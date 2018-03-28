@@ -18,16 +18,22 @@
 
 		$server = array() ;
 
-		$server['protocol'] = $_SERVER["REQUEST_SCHEME"] ;
+		if( empty( $_SERVER["REQUEST_SCHEME"] ) ) {
+			$server['protocol'] = "http" ;
+		}
+		else {
+			$server['protocol'] = $_SERVER["REQUEST_SCHEME"] ;
+		}
+		
 		$server['port']=$_SERVER["SERVER_PORT"];
-			
-		if( empty($support_https_playback) && $server['port'] == "443" ) {
+		$server['host']=$_SERVER["SERVER_NAME"];
+		
+		if( empty($support_https_playback) && $server['protocol'] == "https" ) {
 			// https not supported
 			$server['protocol'] = "http" ;
 			$server['port']="80" ;
 		}
 		
-		$server['host']=$_SERVER["SERVER_NAME"];
 		$server['app']=dirname( $_SERVER["SCRIPT_NAME"] )."/istream.php" ;
 		$server['url']= $server['protocol'].'://'.$server['host'].":".$server['port'].$server['app'] ;
 		$server['sessionidname']=session_name();

@@ -5,7 +5,7 @@
 //      vltpage : page number
 // Return:
 //      JSON array of vehicle list
-// By Dennis Chen @ TME	 - 2013-11-18
+// By Dennis Chen @ TME	 - 2014-02-21
 // Copyright 2013 Toronto MicroElectronics Inc.
 
     require 'session.php' ;
@@ -35,6 +35,13 @@
 			$serialno = $_REQUEST['vltserial'] ;
 			$resp['vltserial'] = $_REQUEST['vltserial'] ;
 		}
+		
+		// wait for avl events
+		$mtime = time();
+
+		$sql = "INSERT INTO `_tmp_tdweb` ( `vname`, `mtime`, `user`, `session`, `vdata` ) VALUES ('vltlistener', '$mtime', '$_SESSION[user]', '$vltsession', '1' ); ";
+		$conn->query($sql) ;
+		
 		$cmd = '23' ;				// AVL_DVR_LIST
 		
 		$xml = new SimpleXMLElement('<tdwebc></tdwebc>') ;
@@ -78,12 +85,7 @@
 			goto done ;
 		}
 	
-		// wait for avl events
-		$mtime = time();
-
-		$sql = "INSERT INTO `_tmp_tdweb` ( `vname`, `mtime`, `user`, `session`, `vdata` ) VALUES ('vltlistener', '$mtime', '$_SESSION[user]', '$vltsession', '1' ); ";
-		$conn->query($sql) ;
-		
+	
 		if( strcasecmp( $resp['status'], 'OK' )==0 ) {
 			if( !empty( $tdwebc->avlp ) ) {
 				$vdata = $conn->escape_string(json_encode( $tdwebc ));

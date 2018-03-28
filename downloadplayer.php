@@ -13,7 +13,7 @@
 	
 	if( $logon ){
 		if( empty( $playerinstallfile ) ) {
-			$playerinstallfile = "player/player.msi" ;
+			$playerinstallfile = "player/player.exe" ;
 		}
 		if( $playerinstallfile[0] != "/" && $playerinstallfile[0] != "\\" ) {	// not absolute path
 			$playerinstallfile =  dirname( $_SERVER["SCRIPT_FILENAME"] ).'/'.$playerinstallfile ;

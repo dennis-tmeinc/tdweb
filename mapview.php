@@ -6,7 +6,7 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 
 // clear map filter
 // session_save('mapfilter', array() );
-	
+
 ?>
 	<title>Touch Down Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
@@ -18,9 +18,9 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
 	<script>
 // start up 
-var map  ;
+var map ;
 
-$(document).ready(function(){
+$(function(){
 
 // update TouchDown alert
 function touchdownalert()
@@ -91,6 +91,23 @@ if( sessionStorage ) {
 	}
 }
 
+function map_showaddress( latitude, longitude, address )
+{
+	function copyaddress() 
+	{ 
+		if (window.clipboardData && clipboardData.setData) {
+			clipboardData.setData( 'text', address );
+		}
+		$("input[name='txtaddress']").val( address );
+	} 
+	var iaction = [{label: 'Copy address', eventHandler: copyaddress}] ;
+	var ibox = map_infobox() ;
+	ibox.setLocation( new Microsoft.Maps.Location(latitude, longitude) ); 
+	var desc = "<div>"+address+"</div>" ;
+	ibox.setOptions( { title:"Address", description: desc, actions: iaction, height: 128, id: "-1", visible: true, zIndex: 10 } );
+}
+
+
 map = new Microsoft.Maps.Map(document.getElementById("tdcmap"),
 {credentials: <?php echo "'$map_credentials'"; ?> ,
 center: mapcenter,
@@ -109,48 +126,66 @@ Microsoft.Maps.Events.addHandler( map, "viewchangestart", function(){
 	mapmove=true ;
 }) ;
 
-if( !mapinit ) {
-	var map_area="<?php echo isset($map_area)?$map_area:''; ?>";
-	if( map_area.length > 1 ) 
-		$.ajax( {
-			url : "http://dev.virtualearth.net/REST/v1/Locations",
-			data : {q: map_area,o:"json",key:<?php echo "'$map_credentials'"; ?>},
-			dataType : 'jsonp',	jsonp :'jsonp'
-		}).done(function(location){
-			if( location.statusCode == 200 && location.resourceSets[0].resources[0] && location.resourceSets[0].resources[0].confidence=="High" ) {
-				var resource = location.resourceSets[0].resources[0] ;
-				if( resource.geocodePoints[0].coordinates ) {
-					var qzoom=11 ;		// city 
-					if( resource.bbox && resource.bbox instanceof Array ) {
-						var nb = Microsoft.Maps.LocationRect.fromLocations( [
-							new Microsoft.Maps.Location( resource.bbox[0], resource.bbox[1] ),
-							new Microsoft.Maps.Location( resource.bbox[2], resource.bbox[3] )
-						] );
-						var w = 60 ;
-						for( var z=4; z<=18 ; z++ ) {
-							if( w/2 < nb.width ) {
-							    qzoom = z ;
-								break;
-							}
-							w/=2 ;
-						}
-					}
-					var point = location.resourceSets[0].resources[0].geocodePoints[0].coordinates ;
-					map.setView({
-					center: new Microsoft.Maps.Location(point[0], point[1]),
-					zoom : qzoom });
+Microsoft.Maps.Events.addHandler( map, "rightclick", function(e){
+	if( e.target == map ) {
+		var point = new Microsoft.Maps.Point(e.getX(), e.getY());
+		var loc = map.tryPixelToLocation(point);
+		$.getJSON("mapquery.php?p="+loc.latitude + "," + loc.longitude, function(resp){
+			if( resp.res && resp.map && resp.map.name && resp.map.point && resp.map.name ) {
+				var dy = resp.map.point.coordinates[0] - loc.latitude ;
+				var dx = resp.map.point.coordinates[1] - loc.longitude ;
+				var dist = Math.sqrt( dx*dx + dy*dy) ;
+				if( dist < 0.01 ) {
+					map_showaddress( resp.map.point.coordinates[0], resp.map.point.coordinates[1], resp.map.name );
 				}
-			}		
-		});
-	else 
-		$.getJSON("http://freegeoip.net/json/", function(geo){
-			if( geo.latitude && geo.longitude ) {
-				map.setView({
-					center: new Microsoft.Maps.Location(geo.latitude, geo.longitude),
-					zoom : 11 });		
 			}
 		});
-}	
+	}
+}) ;
+
+if( !mapinit ) {
+	$.getJSON("mapquery.php", function(resp){
+		if( resp.res && resp.map && resp.map.bbox && resp.map.bbox.length>=4) {
+			setTimeout( function(){
+				var nbounds = Microsoft.Maps.LocationRect.fromLocations( [
+					new Microsoft.Maps.Location( resp.map.bbox[0], resp.map.bbox[1] ),
+					new Microsoft.Maps.Location( resp.map.bbox[2], resp.map.bbox[3] )
+					] );
+				map.setView({bounds:nbounds});
+			}, 1000 ) ;
+		}
+	});
+}
+
+// disable context menu (rightclick) on map
+$("#tdcmap").on( "contextmenu", function(e) { 
+	return false ; 
+});
+
+$("button#btaddress").click(function(e){
+	e.preventDefault();
+	var query=$("input[name='txtaddress']").val();
+	$.getJSON("mapquery.php?q="+query, function(resp){
+		if( resp.res && resp.map.bbox.length>=4) {
+			// Change Zone to 'Current Map'
+			$("#filterform select[name='zoneName']").val('Current Map');
+			map.setView({ bounds: Microsoft.Maps.LocationRect.fromLocations( [
+				new Microsoft.Maps.Location( resp.map.bbox[0], resp.map.bbox[1] ),
+				new Microsoft.Maps.Location( resp.map.bbox[2], resp.map.bbox[3] )
+			] )});
+			if( resp.map.point && resp.map.point.coordinates && resp.map.name ) {
+				map_showaddress( resp.map.point.coordinates[0], resp.map.point.coordinates[1], resp.map.name );
+			}
+		}
+	});	
+});
+
+$("input[name='txtaddress']").on("keypress", function(e){
+	if( e.keyCode == 13 ) {
+		e.preventDefault() ;
+		$("button#btaddress").click();
+	}
+});
 
 function showsyncicon( mapevent )
 {
@@ -284,6 +319,18 @@ function map_clear()
 	map_search = false ;
 	map.entities.clear();
 }
+function map_infobox()
+{
+	for( var i=map.entities.getLength()-1; i>=0; i--) {
+		var e = map.entities.get(i);
+		if( e instanceof Microsoft.Maps.Infobox ) {
+			return e ;
+		}
+	}
+	var ibox = new Microsoft.Maps.Infobox(map.getCenter(), {visible:false, showPointer:true, showCloseButton:true} );    
+	map.entities.push(ibox);	
+	return ibox ;
+}
 
 var mapmove = false ;
 var gendelay=40;
@@ -336,7 +383,23 @@ function loadvlmap()
 		if( resp.res == 1 && resp.serial>=vlmap_serial ) {
 			// map events (icons) successfully loaded
 			mapevent = resp.mapevent ;
-			map.entities.clear();
+			
+			var infoindex = -1 ;
+			var ibox = map_infobox();
+			if( ibox.getVisible() ) {
+				infoindex = ibox.getId();
+			}
+				
+			// clear pushpin only
+			for( var i=map.entities.getLength()-1; i>=0; i--) {
+				var e = map.entities.get(i);
+				if( e instanceof Microsoft.Maps.Pushpin ) {
+					if( parseInt(e.getText()) != infoindex ) {
+						map.entities.removeAt(i);
+					}
+				}
+			}
+			
 			var i;
 			var len=mapevent.length ;
 			if(len<1)
@@ -344,8 +407,7 @@ function loadvlmap()
 
 			var speedLimit = map_search.speedLimit * 1.609334 ;			// convert to KMh
 			var save = new Object ;		// saved value for reducing displayed event ;
-			var eventInfobox = new Microsoft.Maps.Infobox(map.getCenter(), {visible:false,showPointer:true,showCloseButton:true} );    
-			map.entities.push(eventInfobox);
+
 			var pinicons = {
 				1:"res/map_icons_stop.png",
 				2:"route_icon.php?",
@@ -373,7 +435,12 @@ function loadvlmap()
 					var direction = ((parseInt(mapevent[i][2])+5)/10).toFixed()*10;
 					iconimg += "deg="+direction ;
 				}
-
+				
+				// don't insert the pushpin with infobox
+				if( mapevent[i][0] == infoindex ) {
+					continue ;
+				}
+				
 				var pushpinOptions = {icon:iconimg, width: 24, height: 24, anchor: new Microsoft.Maps.Point(12,12), text: mapevent[i][0], textOffset: new Microsoft.Maps.Point(50, 50) }; 
 				var pinlocation = new Microsoft.Maps.Location( mapevent[i][3], mapevent[i][4] );
 				var pushpin= new Microsoft.Maps.Pushpin(pinlocation, pushpinOptions);
@@ -382,9 +449,12 @@ function loadvlmap()
 					var vl_id=parseInt(e.target.getText()); 
 					// e.target.setOptions( {zIndex: 10 } );		// to prevent Infobox flashing
 					var loc=e.target.getLocation() ;
+
+					var eventInfobox = map_infobox() ;
+			
 					eventInfobox.setLocation( loc );
 					var icon = e.target.getIcon() ;
-					eventInfobox.setOptions( { title:'', description:"Loading...", actions: [], visible: true,  zIndex: 10 } );
+					eventInfobox.setOptions( { title:'', description:"Loading...", actions: [], id: vl_id, visible: true,  zIndex: 10 } );
 					
 					$.getJSON("vllist.php?vl_id="+vl_id, function(v){
 						if( v.res == 1 && v.vl.vl_id == vl_id ) {
@@ -419,10 +489,12 @@ function loadvlmap()
 							if( v.vl.video == 1 && (navigator.platform == 'Win32' || navigator.platform == 'Win64') ) {
 								iaction = [{label: 'Play Video', eventHandler: iplayvideo}] ;
 							}
-							eventInfobox.setOptions( { title:ititle, description: desc, actions: iaction, height: iheight,  zIndex: 10 } );
+							var ibox = map_infobox() ;
+							if( ibox )
+								ibox.setOptions( { title:ititle, description: desc, actions: iaction, id: v.vl.vl_id, height: iheight,  zIndex: 10 } );
 						}
 					});
-				}, 100 );  
+				}, 200 );  
 
 				map.entities.push(pushpin);
 			}

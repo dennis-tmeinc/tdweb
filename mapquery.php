@@ -11,39 +11,28 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
-		if( empty( $_REQUEST['q'] ) ) {
-			if( empty( $map_area ) ) {
-				$query = "United States" ;
-			}
-			else {
-				$query = $map_area ;
-			}
+
+		if( isset( $_REQUEST['q'] ) ) {
+			$url =  "http://dev.virtualearth.net/REST/v1/Locations?q=".rawurlencode($_REQUEST['q'])."&o=json&maxResults=1&key=".$map_credentials ;
+		}
+		else if( isset( $_REQUEST['p'] ) ){		// points
+			$url =  "http://dev.virtualearth.net/REST/v1/Locations/$_REQUEST[p]?o=json&maxResults=1&key=$map_credentials" ;
+		}
+		else if( !empty($map_area) ) {
+			$url =  "http://dev.virtualearth.net/REST/v1/Locations?q=".rawurlencode($map_area)."&o=json&maxResults=1&key=".$map_credentials ;
 		}
 		else {
-			$query = $_REQUEST['q'] ;
+			$url =  "http://dev.virtualearth.net/REST/v1/Locations?q=USA&o=json&maxResults=1&key=".$map_credentials ;
 		}
 		
-		$url =  "http://dev.virtualearth.net/REST/v1/Locations?q=".rawurlencode($query)."&o=json&maxResults=1&key=".$map_credentials ;
 		@$maparea = file_get_contents( $url );
 		if( !empty($maparea) ) {
 			$maparea = json_decode($maparea, true) ;
 		}
-		$resp['map'] = array();
-		if( !empty( $maparea['resourceSets'][0]['resources'][0]['bbox'] )) {
-			$resp['map']['bbox'] =  $maparea['resourceSets'][0]['resources'][0]['bbox'] ;
+		if( ! empty( $maparea['resourceSets'][0]['resources'][0] )  ) {
+			$resp['map'] = $maparea['resourceSets'][0]['resources'][0] ;
+			$resp['res'] = 1 ;
 		}
-		if( !empty( $maparea['resourceSets'][0]['resources'][0]['name'] ) ) {
-			$resp['map']['name'] =  $maparea['resourceSets'][0]['resources'][0]['name'] ;
-		}
-		if( !empty( $maparea['resourceSets'][0]['resources'][0]['point']['coordinates']) ) {
-			$resp['map']['point'] = $maparea['resourceSets'][0]['resources'][0]['point']['coordinates'] ;
-		}
-		if( empty( $resp['map']['bbox'] ) ) {
-			$resp['map']['bbox'] =  array(18.299999237060547,-172.60000610351563,71.699996948242188,-67.4000015258789) ;
-			$resp['map']['name'] =  "United States";
-			$resp['map']['point'] = array(43.648399353027344,-79.485702514648438);
-		}
-		$resp['res'] = 1 ;
 	
 	}
 

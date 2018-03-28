@@ -37,7 +37,7 @@
 <p><input checked="checked" name="zoneType" type="radio" value="0" />Inside<input name="zoneType" type="radio" value="1" />Outside <select name="zoneName" style="width:150px">
 <option>No Restriction</option>
 <?php
-	if( basename($_SERVER["REQUEST_URI"]) == "mapview.php" ) {
+	if( basename($_SERVER["SCRIPT_NAME"]) == "mapview.php" ) {
 		if( !empty($map_area) ) {
 			echo "<option>Default Area</option>" ;
 		}
@@ -52,7 +52,16 @@
 		}
 		$result->free();
 	}
-?> </select></p>
+?></select></p>
+
+<?php if( basename($_SERVER["SCRIPT_NAME"]) == "mapview.php" ) { ?>
+
+<div>
+<button id="btaddress">Address</button>
+<input size="24" name="txtaddress" type="text"/>
+</div>
+
+<?php } ?>
 
 <div id="accordion" >
 

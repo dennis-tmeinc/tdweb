@@ -32,7 +32,7 @@
 			$_SESSION['welcome_name'] = $savesess['welcome_name'];
 			$_SESSION['clientid']=$_SERVER['REMOTE_ADDR'] ;
 			$_SESSION['xtime'] = $_SERVER['REQUEST_TIME'] ;
-			$_SESSION['release']="V3.7.7" ;
+			$_SESSION['release']="V3.7.8" ;
 	
 		    $resp['res']=1 ;
 			$resp['user']=$savesess['xuser'] ;

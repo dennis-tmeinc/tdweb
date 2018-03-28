@@ -234,12 +234,9 @@ function vfile_open( $filename , $mode = "rb" )
 	return $fctx ;
 }
 
-function vfile_seek( &$fctx, $offset, $whence )
+function vfile_seek( &$fctx, $offset, $whence = SEEK_SET )
 {
 	if( !empty( $fctx['type'] )) {
-		if( !isset( $whence ) ) {
-			$whence = SEEK_SET ;
-		}
 		if( $fctx['type'] == 1 ) {
 			// local handle
 			fseek( $fctx['handle'], $offset, $whence );
@@ -318,12 +315,9 @@ function vfile_write( &$fctx, $string )
 	return false ;
 }
 
-function vfile_gets( &$fctx, $length ) 
+function vfile_gets( &$fctx, $length = 8192 ) 
 {
 	if( !empty( $fctx['type'] )) {
-		if( empty($length) ) {
-			$length = 64*1024 ;
-		}
 		if( $fctx['type'] == 1 ) {
 			return fgets( $fctx['handle'], $length ) ;
 		}

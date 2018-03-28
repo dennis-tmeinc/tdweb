@@ -497,7 +497,7 @@ switch ( $_REQUEST['cmd'] ) {
 			$playsync['playtime'] = $playtime->getTimestamp();
 			$playsync['reporttime'] = $now->getTimestamp();
 			session_save('playsync', $playsync);
-			$resp['run'] = $synctime['run'] ? 1:0 ;
+			$resp['run'] = $playsync['run'] ? 1:0 ;
 			$resp['time'] = $playtime->format('Y-m-d H:i:s');
 		}
         break;

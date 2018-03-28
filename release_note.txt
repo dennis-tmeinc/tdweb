@@ -1,6 +1,13 @@
 Touch Down Center 
 Release Notes
 
+V3.7.8 (2014-02-25) (by Dennis)
+	Add address input on "MAP VIEW" page
+	Right click on "MAP VIEW" map to display address, only if address can be retrieved, so click close to roads.
+	Click "Copy Address" link on address infobox to copy address to address input
+	Do not remove infobox on "MAP VIEW" when map is moved. (Work around DELL touch screen issue)
+	Fix email settings bug.
+	
 V3.7.7 (2014-02-19) (by Dennis)
 	Add ignition on event and icon on LiveTrack
 	Add temperature event and icon on LiveTrack

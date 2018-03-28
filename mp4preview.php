@@ -71,10 +71,11 @@
 				$preview_file = $vcachedir.$dirc."v".$hash.".mp4" ;
 				$preview_tmpfile = $vcachedir.$dirc."t".$hash.".mp4" ;
 				$preview_file_pattern = $vcachedir.$dirc."*.mp4" ;
+				$preview_lockfile = session_save_path().$dirc.'sess_lock'.$hash ;
 				if( vfile_size( $preview_file ) < 100 ) {
 				
 					// exclude other process do the converting
-					$lockf = fopen( session_save_path().$dirc.'sess_lock'.$hash, "c" );
+					$lockf = fopen( $preview_lockfile, "c" );
 					if( $lockf ) {
 						flock( $lockf, LOCK_EX ) ;		// exclusive lock
 
@@ -101,7 +102,8 @@
 				}
 				else {
 					// lock file are safe to be removed
-					unlink( session_save_path().$dirc.'sess_lock'.$hash );
+					if( file_exists( $preview_lockfile ) ) 
+						unlink( $preview_lockfile );
 				}
 
 				if( $f = vfile_open( $preview_file ) ) {
@@ -138,6 +140,7 @@
 
 					if( $len>0 ) {
 						header("Content-Length: $len" );
+						header("Connection: close");
 						vfile_seek( $f, $offset );
 
 						while( $len > 0 ) {
@@ -160,7 +163,7 @@
 						header("Content-Length: 0" );
 					}
 					
-					fclose( $f );
+					vfile_close( $f );
 				}
 			}
 			$result->free();

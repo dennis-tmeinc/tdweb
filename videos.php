@@ -242,8 +242,6 @@ function webplay_settitle()
 function webplay_play()
 {
 	var clipinfo = $( "video#webplay" ).data("clipinfo") ;
-	$( "video#webplay" )[0].src = clipinfo.mp4  ;
-	$( "video#webplay" )[0].autoplay=true;
 	$( "video#webplay" )[0].onended = function(){
 		if( $( "video#webplay" )[0].currentTime > 2 ) {
 			$("button#webplay_next").click();
@@ -252,7 +250,9 @@ function webplay_play()
 	webplay_playtime = -1 ;
 	webplay_settitle();
 	$( "video#webplay" )[0].ontimeupdate = webplay_settitle ;
-	$( "video#webplay" )[0].load();
+	$( "video#webplay" )[0].src = clipinfo.mp4  ;
+	$( "video#webplay" )[0].play();
+//	$( "video#webplay" )[0].load();
 }
 
 var webplay_1open=0 ;
@@ -262,9 +262,9 @@ $( ".tdcdialog#dialog_webplay" ).dialog({
 	width:"auto",
 	modal: true,
 	beforeClose: function( event, ui ) {
-		$( "video#webplay" )[0].src = "" ;
+		// $( "video#webplay" )[0].src = "" ;
 		$( "video#webplay" )[0].autoplay=false;
-		$( "video#webplay" )[0].load();	
+		$( "video#webplay" )[0].pause();	
 	},
 	resize: function( event, ui ) {
 		$( "video#webplay" )[0].width=$( "div#dialog_webplay" ).width() - $( ".tdcdialog#dialog_webplay" ).data("wdif");
@@ -475,7 +475,7 @@ Vehicles &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="selectallvehicle">Select All<
 </form>
 <button id="deletevideo"><img src="res/button_delete.png" > Delete </button>
 <button  id="playvideo"><img src="res/button_play.png" > Play </button>
-<?php if( ! empty( $webplay_enable ) ) { ?>
+<?php if( ! empty( $webplay_support ) ) { ?>
 <button  id="webplay"> Preview Video Clip </button>
 <?php } ?>
 <a  id="playsync" href="mapview.php?sync=1" >Sync on Map View</a>

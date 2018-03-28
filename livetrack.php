@@ -208,9 +208,9 @@ function showpin( avlp, id, iconimg, clean )
 						delete vlt_pins[i] ;
 					}
 				}
-			}			
-		}		
-
+			}
+		}
+		
 		// insert gps location to map
 		// resp.avlp.pos format: YYMMDDhhmmss,43.641988N079.672085W0.0D134.05
 		var pvlp_pos = avlp.pos.split(',');
@@ -277,7 +277,8 @@ function showpin( avlp, id, iconimg, clean )
 			else {
 				return ;
 			}
-			var dvrid = vlt_pins[pidx].vid.substr(4) ;
+
+			var infotitle =   '<img src="'+e.target.getIcon()+'" /> ' + vlt_pins[pidx].vid.substr(4) ;
 			
 			// remove old infobox
 			for( var i=map.entities.getLength()-1;i>=0;i--) {
@@ -353,7 +354,7 @@ function showpin( avlp, id, iconimg, clean )
 				lines ++ ;
 			}
 			
-			var iheight=80+18*lines  ;
+			var iheight=92+18*lines  ;
 			
 			function removepin()
 			{ 
@@ -372,7 +373,7 @@ function showpin( avlp, id, iconimg, clean )
 			
 			map.entities.push(new Microsoft.Maps.Infobox(e.target.getLocation(), {
 				showPointer:true,showCloseButton:true,
-				title:dvrid, description: desc, height: iheight,  zIndex: 10, actions: iaction
+				title:infotitle, description: desc, height: iheight,  zIndex: 10, actions: iaction
 				}));
 		}, 100 );  
 	}
@@ -545,9 +546,6 @@ $.getJSON("vltdvrlist.php", vltparam, function(v){
 		if( v.tdwebc ) {
 			tdwebc_message( v.tdwebc );
 		}
-		$( window ).unload(function() {
-			$.getJSON("vltunload.php", vltparam);
-		});
 	}		
 });
 
@@ -1197,50 +1195,38 @@ enableClickableLogo: false,
 mapTypeId : Microsoft.Maps.MapTypeId.road
 });
 
-
 if( !mapinit ) {
-	var map_area="<?php echo isset($map_area)?$map_area:''; ?>";
-	if( map_area.length > 1 ) 
-		$.ajax( {
-			url : "http://dev.virtualearth.net/REST/v1/Locations",
-			data : {q: map_area,o:"json",key:<?php echo "'$map_credentials'"; ?>},
-			dataType : 'jsonp',	jsonp :'jsonp'
-		}).done(function(location){
-			if( location.statusCode == 200 && location.resourceSets[0].resources[0] && location.resourceSets[0].resources[0].confidence=="High" ) {
-				var resource = location.resourceSets[0].resources[0] ;
-				if( resource.geocodePoints[0].coordinates ) {
-					var qzoom=11 ;		// city 
-					if( resource.bbox && resource.bbox instanceof Array ) {
-						var nb = Microsoft.Maps.LocationRect.fromLocations( [
-							new Microsoft.Maps.Location( resource.bbox[0], resource.bbox[1] ),
-							new Microsoft.Maps.Location( resource.bbox[2], resource.bbox[3] )
-						] );
-						var w = 60 ;
-						for( var z=4; z<=18 ; z++ ) {
-							if( w/2 < nb.width ) {
-							    qzoom = z ;
-								break;
-							}
-							w/=2 ;
-						}
-					}
-					var point = location.resourceSets[0].resources[0].geocodePoints[0].coordinates ;
-					map.setView({
-					center: new Microsoft.Maps.Location(point[0], point[1]),
-					zoom : qzoom });
-				}
-			}		
-		});
-	else 
-		$.getJSON("http://freegeoip.net/json/", function(geo){
-			if( geo.latitude && geo.longitude ) {
-				map.setView({
-					center: new Microsoft.Maps.Location(geo.latitude, geo.longitude),
-					zoom : 11 });		
-			}
-		});
-}	
+	$.getJSON("mapquery.php", function(resp){
+		if( resp.res && resp.map && resp.map.bbox && resp.map.bbox.length>=4) {
+			setTimeout( function(){
+				var nbounds = Microsoft.Maps.LocationRect.fromLocations( [
+					new Microsoft.Maps.Location( resp.map.bbox[0], resp.map.bbox[1] ),
+					new Microsoft.Maps.Location( resp.map.bbox[2], resp.map.bbox[3] )
+					] );
+				map.setView({bounds:nbounds});
+			}, 1000 ) ;
+		}
+	});
+}
 
+$( window ).unload(function() {
+	// save map position
+	if( sessionStorage ) {
+		var localsession = {} ;
+		var tdsess = sessionStorage.getItem('tdsess');
+		if( tdsess ) {
+			localsession = JSON.parse(tdsess);
+		}
+		var center = map.getCenter();
+		var zoom = map.getZoom();
+		localsession.tdcmap={ lat:center.latitude,lon:center.longitude,zoom:zoom };
+		sessionStorage.setItem('tdsess', JSON.stringify(localsession));
+	}
+	// finish vlt session
+	vltparam.vltserial++ ;
+	$.getJSON("vltunload.php", vltparam);
+});
+		
 $("select[name='vehicle']").change(function(e){
 	var x=this.value ;
 });

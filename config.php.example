@@ -19,7 +19,7 @@
 	$dashboard_conf="C:\\SmartSvrApps\\dashboardoption.config" ;
 	
 	// backup file location, 
-	$backup_path="\\TouchDownCenter\\mysql\\backup" ;
+	$backup_path="smartbackup" ;
 	
 	// set to 1 to include auto_increment fields in backup.
 	$backup_auto_increment = 0 ;
@@ -40,15 +40,16 @@
 	// $zone_mode = "cross" ;
 	
 	// bing map
-	$map_credentials="AnC6aHa2J8jWAluq14HQu6HDH1cDshGtPEPrYiotanIf-q6ZdoSiVGd96wzuDutw";
+	$map_credentials="AnC6aHa2J8jWAluq14HQu6HDH1cDshGtPEPrYiotanIf-q6ZdoSiVGd96wzuDutw" ;
+
 	// Default map location, comment it to auto detect
-	$map_area="New York" ;
+	$map_area="Toronto,ON" ;
 	
 	// session timeout (max half hour)
 	$session_timeout=900 ;	
-	$session_path= __DIR__ . "\\session";
+	$session_path= "session";
 	$session_idname = "touchdownid";
-	
+		
 	// user
 	$user_path = $session_path ;
 
@@ -58,11 +59,17 @@
 	//              vader dot-luv mint-choc black-tie trontastic swanky-purse
 	$default_ui_theme = "start" ;
 	
-	// DVRViewer Installation File
-	$playerinstallfile = "player\\player.msi" ;
-
-	// enable live track
+	$playerinstallfile = "player/player.exe" ;
+	
+	// web video playback
+	$webplay_support = 1 ;
+	
+	// Maximum videos cache size in Mega Bytes
+	$webplay_cache_size = 10000 ;
+	
+	// enable or disable live track
 	$enable_livetrack = 1 ;
+	// Auto zoom in level for live map
 	$livetrack_autozoomin = 16 ;
 	
 	// live track server (AVL Service)
@@ -72,7 +79,6 @@
 	
 	// setup time zone
 	date_default_timezone_set($timezone) ;	
-	// persistent database connection
 	if(	$database_persistent ) {
 		$smart_server = "p:".$smart_host ;
 	}
@@ -81,4 +87,4 @@
 	}
 	
 	return ;
-?>
+?>	
