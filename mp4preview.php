@@ -122,12 +122,14 @@
 						}
 						$offset = $range[0] ;
 						$len = $lastpos + 1 - $offset ;
+						header("Content-Length: $len" );
 						header( sprintf("Content-Range: bytes %d-%d/%d", $offset, $lastpos, $fs ));
 						header( "HTTP/1.1 206 Partial Content" );
 					}
 					else {
 						$len = $fs ;
 						$offset = 0 ;
+						header("Content-Length: $len" );
 						// test for only return partial contents
 						if( empty( $mp4preloadsize ) ) {
 							$mp4preloadsize = 102400 ;		// 100 K
@@ -141,7 +143,6 @@
 					}
 
 					if( $len>0 ) {
-						header("Content-Length: $len" );
 						header("Connection: close");
 						vfile_seek( $f, $offset );
 
@@ -154,6 +155,7 @@
 							$da = vfile_read( $f, $r ) ;
 							if( strlen( $da ) > 0 ) {
 								echo $da ;
+								if( connection_aborted () ) break;
 								$len -= $r ;
 							}
 							else {

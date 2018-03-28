@@ -10,6 +10,8 @@
     require 'session.php' ;
 	header("Content-Type: application/json");
 	
+	$dobackup = false ;
+	
 	if( $logon ) {
 		if( $_SESSION['user_type'] != 'admin' ) {
 			$resp['errormsg']="Not allowed!" ;
@@ -19,56 +21,37 @@
 		}
 		else {
 
-			if( empty($php_bin) ) {
-				if( strtoupper( substr(PHP_OS,0,3) ) == 'WIN' ) {
-					// my installed php path
-					$php_bin = dirname( php_ini_loaded_file() )."\\php-win.exe";
-				}
-				else {
-					$php_bin = "php" ;
-				}
-			}
-
-			// windows system
-			if( strtoupper( substr(PHP_OS,0,3) ) == 'WIN' ) {
-				$php_cmd = 'start /B '.$php_bin;
+			if( empty( $backup_path ) ) {
+				$backup_path=sys_get_temp_dir();
 			}
 			else {
-				$php_cmd = $php_bin ;
+				// try make dir
+				@mkdir( $backup_path );
 			}
-			
-			if( !empty($php_cmd) ) {
-				if( empty( $backup_path ) ) {
-					$backup_path=sys_get_temp_dir();
-				}
-				else {
-					// try make dir
-					@mkdir( $backup_path );
-				}
-				$progressfile = tempnam ( $backup_path, "per" ) ;
-				$fpercent = fopen($progressfile, 'w');
-				fwrite($fpercent, "-1");
-				fclose($fpercent);
-				$resp['progressfile'] = $progressfile ;
 
-				// backup script argument
-				//      argv[1] : backup file path
-				//      argv[2] : database server
-				//      argv[3] : database user
-				//      argv[4] : database password
-				//      argv[5] : database name
-				//      argv[6] : progress file
-				$backupname = $backup_path."/bk".urlencode( $_REQUEST['backupname'] );
-				
-				$resp['backupname'] = $backupname ;
-				
-				$cmdline = $php_cmd . " backupscript.php \"$backupname\" $smart_host $smart_user $smart_password $smart_database $progressfile" ;
-				pclose(popen( $cmdline, "r"));
-				
-				$resp['cmdline'] = $cmdline ;
-				
-				$resp['res']=1;
-			}
+			$backupname = $backup_path."/bk".urlencode( $_REQUEST['backupname'] );
+			$resp['backupname'] = $backupname ;
+			$progressfile = tempnam ( $backup_path, "per" ) ;
+			$fpercent = fopen($progressfile, 'w');
+			fwrite($fpercent, "-1");
+			$resp['progressfile'] = $progressfile ;			
+			$resp['res']=1;
+			
+			// flush out contents
+			$content = json_encode($resp);
+			header( "Content-Length: ".strlen($content) );
+			header( "Connection: close" );
+			echo $content ;
+			ob_flush();
+			flush();
+	
+			// now let's do the real backup work
+			require 'backupfunction.php' ;
+			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database ); 
+			dbbackup( $backupname, $conn, $fpercent ) ;
+			
+			fclose($fpercent);
+			return ;
 		}
 	}
 	echo json_encode( $resp );

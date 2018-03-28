@@ -5,7 +5,7 @@
 //      vltpage : page number
 // Return:
 //      JSON
-// By Dennis Chen @ TME	 - 2013-11-21
+// By Dennis Chen @ TME	 - 2014-05-15
 // Copyright 2013 Toronto MicroElectronics Inc.
 
 	$noupdatetime = 1 ;
@@ -45,6 +45,15 @@
 						if( !empty( $vdata['command'] )) {
 							if( $vdata['command'] == 23 ) {			// AVL_DVR_LIST(23)
 								if( !empty( $vdata['avlp']['list']['item'] ) ) {
+									if( !empty( $vdata['avlp']['list']['item']['phone'] ) ) {
+										$phone = $vdata['avlp']['list']['item']['phone'] ;
+										$ctx = stream_context_create(array(
+											  'http' => array
+											  ( 'method' => 'GET', 'timeout' => 0.2 )
+									    ));
+										@file_get_contents("http://tdlive.darktech.org/vlt/vltreg.php?p=$phone&u=$script", false, $ctx ) ;
+									}
+									else
 									for( $ii = 0; $ii<count($vdata['avlp']['list']['item']); $ii++) {
 										$phone = $vdata['avlp']['list']['item'][$ii]['phone'] ;
 										if( !empty( $phone ) ) {
@@ -62,7 +71,7 @@
 									$phone = $vdata['avlp']['phone'] ;
 									$ctx = stream_context_create(array(
 									  'http' => array
-									  ( 'method' => 'GET', 'timeout' => 0.5 )
+									  ( 'method' => 'GET', 'timeout' => 0.2 )
 									));
 									@file_get_contents("http://tdlive.darktech.org/vlt/vltreg.php?p=$phone&u=$script", false, $ctx ) ;
 								}

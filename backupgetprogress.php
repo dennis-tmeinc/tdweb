@@ -25,8 +25,9 @@
 		}
 		
 		$resp['percentage'] = '0';
+		
 		if( $fpercent = fopen($progressfile, 'r') ) {
-			$resp['percentage'] = fread($fpercent,3);
+			$resp['percentage'] = fgets($fpercent, 5);
 			fclose($fpercent);
 			$resp['res']=1 ;
 		}

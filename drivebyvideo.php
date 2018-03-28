@@ -2,19 +2,24 @@
 // drivebyvideo.php - video(mp4) file reader for drive by
 // Request:
 //      tag : drive tag file name
-//      channel : channel number
+//      channel : channel name
+//  or : (from non-session external link)
+//      link : encoded tag file and channel 
 // Return:
 //      mp4 stream
 // By Dennis Chen @ TME	 - 2014-1-17
 // Copyright 2013 Toronto MicroElectronics Inc.
 //
-
-    require 'session.php' ;
+	
+	// don't redir to login page
+	$noredir = true ;
+    
+	require 'session.php' ;
 	require_once 'vfile.php' ;
 	// Content type
 	header("Content-Type: video/mp4");	
 	
-	if( $logon ) {
+	if( true ) {
 	
 		$v = vfile_get_contents( $driveby_eventdir.'/'.$_REQUEST['tag'] );
 		
@@ -54,8 +59,8 @@
 							}
 							$len = $lastpos + 1 - $range[0] ;
 							vfile_seek( $f, $range[0] );
-							header( "HTTP/1.1 206 Partial Content" );
 							header("Content-Length: $len" );
+							header( "HTTP/1.1 206 Partial Content" );
 							header( sprintf("Content-Range: bytes %d-%d/%d", $range[0], $lastpos, $fsize ));
 						}
 						else {
@@ -67,13 +72,14 @@
 						while( $len > 0 ) {
 							set_time_limit(30);
 							$r = $len ;
-							if( $r > 256*1024 ) {
-								$r = 256*1024 ;
+							if( $r > 64*1024 ) {
+								$r = 64*1024 ;
 							}
 							$da = vfile_read( $f, $r ) ;
 							if( strlen( $da ) > 0 ) {
 								echo $da ;
 								$len -= $r ;
+								if( connection_aborted () ) break;
 							}
 							else {
 								break;

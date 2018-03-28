@@ -150,7 +150,7 @@
 			
 		// System Alerts list
 		$alert_types=array();
-		$alert_types[2]="Fan Filter" ;
+		$alert_types[2]="High Temperature" ;
 		$alert_types[3]="Connection" ;
 		$alert_types[4]="Camera" ;
 		$alert_types[5]="Recording" ;

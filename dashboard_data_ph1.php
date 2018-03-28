@@ -295,7 +295,7 @@ if( $result ){
 	}
 }
 
-// Fan Filter Alerts
+// High Temperature Alerts
 $Fan_Filter_Alerts_day = 0 ;
 $Fan_Filter_Alerts_avg = 0 ;
 

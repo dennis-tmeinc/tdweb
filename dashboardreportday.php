@@ -273,7 +273,7 @@
 			$result->free();
 		}
 
-		// Fan Filter Alerts
+		// High Temperature Alerts
 		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = 2 AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
 		$result=$conn->query($sql);
 		if( $result ){

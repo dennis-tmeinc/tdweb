@@ -176,7 +176,7 @@
 				}
 				$result->free();
 			}
-			if( $alerts>0 ) $alert_types[]="Fan Filter" ;
+			if( $alerts>0 ) $alert_types[]="High Temperature" ;
 			
 			$vehicle[5] = implode('/', $alert_types);
 			

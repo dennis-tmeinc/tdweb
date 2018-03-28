@@ -7,7 +7,7 @@ require 'session.php';
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta content="Touch Down Center by TME" name="description" />
 	<meta content="Dennis Chen @ TME, 2013-05-15" name="author" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.4/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.4/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.11.0/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
 	<script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script>
 	<script src="picker.js"></script>
 	<link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
@@ -21,83 +21,103 @@ $(document).ready(function(){
 		
 $("button").button();	
 $(".btset").buttonset();
+$(".btset input").change(function(){
+   location=$(this).attr("href");
+});
 
-var lasttagid = -2 ;
-var tagfile = {} ;
+var selectedtag = "" ;
+var tagchannels = {};
 
 // Event Tag list
 $("#tag_list").jqGrid({        
     scroll: true,
 	datatype: "local",
-	height: 138,
-	width: 750,
+	height: 142,
+	width: 480,
 	caption: 'Drive By Event Tags',
-    colNames:['Tag Name','Client ID', 'Bus ID', 'Date/Time'],
+    colNames:['Client ID', 'Bus ID', 'Date/Time'],
     colModel :[ 
-      {name:'tagname', index:'tagname', width:180, sortable: true }, 
       {name:'clientid', index:'clientid', width:180, sortable: true }, 
       {name:'vehicle', index:'vehicle', width:180, sortable: true }, 
       {name:'datetime', index:'datetime', width:180, sortable: true } 
     ],
 	
 	onSelectRow: function(id){ 
-		if( id && lasttagid!=-1 && id!==lasttagid ) {
-			
-			var tagname = $("#tag_list").jqGrid('getCell', id, 0 );
-			$.getJSON("drivebytaglock.php?tag="+tagname, function(resp){
+		if( id && id!==selectedtag ) {
+			var param = {} ;
+			param.tag = id ;
+			param.lasttag = selectedtag ;
+			param.plateofviolator = $("input[name='plateofviolator']").val();
+			param.notes = $("textarea[name='notes']").val();
+			// update selectedtag
+			selectedtag = id ;
+			$.getJSON("drivebytaglock.php", param, function(resp){
 				if( resp.res == 1 ) {
-					lasttagid = id ;
-					tagfile = resp.tag ;
+					// set notes
+					if( resp.tag.plateofviolator && !jQuery.isEmptyObject(resp.tag.plateofviolator) )
+						$("input[name='plateofviolator']").val(resp.tag.plateofviolator);
+					else 
+						$("input[name='plateofviolator']").val("");
 
+					if( resp.tag.notes && !jQuery.isEmptyObject(resp.tag.notes) )
+						$("textarea[name='notes']").val(resp.tag.notes);
+					else 
+						$("textarea[name='notes']").val("");
+					
 					// set map
-					if( resp.tag.coordinate ) {
-						mapcoor = resp.tag.coordinate ;
-						setmap();
-					}
+					mapcoor = resp.tag.coordinate ;
+					setmap();
+					
+					tagchannels = resp.tag.channel ;
+					
 					// setup camera select
 					var camopts = [] ;
 					var camopt = "" ;
-					for( var ch = 0 ; ch < resp.tag.channel.length; ch++ ) {
+					for( var ch = 0 ; ch < tagchannels.length; ch++ ) {
 						// set lpr1
 						var name = "camera"+(ch+1) ;
-						if( resp.tag.channel[ch].name ) {
-							name = resp.tag.channel[ch].name ;
+						if( tagchannels[ch].name ) {
+							name = tagchannels[ch].name ;
 						}
 						camopts[ch] = name ;
 						camopt += "<option>"+name+"</option>" ;
 					}
 					
+					var sel = $("select[name='vidcam']")[0].selectedIndex ;
+					if( sel >= tagchannels.length || sel < 0 ) {
+						sel = 0 ;
+					}
+					
 					// video camera selection
 					$("select[name='vidcam']").html(camopt);
-					$("select[name='vidcam']").val( camopts[0] );
+					$("select[name='vidcam']")[0].selectedIndex = sel ;
+					$("select[name='vidcam']").change();
 
 					var sels = ['lpr1','lpr2','ov1','ov2'] ;
 					
-					// selects
+					// camera selection
 					var i;
 					for( i= 0 ; i<sels.length; i++ ) {
-						var s = $("select[name='"+sels[i]+"cam']") ;
-						var xv = s.val();
+						var camname = sels[i]+"cam" ;
+						var s = $("select[name='"+camname+"']") ;
+						sel = s[0].selectedIndex ;
+						if( sel < 0 ) {
+							sel = i ;
+						}
+						if( sel >= tagchannels.length ) {
+							sel = 0 ;
+						}
 						s.html(camopt);
-						if( xv ){
-							s.val( xv );
-						}
-						else {
-							s.val( camopts[i] );
-						}
+						s[0].selectedIndex = sel ;
+						s.change();
 					}
 					
-					for( i= 0 ; i<sels.length; i++ ) {
-						$("div#"+sels[i]+"slider").slider("option","max",20*30);
-						$("div#"+sels[i]+"slider").slider("value", 0);
-					}
 				}
 				else {
 					alert("Can not process this tag, it is being used by other user");
 				}
 			});	
-			// clear all images ...
-			lasttagid = -1 ;
+
 		}
 	}
 });
@@ -114,20 +134,72 @@ $("#tag_list").jqGrid({
 						  vehicle: resp.tags[i].vehicle,
 						  datetime: resp.tags[i].datetime };
 			}
-			$("#tag_list").jqGrid('addRowData',1,griddata);		
+			$("#tag_list").jqGrid('addRowData','tagname',griddata);		
+			$("#tag_list").jqGrid('setGridParam',{sortname:'datetime'}).trigger('reloadGrid');
+			 
+			if( resp.tags.length>0 ) {
+				// to select first tag
+				var ids = $("#tag_list").jqGrid('getDataIDs');
+				if( ids[0] ) 
+					$("#tag_list").jqGrid('setSelection',ids[0],true);		
+			}
 		}
 	});	
 })();
 
+// initialize Notes dialog
+$( ".dialog#dialog_editcontacts" ).dialog({
+	autoOpen: false,
+	width:"auto",
+	modal: true,
+	open: function( event, ui ) {
+	},
+	close: function( event, ui ) {
+	},
+	buttons:{
+		"OK": function() {
+			$( this ).dialog( "close" );
+		},
+		Cancel: function() {
+			$( this ).dialog( "close" );
+		}
+	}
+});
+
+$("button#EditContacts").click( function() {
+	$( ".dialog#dialog_editcontacts" ).dialog("open");
+} );
+
+$("button#GenerateReport").click( function() {
+	var param = {} ;
+	param.tag = selectedtag ;
+	param.plateofviolator = $("input[name='plateofviolator']").val();
+	param.notes = $("textarea[name='notes']").val();
+	param.mapzoom = mapzoom ;
+	var sels = ['lpr1','lpr2','ov1','ov2'] ;
+	// cameras
+	var i;
+	for( i= 0 ; i<sels.length; i++ ) {
+		var camname = sels[i]+"cam" ;
+		param['ch'+i] = $("select[name='"+camname+"']").val();
+		//param['pos'+i] = $("div#"+sels[i]+"slider").slider("value")/30;
+		$("video[name='"+ camname +"']")[0].pause();
+		param['pos'+i] = $("video[name='"+ camname +"']")[0].currentTime ;
+	}
+	window.open("drivebymkpdf.php?"+$.param(param));
+});
+
 // current zoom level
-var mapzoom = 16 ;
+var mapzoom = 15 ;
 var mapcoor = "37.778297,-122.417297" ;
-	
+
 function setmap() 
 {
-	var mapimg = "http://dev.virtualearth.net/REST/v1/Imagery/Map/Road/"+mapcoor+"/"+mapzoom+"?pp="+mapcoor+";0&ms=480,360&key="+
+	var mapimg = "http://dev.virtualearth.net/REST/v1/Imagery/Map/Road/"+mapcoor+"/"+mapzoom+"?pp="+mapcoor+";0&ms=360,200&key="+
 			<?php echo "'$map_credentials'"; ?>	;
 	$("img#mapimage").prop("src", mapimg );
+	$("#mapaddress").text( "" );
+	$("#coordinate").text( "" );
 	$.ajax({
 		url : "http://dev.virtualearth.net/REST/v1/Locations/"+mapcoor ,
 		data : {o:"json",key:<?php echo "'$map_credentials'"; ?>},
@@ -141,18 +213,6 @@ function setmap()
 	});
 
 }
-
-// frames images
-//   sections: lpr1, lpr2, ov1, ov2
-//   time: offset from begin
-//   channel: camera channel
-function img_frame( section, time, channel )
-{
-	var tagname = $("#tag_list").jqGrid('getCell', lasttagid, 0 );
-	var img = "drivebyframe.php?tag=" + tagname +"&channel="+channel+"&time="+time;
-	$("img[name='"+section+"img']").prop("src", img);
-}
-
 
 $("input#zoomlevel").spinner({
 max: 18, 
@@ -170,6 +230,21 @@ spin: function( event, ui ) {
 	setmap();
 },
 });
+		
+// load frames images
+//   sections: lpr1, lpr2, ov1, ov2
+//   time: offset from begin
+//   channel: camera channel
+function img_frame( section, time, channel )
+{
+	var tagname = selectedtag ;
+	var img = "drivebyframe.php?tag=" + tagname +"&channel="+channel+"&time="+time;
+	$("img[name='"+section+"img']").prop("src", img);
+	var min = Math.floor(time/60) ;
+	var sec = (time%60).toFixed(1) ;
+	if( sec<10 ) sec = "0"+sec ;
+	$("span#"+section+"time").text( ""+min+":"+sec );
+}
 		
 $(".slider").slider({
 min:0,
@@ -191,7 +266,26 @@ slide:function(event,ui){
 $("select.cam").change(function(){
 	var name = $(this).attr("name") ;
 	var cam = name.substr( 0, name.length - 3 );
-	$("#"+cam+"slider").slider("value",0);
+	
+	var s = $("select[name='"+cam+"cam']") ;
+	var len = 20 ;
+	var v = s.val();
+	for( var ch = 0 ; ch < tagchannels.length; ch++ ) {
+		if( v == tagchannels[ch].name ) {
+			len = tagchannels[ch].videolen ;
+			break;
+		}
+	}
+
+	var tagname = selectedtag ;
+	var channel = s.val();
+	var mp4 = "drivebyvideo.php?tag=" + tagname +"&channel="+channel;
+	$("video[name='"+ name +"']").attr("src", mp4);
+	$("video[name='"+ name +"']")[0].oncanplay=function(){
+		var video = $("video[name='"+ name +"']")[0] ;
+		video.oncanplay=null ;
+		video.currentTime = len/2 ;
+	}
 });
 
 $("button.step").on('click',function(){
@@ -208,10 +302,24 @@ $("button.step").on('click',function(){
 		sv+=1 ;
 	}
 	xslider.slider("value",sv);
+	
+
+	var step ;
+	if( dir=="stepback" ) {
+		step = -(1.0/30) ;
+	}
+	else {
+		step = (1.0/30) ;
+	}
+	
+	var videoname = s+"cam" ;
+	$("video[name='"+ videoname +"']")[0].pause();
+	$("video[name='"+ videoname +"']")[0].currentTime += step ;
+	
 });
 	
 $("select[name='vidcam']").change(function(){
-	var tagname = $("#tag_list").jqGrid('getCell', lasttagid, 0 );
+	var tagname = selectedtag ;
 	var channel = $("select[name='vidcam']").val();
 	var mp4 = "drivebyvideo.php?tag=" + tagname +"&channel="+channel;
 	$("#avivideo").attr("src", mp4);
@@ -235,9 +343,7 @@ $("#rcontainer").show('slow');
 	<li><a class="lmenu" href="reportview.php"><img onmouseout="this.src='res/side-reportview-logo-clear.png'" onmouseover="this.src='res/side-reportview-logo-fade.png'" src="res/side-reportview-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="videos.php"><img onmouseout="this.src='res/side-videos-logo-clear.png'" onmouseover="this.src='res/side-videos-logo-fade.png'" src="res/side-videos-logo-clear.png" /> </a></li>
 	<?php if( !empty($enable_livetrack) ){ ?><li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li><?php } ?>
-	<?php if( !empty($enable_driveby) ){ ?>
 	<li><img src="res/side-driveby-logo-green.png" /></li>
-	<?php } ?>
 	<li><a class="lmenu" href="settings.php"><img onmouseout="this.src='res/side-settings-logo-clear.png'" onmouseover="this.src='res/side-settings-logo-fade.png'" src="res/side-settings-logo-clear.png" /> </a></li>
 </ul>
 </div>
@@ -256,93 +362,99 @@ $("#rcontainer").show('slow');
 
 <div id="workarea" style="width:auto;">
 <p class="btset">
-<input href="dashboardmorning.php" name="btset" id="btmorning"
-<?php 
-	if( $title_type != 'Live ' ) {
-		echo ' checked="checked" ' ;
-	}
-?>
-type="radio" /><label for="btmorning"> Drive By Event Process </label> 
-<input href="dashboardlive.php"    name="btset" id="btlive"  
-<?php 
-	if( $title_type == 'Live ' ) {
-		echo ' checked="checked" ' ;
-	}
-?>
-type="radio" /><label for="btlive"> Drive By Event Review </label> 
+<input name="btset" href="driveby.php" id="btdriveby" type="radio" checked="checked" /><label for="btdriveby">Drive By Event Process</label>
+<input name="btset" href="drivebyreview.php" id="btdrivebyreview" type="radio"  /><label for="btdrivebyreview">Drive By Event Review</label> 
 </p>
 
 <!-- work area --->
+<table border="0" cellpadding="1" cellspacing="10" style="width:500px">
+<tr>
+<td>
 <div>
 <table id="tag_list"></table> 
 </div>
+</td>
+<td>
+<p>Plate of Violator:</p>
+<input name="plateofviolator" type="text" />
+<p>Notes:</p>
+<textarea name="notes" maxlength="100" style="margin: 2px; width: 180px; height: 80px;"></textarea>
+<button id="GenerateReport">Generate Report</button>
+<!-- <button style="width:180px" id="EditContacts">Edit Contacts</button> -->
+</td>
+</tr>
+</table>
 
-<table border="0" cellpadding="1" cellspacing="18" style="width:500px">
+<table border="0" cellpadding="2" cellspacing="4" style="width:500px">
 	<tbody>
 		<tr>
 			<td>
-			<p>LPR1:&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
+			<video id="lpr2cam" name="lpr1cam" width="360" src="" type="video/mp4" controls>Your browser does not support the video tag.</video>
+			<br/>
+			<div>LPR1:&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
 			<select class="cam" name="lpr1cam"></select>
 			&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
-			<button class="step" name="lpr1stepback"><span class="ui-icon ui-icon-seek-prev"></span> </button><button class="step" name="lpr1stepforw"> <span class="ui-icon ui-icon-seek-next"></span></button>
-			</p>
-			<img width="480" alt="" name="lpr1img" src="res/247logo.jpg" /><br/>
-			<div class="slider" id="lpr1slider" name="lpr1slider" style="max-width:480px"></div>
+			<button class="step" name="lpr1stepback"><span class="ui-icon ui-icon-seek-prev"></span></button><button class="step" name="lpr1stepforw"> <span class="ui-icon ui-icon-seek-next"></span></button>
+			</div>
 			</td>
 			
 			<td>
-			<p>LPR2:&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
+			<video id="lpr2cam" name="lpr2cam" width="360" src="" type="video/mp4" controls>Your browser does not support the video tag.</video>
+			<br/>
+			<div>LPR2:&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
 			<select class="cam"  name="lpr2cam"></select>
 			&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
 			<button class="step" name="lpr2stepback"><span class="ui-icon ui-icon-seek-prev"></button><button class="step" name="lpr2stepforw"><span class="ui-icon ui-icon-seek-next"></button>
-			</p>
-			<img width="480" alt="" name="lpr2img" src="res/247logo.jpg" /><br/>
-			<div class="slider" id="lpr2slider" name="lpr2slider" style="max-width:480px"></div>
+			</div>
 			</td>
-			
-			<td>
-			<p>Video:&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
-			<select name="vidcam"></select></p>
-			<video id="avivideo" width="480" height="360" src="" type="video/mp4" controls>Your browser does not support the video tag.</video>
+		
+			<td  rowspan="2">
+			<img id="mapimage" alt="MAP NOT AVAILABLE" src="" />
+			<div>MAP:&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;<label for="spinner">Zoom Level: </label><input id="zoomlevel" value="15"></div>
+			<p>Address: <span id="mapaddress"></span></p>
+			<p>Coordinate: <span id="coordinate"></span></p>
 			</td>			
 		</tr>
 		<tr>
 			<td>
-			<p>OV1:&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
+			<video id="ov1cam" name="ov1cam" width="360" src="" type="video/mp4" controls>Your browser does not support the video tag.</video>
+			<br/>
+			<div>OV1:&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
 			<select class="cam"  name="ov1cam"></select>
 			&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
 			<button class="step" name="ov1stepback"><span class="ui-icon ui-icon-seek-prev"></button><button class="step" name="ov1stepforw"><span class="ui-icon ui-icon-seek-next"></button>
-			</p>
-			<img width="480" alt="" name="ov1img" src="res/247logo.jpg" /><br/>
-			<div class="slider" id="ov1slider" name="ov1slider" style="max-width:480px"></div>
+			</div>
 			</td>
 			
 			<td>
-			<p>OV2:&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
+			<video id="ov2cam" name="ov2cam" width="360" src="" type="video/mp4" controls>Your browser does not support the video tag.</video>
+			<br/>
+			<div>OV2:&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
 			<select class="cam"  name="ov2cam"></select>
 			&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
 			<button class="step" name="ov2stepback"><span class="ui-icon ui-icon-seek-prev"></button><button class="step" name="ov2stepforw"><span class="ui-icon ui-icon-seek-next"></button>
-			</p>
-			<img width="480" alt="" name="ov2img" src="res/247logo.jpg" /><br/>
-			<div class="slider" id="ov2slider" name="ov2slider" style="max-width:480px"></div>
+			</div>
 			</td>
-			
-			<td>
-			<p>MAP:&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;<label for="spinner">Zoom Level: </label><input id="zoomlevel" value="16"></p>
-			<img id="mapimage" alt="MAP NOT AVAILABLE" src="" />
-			<p id="mapaddress"></p>
-			<p id="coordinate"></p>
-			</td>			
 		</tr>
 
 	</tbody>
 </table>
 
-
-<button id="DriveByGenerate">Generate Event</button>
+<!-- disabled video screen -->
+<div style="display:none">
+			<video id="avivideo" width="360" src="" type="video/mp4" controls>Your browser does not support the video tag.</video>
+			<div>Video Clip:&nbsp; &nbsp;&nbsp;&nbsp;
+			<select name="vidcam"></select></div>
+</div>			
 <p/>
 
 </div>
+
+<!-- Edit Contacts Dialog -->
+<div class="dialog" title="Contacts" id="dialog_editcontacts">
+
+</div>
+
 <!-- workarea --></div>
 <!-- mcontainer --></div>
 <div id="push"></div>
