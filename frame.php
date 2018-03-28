@@ -3,10 +3,9 @@
 <head>
 <title>Touch Down Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-	<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
-	<link href="http://code.jquery.com/ui/1.11.0/themes/base/jquery-ui.css" rel="stylesheet" /><script src="http://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script>
-	<script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script><script src="timepicker.js"></script>
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><?php require 'config.php' ; ?>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"https://code.jquery.com/ui/1.11.0/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?> <script src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type="text/javascript" src="https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0&s=1"></script><script src="picker.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" />
+	<?php require 'config.php' ; ?>
 	<script>
         // start up 
         
@@ -21,7 +20,7 @@
 	</style>
 </head>
 <body>
-<div id="header" style="text-align: right;"><span style="color:#006400;"><span style="font-size: 14px;"><span>Welcome </span></span></span><span style="color:#2F4F4F;"><span style="font-size: 14px;">user</span></span><span> &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://logout.php" style="background-color:#98bf21;text-decoration:none;text-align:center;">&nbsp; Logout &nbsp;</a></span><span style="color:#B22222;"><span style="font-size: 12px;"><span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TOUCH DOWN CENTER <?php echo $_SESSION['release']; ?></span></span></span></div>
+<div id="header" style="text-align: right;"><span style="color:#006400;"><span style="font-size: 14px;"><span>Welcome </span></span></span><span style="color:#2F4F4F;"><span style="font-size: 14px;">user</span></span><span> &nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="logout.php" style="background-color:#98bf21;text-decoration:none;text-align:center;">&nbsp; Logout &nbsp;</a></span><span style="color:#B22222;"><span style="font-size: 12px;"><span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; TOUCH DOWN CENTER <?php echo $_SESSION['release']; ?></span></span></span></div>
 
 <div id="lpanel"><img alt="index.php" src="res/side-TD-logo-clear.png" />
 	<p style="text-align: center;"><span style="font-size:11px;"><a href="http://www.247securityinc.com/" style="text-decoration:none;">247 Security Inc.</a></span></p>

@@ -22,12 +22,12 @@ else {
 	$resp['error'] = 0 ;
 }
 
-// Get channel info from camera, and busname ( playtime in $chctx['ve'] )
+// Get channel info from camera channel, and busname ( playtime in $chctx['ve'] )
 // channel context
 //   (input)
 //   hs: default file header size
 //   ve: previous video end time ( search time )
-function findvideo( &$chctx, $camera, $busname )
+function findvideo( &$chctx, $channel, $busname )
 {
 	global $conn ;
 
@@ -39,7 +39,7 @@ function findvideo( &$chctx, $camera, $busname )
 	}
 	
 	// find video ending after $chctx['ve']
-	$sql = "SELECT time_start, time_end, TIMESTAMPDIFF(SECOND, time_start, time_end ) AS length, path FROM videoclip WHERE vehicle_name = '$busname' AND channel = $camera AND time_end > '$searchtime' ORDER BY time_start" ;
+	$sql = "SELECT time_start, time_end, TIMESTAMPDIFF(SECOND, time_start, time_end ) AS length, path FROM videoclip WHERE vehicle_name = '$busname' AND channel = $channel AND time_end > '$searchtime' ORDER BY time_start" ;
 
 	if( $result = $conn->query($sql, MYSQLI_USE_RESULT) ) {
 		while( $row=$result->fetch_array() ) {
@@ -185,6 +185,19 @@ function videodata( &$chctx, &$data, &$vheaddata )
 	return $chctx['fl'] ;
 }
 
+// getChannel() - get real channel number from virtual camera number
+//   camera : camera number from request (start from 1)
+// return channel number 
+function getChannel( $camera )
+{
+	$camera -= 1 ;
+	@$channel_map = $_SESSION['playlist']['channel_map'] ;
+	if( isset($channel_map[$camera]) ) {
+		return $channel_map[$camera] ;
+	}
+	return $camera ;
+}
+
 if( !empty( $_REQUEST['serno'] ) ) {
 	$resp['serno'] = $_REQUEST['serno'];
 }
@@ -196,14 +209,13 @@ switch ( $_REQUEST['cmd'] ) {
         break;
 		
     case 'getdaylist':
-		$camera = $_REQUEST['camera'];
-		if( empty( $camera ) ) {
+		if( empty(  $_REQUEST['camera'] ) ) {
 			$resp['error'] = 103 ;
 			$resp['error_message'] = "No camera number specified!" ;
 		}
 		else {
 			$busname = $_SESSION['playlist']['info']['name'] ;
-			$channel = $camera - 1 ;
+			$channel = getChannel( $_REQUEST['camera'] );
 			$sql = "SELECT DISTINCT DATE(time_start) as `dat` from videoclip where vehicle_name = '$busname' AND channel = $channel" ;
 			if( !empty( $_REQUEST['begin'] ) ){
 				$resp['begin']=$_REQUEST['begin'] ;
@@ -229,14 +241,13 @@ switch ( $_REQUEST['cmd'] ) {
 		
     case 'getcliplist':
 	
-		$camera = $_REQUEST['camera'];
-		if( empty( $camera ) ) {
+		if( empty( $_REQUEST['camera'] ) ) {
 			$resp['error'] = 103 ;
 			$resp['error_message'] = "No camera number specified!" ;
 		}
 		else {
 			$busname = $_SESSION['playlist']['info']['name'] ;
-			$channel = $camera - 1 ;
+			$channel = getChannel( $_REQUEST['camera'] );
 			$sql = "SELECT time_start, TIMESTAMPDIFF(SECOND, time_start, time_end ) as length, path from videoclip where vehicle_name = '$busname' AND channel = $channel" ;
 			if( !empty( $_REQUEST['begin'] ) ){
 				$resp['begin']=$_REQUEST['begin'] ;
@@ -284,13 +295,14 @@ switch ( $_REQUEST['cmd'] ) {
         break;
 
     case 'getkeylist':
-		$camera = $_REQUEST['camera'];
-		if( empty( $camera ) ) {
+		if( empty( $_REQUEST['camera'] ) ) {
 			$resp['error'] = 103 ;
 			$resp['error_message'] = "No camera number specified!" ;
 		}
 		else {
 			$busname = $_SESSION['playlist']['info']['name'] ;
+			$resp['error'] = 105 ;
+			$resp['error_message'] = "Not implemented!" ;
 		}
         break;
 		
@@ -299,8 +311,7 @@ switch ( $_REQUEST['cmd'] ) {
 		$vdata = "" ;		// empty data
 		$vheaddata = "" ;	// empty file header
 		$vlength = 0 ;
-		$camera = $_REQUEST['camera'];
-		if( empty( $camera ) ) {
+		if( empty( $_REQUEST['camera'] ) ) {
 			$resp['error'] = 103 ;
 			$resp['error_message'] = "No camera number specified!" ;
 		}
@@ -320,10 +331,10 @@ switch ( $_REQUEST['cmd'] ) {
 			}
 
 			$busname = $_SESSION['playlist']['info']['name'] ;
-			$camera = $camera - 1 ;
+			$channel = getChannel( $_REQUEST['camera'] );
 			
 			// channel file
-			$chfile = session_save_path().'/sess_'.session_id().'-'.$camera ;
+			$chfile = session_save_path().'/sess_'.session_id().'-'.$channel ;
 			if( !empty( $_REQUEST['xid'] ) ) {
 				$chfile .= '-'.$_REQUEST['xid'] ;
 			}
@@ -356,7 +367,7 @@ switch ( $_REQUEST['cmd'] ) {
 				}
 				// continue form previous position
 				while( ($vlength = videodata( $chctx, $vdata, $vheaddata )) == 0 ) {
-					if( ! findvideo( $chctx, $camera, $busname ) ) {
+					if( ! findvideo( $chctx, $channel, $busname ) ) {
 						break;
 					}
 				}
@@ -377,7 +388,7 @@ switch ( $_REQUEST['cmd'] ) {
 				if( !empty($_REQUEST['size'] ) ) {
 					$chctx['rs'] = $_REQUEST['size'] ;
 				}
-				while( findvideo( $chctx, $camera, $busname )  ) {
+				while( findvideo( $chctx, $channel, $busname )  ) {
 					$vlength = videodata( $chctx, $vdata, $vheaddata );
 					if( $vlength > 0 ) {
 						break ;

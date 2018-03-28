@@ -17,19 +17,28 @@
 	header("Content-Type: application/json");
 	
 	if( $logon && !empty($webplay_support) ) {
-
+		$chmapname = 'chmap' ;
 		if( empty( $_REQUEST['index'] ) ) {
+			$channel = $_REQUEST['channel'] ;
+			// map channel number
+			if( !empty( $_REQUEST['vehicle_name'] ) ) {
+				$chmapname = 'chmap-' . $_REQUEST['vehicle_name'] ;
+				if( !empty($_SESSION[$chmapname] ) ) {
+					$channel = $_SESSION[$chmapname][$channel] ;
+				}
+			}
+			
 			if( empty( $_REQUEST['dir'] ) ) {
-				$sql = "SELECT * FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = '$_REQUEST[channel]' AND (  `time_start` <= '$_REQUEST[time_start]' OR `time_end` >= '$_REQUEST[time_start]' ) LIMIT 100" ;
+				$sql = "SELECT * FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = $channel AND (  `time_start` <= '$_REQUEST[time_start]' OR `time_end` >= '$_REQUEST[time_start]' ) LIMIT 100" ;
 			}
 			else if( $_REQUEST['dir'] == 1 ) {
-				$sql = "SELECT * FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = '$_REQUEST[channel]' AND `time_start` > '$_REQUEST[time_start]' ORDER BY `time_start` LIMIT 100 ;" ;
+				$sql = "SELECT * FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = $channel AND `time_start` > '$_REQUEST[time_start]' ORDER BY `time_start` LIMIT 100 ;" ;
 			}
 			else if( $_REQUEST['dir'] == 2 ) {
-				$sql = "SELECT * FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = '$_REQUEST[channel]' AND `time_start` < '$_REQUEST[time_start]' ORDER BY `time_start` DESC LIMIT 100 ;" ;
+				$sql = "SELECT * FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = $channel AND `time_start` < '$_REQUEST[time_start]' ORDER BY `time_start` DESC LIMIT 100 ;" ;
 			}
 			else if( $_REQUEST['dir'] == 3 ) {
-				$sql = "SELECT *, ABS( TIMESTAMPDIFF(SECOND, `time_start`, '$_REQUEST[time_start]') ) AS sdiff FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = '$_REQUEST[channel]' ORDER BY sdiff LIMIT 100 ;" ;
+				$sql = "SELECT *, ABS( TIMESTAMPDIFF(SECOND, `time_start`, '$_REQUEST[time_start]') ) AS sdiff FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = $channel ORDER BY sdiff LIMIT 100 ;" ;
 			}
 		}
 		else {
@@ -51,19 +60,35 @@
 			}
 			$result->free();
 		}
+		
 		// detect total channel number
 		if( $resp['res'] == 1 ) {
-			$sql = "SELECT MAX(channel) FROM videoclip WHERE `vehicle_name` = '$resp[vehicle_name]' ;" ;
-			if( $result = $conn->query($sql) ) {
-				if( $row=$result->fetch_array() ) {
-					$resp['camera_number'] =  $row[0] + 1 ;
-					$resp['camera_name'] = array();
-					for( $i = 0 ; $i<$resp['camera_number']; $i++ ) {
-						$resp['camera_name'][$i] = 'camera' . ($i+1) ;
+			if( empty($_SESSION[$chmapname] ) ) {
+				$sql = "SELECT DISTINCT channel FROM videoclip WHERE `vehicle_name` = '$resp[vehicle_name]' ORDER BY channel " ;
+				$chmap = array();
+				if( $result = $conn->query($sql) ) {
+					while( $row=$result->fetch_array() ) {
+						$chmap[] = $row[0];
 					}
+					$result->free();
+				}	
+				$_SESSION[$chmapname] = $chmap ;
+				session_write();
+			}
+			else {
+				$chmap = $_SESSION[$chmapname] ;
+			}
+			
+			// output camera names and replace channel to virtual number
+			$resp['camera_name'] = array();
+			// replace channel to virtual number
+			for( $i=0; $i < count($chmap); $i++ ) {
+				if( $resp['channel'] == $chmap[$i]  ) {
+					$resp['channel'] = $i ;
 				}
-				$result->free();
-			}			
+				$resp['camera_name'][]='camera-' . ($chmap[$i]+1) ;
+			}
+			$resp['camera_number'] =  count($resp['camera_name']) ;
 		}
 
 	}

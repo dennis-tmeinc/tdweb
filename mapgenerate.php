@@ -125,7 +125,7 @@
 				$query = $map_area ;
 			}
 			
-			$url =  "http://dev.virtualearth.net/REST/v1/Locations?q=".rawurlencode($query)."&o=json&maxResults=1&key=".$map_credentials ;
+			$url =  "https://dev.virtualearth.net/REST/v1/Locations?q=".rawurlencode($query)."&o=json&maxResults=1&key=".$map_credentials ;
 			@$maparea = file_get_contents( $url );
 			if( !empty($maparea) ) {
 				$maparea = json_decode($maparea, true) ;

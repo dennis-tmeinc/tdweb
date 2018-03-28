@@ -11,7 +11,7 @@ session_save('settingpage', $_SERVER['REQUEST_URI'] );
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta content="Touch Down Center by TME" name="description" />
 	<meta content="Dennis Chen @ TME, 2013-05-15" name="author" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.11.0/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script>if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"https://code.jquery.com/ui/1.11.0/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script>if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script src="https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script>
 	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none;}" ?>
 	</style>
@@ -965,12 +965,12 @@ bus2 : high tempterature
 	</caption>
 	<tbody>
 		<tr>
-			<td><input alt="UI Lightness" id="ui-lightness" src="http://jqueryui.com/resources/images/themeGallery/theme_90_ui_light.png" style="width: 90px; height: 80px;" title="UI lightness" type="image" /></td>
-			<td><input alt="UI darkness" id="ui-darkness" src="http://jqueryui.com/resources/images/themeGallery/theme_90_ui_dark.png" style="width: 90px; height: 80px;" title="UI darkness" type="image" /></td>
-			<td><input alt="Smoothness" id="smoothness" src="http://jqueryui.com/resources/images/themeGallery/theme_90_smoothness.png" style="width: 90px; height: 80px;" title="Smoothness" type="image" /></td>
-			<td><input alt="Start" id="start" src="http://jqueryui.com/resources/images/themeGallery/theme_90_start_menu.png" style="width: 90px; height: 80px;" title="Start" type="image" /></td>
-			<td><input alt="Redmond" id="redmond" src="http://jqueryui.com/resources/images/themeGallery/theme_90_windoze.png" style="width: 90px; height: 80px;" title="Redmond" type="image" /></td>
-			<td><input alt="Sunny" id="sunny" src="http://jqueryui.com/resources/images/themeGallery/theme_90_sunny.png" style="width: 90px; height: 80px;" title="Sunny" type="image" /></td>
+			<td><input alt="UI Lightness" id="ui-lightness" src="https://jqueryui.com/resources/images/themeGallery/theme_90_ui_light.png" style="width: 90px; height: 80px;" title="UI lightness" type="image" /></td>
+			<td><input alt="UI darkness" id="ui-darkness" src="https://jqueryui.com/resources/images/themeGallery/theme_90_ui_dark.png" style="width: 90px; height: 80px;" title="UI darkness" type="image" /></td>
+			<td><input alt="Smoothness" id="smoothness" src="https://jqueryui.com/resources/images/themeGallery/theme_90_smoothness.png" style="width: 90px; height: 80px;" title="Smoothness" type="image" /></td>
+			<td><input alt="Start" id="start" src="https://jqueryui.com/resources/images/themeGallery/theme_90_start_menu.png" style="width: 90px; height: 80px;" title="Start" type="image" /></td>
+			<td><input alt="Redmond" id="redmond" src="https://jqueryui.com/resources/images/themeGallery/theme_90_windoze.png" style="width: 90px; height: 80px;" title="Redmond" type="image" /></td>
+			<td><input alt="Sunny" id="sunny" src="https://jqueryui.com/resources/images/themeGallery/theme_90_sunny.png" style="width: 90px; height: 80px;" title="Sunny" type="image" /></td>
 		</tr>
 		<tr>
 			<td style="text-align: center;">UI lightness</td>
@@ -981,12 +981,12 @@ bus2 : high tempterature
 			<td style="text-align: center;">Sunny</td>
 		</tr>
 		<tr>
-			<td><input alt="Overcast" id="overcast" src="http://jqueryui.com/resources/images/themeGallery/theme_90_overcast.png" style="width: 90px; height: 80px;" title="Over cast" type="image" /></td>
-			<td><input alt="Le Frog" id="le-frog" src="http://jqueryui.com/resources/images/themeGallery/theme_90_le_frog.png" style="width: 90px; height: 80px;" title="Le Frog" type="image" /></td>
-			<td><input alt="Flick" id="flick" src="http://jqueryui.com/resources/images/themeGallery/theme_90_flick.png" style="width: 90px; height: 80px;" title="Flick" type="image" /></td>
-			<td><input alt="Pepper Grinder" id="pepper-grinder" src="http://jqueryui.com/resources/images/themeGallery/theme_90_pepper_grinder.png" style="width: 90px; height: 80px;" title="Pepper Grinder" type="image" /></td>
-			<td><input alt="Eggplant" id="eggplant" src="http://jqueryui.com/resources/images/themeGallery/theme_90_eggplant.png" style="width: 90px; height: 80px;" title="Eggplant" type="image" /></td>
-			<td><input alt="Dark Hive" id="dark-hive" src="http://jqueryui.com/resources/images/themeGallery/theme_90_dark_hive.png" style="width: 90px; height: 80px;" title="Dark Hive" type="image" /></td>
+			<td><input alt="Overcast" id="overcast" src="https://jqueryui.com/resources/images/themeGallery/theme_90_overcast.png" style="width: 90px; height: 80px;" title="Over cast" type="image" /></td>
+			<td><input alt="Le Frog" id="le-frog" src="https://jqueryui.com/resources/images/themeGallery/theme_90_le_frog.png" style="width: 90px; height: 80px;" title="Le Frog" type="image" /></td>
+			<td><input alt="Flick" id="flick" src="https://jqueryui.com/resources/images/themeGallery/theme_90_flick.png" style="width: 90px; height: 80px;" title="Flick" type="image" /></td>
+			<td><input alt="Pepper Grinder" id="pepper-grinder" src="https://jqueryui.com/resources/images/themeGallery/theme_90_pepper_grinder.png" style="width: 90px; height: 80px;" title="Pepper Grinder" type="image" /></td>
+			<td><input alt="Eggplant" id="eggplant" src="https://jqueryui.com/resources/images/themeGallery/theme_90_eggplant.png" style="width: 90px; height: 80px;" title="Eggplant" type="image" /></td>
+			<td><input alt="Dark Hive" id="dark-hive" src="https://jqueryui.com/resources/images/themeGallery/theme_90_dark_hive.png" style="width: 90px; height: 80px;" title="Dark Hive" type="image" /></td>
 		</tr>
 		<tr>
 			<td style="text-align: center;">Overcast</td>
@@ -997,12 +997,12 @@ bus2 : high tempterature
 			<td style="text-align: center;">Dark Hive</td>
 		</tr>
 		<tr>
-			<td><input alt="Cupertino" id="cupertino" src="http://jqueryui.com/resources/images/themeGallery/theme_90_cupertino.png" style="width: 90px; height: 80px;" title="Cupertino" type="image" /></td>
-			<td><input alt="South Street" id="south-street" src="http://jqueryui.com/resources/images/themeGallery/theme_90_south_street.png" style="width: 90px; height: 80px;" title="South Street" type="image" /></td>
-			<td><input alt="Blitzer" id="blitzer" src="http://jqueryui.com/resources/images/themeGallery/theme_90_blitzer.png" style="width: 90px; height: 80px;" title="Blitzer" type="image" /></td>
-			<td><input alt="Humanity" id="humanity" src="http://jqueryui.com/resources/images/themeGallery/theme_90_humanity.png" style="width: 90px; height: 80px;" title="Humanity" type="image" /></td>
-			<td><input alt="Hot Sneaks" id="hot-sneaks" src="http://jqueryui.com/resources/images/themeGallery/theme_90_hot_sneaks.png" style="width: 90px; height: 80px;" title="Hot Sneaks" type="image" /></td>
-			<td><input alt="Excite Bike" id="excite-bike" src="http://jqueryui.com/resources/images/themeGallery/theme_90_excite_bike.png" style="width: 90px; height: 80px;" title="Excite Bike" type="image" /></td>
+			<td><input alt="Cupertino" id="cupertino" src="https://jqueryui.com/resources/images/themeGallery/theme_90_cupertino.png" style="width: 90px; height: 80px;" title="Cupertino" type="image" /></td>
+			<td><input alt="South Street" id="south-street" src="https://jqueryui.com/resources/images/themeGallery/theme_90_south_street.png" style="width: 90px; height: 80px;" title="South Street" type="image" /></td>
+			<td><input alt="Blitzer" id="blitzer" src="https://jqueryui.com/resources/images/themeGallery/theme_90_blitzer.png" style="width: 90px; height: 80px;" title="Blitzer" type="image" /></td>
+			<td><input alt="Humanity" id="humanity" src="https://jqueryui.com/resources/images/themeGallery/theme_90_humanity.png" style="width: 90px; height: 80px;" title="Humanity" type="image" /></td>
+			<td><input alt="Hot Sneaks" id="hot-sneaks" src="https://jqueryui.com/resources/images/themeGallery/theme_90_hot_sneaks.png" style="width: 90px; height: 80px;" title="Hot Sneaks" type="image" /></td>
+			<td><input alt="Excite Bike" id="excite-bike" src="https://jqueryui.com/resources/images/themeGallery/theme_90_excite_bike.png" style="width: 90px; height: 80px;" title="Excite Bike" type="image" /></td>
 		</tr>
 		<tr>
 			<td style="text-align: center;">Cupertino</td>
@@ -1013,12 +1013,12 @@ bus2 : high tempterature
 			<td style="text-align: center;">Excite Bike</td>
 		</tr>
 		<tr>
-			<td><input alt="Vader" id="vader" src="http://jqueryui.com/resources/images/themeGallery/theme_90_black_matte.png" style="width: 90px; height: 80px;" title="Vader" type="image" /></td>
-			<td><input alt="Dot Luv" id="dot-luv" src="http://jqueryui.com/resources/images/themeGallery/theme_90_dot_luv.png" style="width: 90px; height: 80px;" title="Dot Luv" type="image" /></td>
-			<td><input alt="Mint Choc" id="mint-choc" src="http://jqueryui.com/resources/images/themeGallery/theme_90_mint_choco.png" style="width: 90px; height: 80px;" title="Mint Choc" type="image" /></td>
-			<td><input alt="Black Tie" id="black-tie" src="http://jqueryui.com/resources/images/themeGallery/theme_90_black_tie.png" style="width: 90px; height: 80px;" title="Black Tie" type="image" /></td>
-			<td><input alt="Trontastic" id="trontastic" src="http://jqueryui.com/resources/images/themeGallery/theme_90_trontastic.png" style="width: 90px; height: 80px;" title="Trontastic" type="image" /></td>
-			<td><input alt="Swanky Purse" id="swanky-purse" src="http://jqueryui.com/resources/images/themeGallery/theme_90_swanky_purse.png" style="width: 90px; height: 80px;" title="Swanky Purse" type="image" /></td>
+			<td><input alt="Vader" id="vader" src="https://jqueryui.com/resources/images/themeGallery/theme_90_black_matte.png" style="width: 90px; height: 80px;" title="Vader" type="image" /></td>
+			<td><input alt="Dot Luv" id="dot-luv" src="https://jqueryui.com/resources/images/themeGallery/theme_90_dot_luv.png" style="width: 90px; height: 80px;" title="Dot Luv" type="image" /></td>
+			<td><input alt="Mint Choc" id="mint-choc" src="https://jqueryui.com/resources/images/themeGallery/theme_90_mint_choco.png" style="width: 90px; height: 80px;" title="Mint Choc" type="image" /></td>
+			<td><input alt="Black Tie" id="black-tie" src="https://jqueryui.com/resources/images/themeGallery/theme_90_black_tie.png" style="width: 90px; height: 80px;" title="Black Tie" type="image" /></td>
+			<td><input alt="Trontastic" id="trontastic" src="https://jqueryui.com/resources/images/themeGallery/theme_90_trontastic.png" style="width: 90px; height: 80px;" title="Trontastic" type="image" /></td>
+			<td><input alt="Swanky Purse" id="swanky-purse" src="https://jqueryui.com/resources/images/themeGallery/theme_90_swanky_purse.png" style="width: 90px; height: 80px;" title="Swanky Purse" type="image" /></td>
 		</tr>
 		<tr>
 			<td style="text-align: center;">Vader</td>

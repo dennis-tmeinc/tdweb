@@ -11,8 +11,8 @@ session_save('settingpage', $_SERVER['REQUEST_URI'] );
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta content="Touch Down Center by TME" name="description" />
 	<meta content="Dennis Chen @ TME, 2013-05-15" name="author" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.11.0/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script>(window.jQuery || document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>'));</script>
-	<script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"https://code.jquery.com/ui/1.11.0/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script>(window.jQuery || document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>'));</script>
+	<script src="https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 
 	option.dirty {

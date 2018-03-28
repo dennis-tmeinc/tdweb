@@ -14,7 +14,7 @@ header( 'Location: logon.php' );
 	<meta name="description" content="Touch Down Center by TME V2.5">
 	<meta name="author" content="Dennis Chen @ TME, 2013-06-15">	
 	<link rel="shortcut icon" href="/favicon.ico" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.11.0/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script>(window.jQuery || document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>'));</script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"https://code.jquery.com/ui/1.11.0/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script>(window.jQuery || document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>'));</script>
 	<script src="md5min.js"></script>
 	<style> body { display:none; } </style>
 	<script>

@@ -24,26 +24,28 @@ function vfile_remote()
 	}
 }
 
-function vfile_http_get( $data )
-{
-    global $remote_fileserver ;
-
-    return file_get_contents( $remote_fileserver."?".http_build_query($data));
-}
-
 function vfile_http_post( $data )
 {
     global $remote_fileserver ;
+	return file_get_contents( $remote_fileserver, false, stream_context_create(array(
+		'http' =>
+			array(
+				'method'  => 'POST',
+				'header'  => 'Content-type: application/x-www-form-urlencoded',
+				'content' => http_build_query($data)
+			),
+		'ssl' =>
+			array(
+				'verify_peer_name' => false,
+				'allow_self_signed' => true
+			)
+    )));
+}
 
-    $opts = array('http' =>
-        array(
-            'method'  => 'POST',
-            'header'  => 'Content-type: application/x-www-form-urlencoded',
-            'content' => http_build_query($data)
-        )
-    );
-
-    return file_get_contents( $remote_fileserver, false, stream_context_create($opts));
+function vfile_http_get( $data )
+{
+    global $remote_fileserver ;
+    return file_get_contents( $remote_fileserver."?".http_build_query($data) );
 }
 
 function vfile_readhttp( $url )
@@ -199,7 +201,7 @@ function vfile_realpath( $filename )
 {
 	if( vfile_remote() ) {
 		// remote file
-		$j = vfile_http_get( array( 
+		$j = vfile_http_post( array( 
 			'c' => "i",
 			'n' => $filename 
 		));
@@ -262,7 +264,7 @@ function vfile_get_contents( $filename )
 {
 	if( vfile_remote() ) {
 		// remote file
-		return vfile_http_get( array( 
+		return vfile_http_post( array( 
 			'c' => "r",
 			'n' => $filename
 		));

@@ -13,16 +13,16 @@
 	if( $logon ) {
 
 		if( isset( $_REQUEST['q'] ) ) {
-			$url =  "http://dev.virtualearth.net/REST/v1/Locations?q=".rawurlencode($_REQUEST['q'])."&o=json&maxResults=1&key=".$map_credentials ;
+			$url =  "https://dev.virtualearth.net/REST/v1/Locations?q=".rawurlencode($_REQUEST['q'])."&o=json&maxResults=1&key=".$map_credentials ;
 		}
 		else if( isset( $_REQUEST['p'] ) ){		// points
-			$url =  "http://dev.virtualearth.net/REST/v1/Locations/$_REQUEST[p]?o=json&maxResults=1&key=$map_credentials" ;
+			$url =  "https://dev.virtualearth.net/REST/v1/Locations/$_REQUEST[p]?o=json&maxResults=1&key=$map_credentials" ;
 		}
 		else if( !empty($map_area) ) {
-			$url =  "http://dev.virtualearth.net/REST/v1/Locations?q=".rawurlencode($map_area)."&o=json&maxResults=1&key=".$map_credentials ;
+			$url =  "https://dev.virtualearth.net/REST/v1/Locations?q=".rawurlencode($map_area)."&o=json&maxResults=1&key=".$map_credentials ;
 		}
 		else {
-			$url =  "http://dev.virtualearth.net/REST/v1/Locations?q=USA&o=json&maxResults=1&key=".$map_credentials ;
+			$url =  "https://dev.virtualearth.net/REST/v1/Locations?q=USA&o=json&maxResults=1&key=".$map_credentials ;
 		}
 		
 		@$maparea = file_get_contents( $url );

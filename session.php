@@ -44,13 +44,6 @@ if( !empty( $_SESSION['clientid'] )) {
 // setup time zone
 date_default_timezone_set($timezone) ;	
 
-if(	$database_persistent ) {
-	$smart_server = "p:".$smart_host ;
-}
-else {
-	$smart_server = $smart_host ;
-}
-
 /* page ui */
 if( !empty($_COOKIE['ui']))
 	$default_ui_theme = $_COOKIE['ui'] ;	
@@ -74,27 +67,43 @@ if( empty($_SESSION['user']) ||
 else {
 	if( empty( $noupdatetime ) )
 		$_SESSION['xtime']=$request_time ;
+	$logon=true ;
+}
 
+session_write_close();
+
+if($logon) {
+	if(	$database_persistent ) {
+		$smart_server = "p:".$smart_host ;
+	}
+	else {
+		$smart_server = $smart_host ;
+	}
 	// move sql connection here, in case for general session's settings (etc. timezone)
 	if( empty( $nodb ) ) {
-		@$conn = new mysqli("p:".$smart_host, $smart_user, $smart_password, $smart_database );
+		@$conn = new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 	}
-	
-	$logon=true ;
 }
 
 // save $_SESSION variable after session_write_close()
 function session_write()
 {
-	if( session_status() !== PHP_SESSION_ACTIVE ) {
-		$savesess = $_SESSION ;
-		session_start();
-		$_SESSION = $savesess ;
-	}
-	session_write_close();
 	if( empty($_SESSION) ) {
 		// remove this session file
 		@unlink( session_save_path().'/sess_'.session_id() );
+	}
+	else {
+		//	file_put_contents( session_save_path().'/sess_'.session_id(), session_encode() );	
+		$fsess = fopen( session_save_path().'/sess_'.session_id(), 'c+' );
+		if( $fsess ) {
+			flock( $fsess, LOCK_EX ) ;		// exclusive lock
+			$sess_str = session_encode() ;
+			fwrite( $fsess, $sess_str );
+			ftruncate( $fsess, ftell($fsess));
+			fflush( $fsess ) ;              // flush before releasing the lock
+			flock( $fsess, LOCK_UN ) ;		// unlock ;
+			fclose( $fsess );
+		}
 	}
 }
 
@@ -109,8 +118,6 @@ function session_save( $vname, $value )
 	}
 	session_write();
 }
-
-session_write();
 
 return ;
 ?>

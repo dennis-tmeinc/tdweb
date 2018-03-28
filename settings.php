@@ -18,8 +18,8 @@ if( $logon ) {
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">
 	<meta name="author" content="Dennis Chen @ TME, 2013-05-15">	
-	<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
-	<link href="http://code.jquery.com/ui/1.11.0/themes/base/jquery-ui.css" rel="stylesheet" /><script src="http://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
+	<script src="https://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<link href="https://code.jquery.com/ui/1.11.0/themes/base/jquery-ui.css" rel="stylesheet" /><script src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
 	<link href="tdclayout.css" rel="stylesheet" type="text/css" />
 </head>
 <body><div id="container">

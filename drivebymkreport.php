@@ -143,8 +143,8 @@
 		
 		// map image
 		$pdf->Cell( 0, $h, "MAP:", 0, 1 );
-		$mapurl = "http://dev.virtualearth.net/REST/v1/Imagery/Map/Road/".$event['Lat'].','.$event['Lon']."/".$_REQUEST['mapzoom']."?pp=".$event['Lat'].','.$event['Lon'].";0&ms=720,200&key=" . $map_credentials ;
-		$pdf->Image($mapurl, null, null, 0, 0, "JPEG", "http://www.bing.com/maps/?where=".urlencode($event['Lat'].','.$event['Lon']) );
+		$mapurl = "https://dev.virtualearth.net/REST/v1/Imagery/Map/Road/".$event['Lat'].','.$event['Lon']."/".$_REQUEST['mapzoom']."?pp=".$event['Lat'].','.$event['Lon'].";0&ms=720,200&key=" . $map_credentials ;
+		$pdf->Image($mapurl, null, null, 0, 0, "JPEG", "https://www.bing.com/maps/?where=".urlencode($event['Lat'].','.$event['Lon']) );
 		$pdf->Ln(3) ;
 
 		$pdf->Cell( 0, $h, "Active Sensors: ".$event['Sensor_Status'], 0, 1 );
@@ -159,7 +159,7 @@
 		$pdf->Cell( 0, $h, "Coordinate: ".$event['Lat'].','.$event['Lon'], 0, 1 );
 		
 		// retrieve address
-		$addrurl = "http://dev.virtualearth.net/REST/v1/Locations/".$event['Lat'].','.$event['Lon']."?o=json&key=".$map_credentials ;
+		$addrurl = "https://dev.virtualearth.net/REST/v1/Locations/".$event['Lat'].','.$event['Lon']."?o=json&key=".$map_credentials ;
 		$addr = file_get_contents( $addrurl );
 		$addr = json_decode( $addr, true );
 		if( !empty(  $addr['resourceSets'][0]['resources'][0]['address']['formattedAddress'] ) ) {

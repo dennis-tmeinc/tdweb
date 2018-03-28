@@ -37,9 +37,9 @@ function createsession()
 				'clientid' => $_REQUEST['clientid'],
 				'transfinderTag' => 'transfinder' 
 			);
-			session_write();
 			$res[session_name()] = session_id ();
 			$res['status'] = "OK" ;
+			session_write_close();
 		}
 		else {
 			$res['errormsg'] = "Client $_REQUEST[clientid] not existed!" ;
@@ -483,7 +483,7 @@ switch ( $_REQUEST['cmd'] ) {
 		//   touchdownid : session id
 		//   vehiclename : vehicle name
 		//   playtime : play back time
-		//   dpl :  (optional) 1 = outpout dpl header, omit or 0 = output json context
+		//   dpl :  (optional) 1 = outpout dpl header, omit or 0 = output json context only
 		if( check_tfsession() ) {
 			$result = playbackcontext( null, $_REQUEST['vehiclename'], $_REQUEST['playtime'] );
 			if( empty($result) ) {
