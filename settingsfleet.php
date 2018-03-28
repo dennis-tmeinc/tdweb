@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head><?php 
-require 'config.php' ; 
+
 require 'session.php'; 
 	
 // remember recent page

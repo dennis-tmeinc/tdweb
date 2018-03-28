@@ -1,6 +1,11 @@
 Touch Down Center 
 Release Notes
 
+
+V3.7.6 (2014-01-23) (by Dennis)
+	Change Live Track igintion event icon, use sensor icon for ignition on event, use paring icon for ignition off event.
+
+
 V3.7.5 (2013-12-19)
 	Fix report view export failed on Firefox browser
 	Add live track command 22 (event) icon display

@@ -169,6 +169,19 @@ for( var i=0; i<6; i++ ) {
   vltparam.vltpage += hexch.charAt(Math.random()*36);
 }
 
+
+// saved sensor names, to be used by sensor pop-up balloon
+var vltsensor = [] ;
+function load_sensors()
+{
+	$.getJSON("vltsensorload.php", function(resp){
+		if( resp.res==1 ) {
+			vltsensor = resp.vltsensor ; 
+		}
+	});
+}
+load_sensors();
+
 // avlp : position message, clean: clean same type of pushpin
 function showpin( avlp, id, iconimg, clean ) 
 {
@@ -249,8 +262,26 @@ function showpin( avlp, id, iconimg, clean )
 			}
 
 			if( avlp.di && avlp.mask ) {
-				desc += "<br/>IO: "+avlp.di+"/"+avlp.mask;
-				lines ++ ;
+				var mask = parseInt( avlp.mask, 16 );
+				var bm = 1 ;
+				var idx = 0 ;
+				for( idx = 0 ; idx<32; idx++ ) {
+					if( bm&mask ) break;
+					bm <<= 1 ;
+				}
+				idx *= 2 ;
+				var v = bm & parseInt( avlp.di, 16 ) ;
+				if( v ) {
+					idx += 1 ;
+				}
+				if( idx < vltsensor.length ) {
+					var sname = vltsensor[idx].sensor_name ;
+					if( sname.length <= 0 ) {
+						sname = vltsensor[i].sensor_index ;
+					}
+					desc += "<br/>Sensor: "+sname;
+					lines ++ ;
+				}
 			}
 			
 			if( avlp.temp ) {
@@ -340,9 +371,9 @@ function tdwebc_message( tdwebc )
 				showpin( avlp, "EV__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_mevent.png", false );
 			}		
 		}	
-		else if( cmd == "33" ) {      // AVL_SYSTEMP_EVENT(33)
+		else if( cmd == "33" ) {      // AVL_SYSTEMP_EVENT(33) , icon missing, use sensor icon instead
 			if( tdwebc[i].source.dvrs.dvr ) {
-				showpin( avlp, "TM__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_mevent.png", false );
+				showpin( avlp, "TM__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_sensor.png", false );
 			}		
 		}		
 		else if( cmd == "34" ) {      // AVL_IDLE_EVENT(34)
@@ -350,12 +381,15 @@ function tdwebc_message( tdwebc )
 				showpin( avlp, "ID__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_idle.png", true );
 			}			
 		}		
-		else if( cmd == "39" ) { 	// AVL_IGNITION_EVENT(39)
-			if( tdwebc[i].source.dvrs.dvr ) {
+		else if( cmd == "39" ) { 	// AVL_IGNITION_EVENT(39), icon missing, use sensor icon and park icon instead
+			if( avlp.ign ) {
 				showpin( avlp, "IG__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_sensor.png", false );
+			}
+			else {
+				showpin( avlp, "IG__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_park.png", false );
 			}		
 		}
-		else if( cmd == "43" ) { 	// PASSBY(43)
+		else if( cmd == "43" ) { 	// DRIVEBY(43)
 			if( tdwebc[i].source.dvrs.dvr ) {
 				showpin( avlp, "PB__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_driveby.png", true );
 			}		
@@ -363,7 +397,7 @@ function tdwebc_message( tdwebc )
 		else if( cmd == "31" ) {      // AVL_GFORCE_EVENT(31)
 			if( tdwebc[i].source.dvrs.dvr ) {
 				showpin( avlp, "PB__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_gforce.png", false );
-			}			
+			}
 		}
 		else if( cmd == "38" ) {      // AAVL_GEOFENCE_RECT_EVENT(38)
 			if( tdwebc[i].source.dvrs.dvr ) {
@@ -455,6 +489,7 @@ $( ".tdcdialog#dialog_sensorconfig" ).dialog({
 	open: function( event, ui ) {
 		$.getJSON("vltsensorload.php", function(resp){
 			if( resp.res==1 ) {
+				vltsensor = resp.vltsensor ; 
 				var tb = "";
 				for( var i=0 ; i<resp.vltsensor.length ; i++ ) {
 					tb += '<tr><td>'+resp.vltsensor[i].sensor_index+'</td><td><input name="' + resp.vltsensor[i].sensor_index + '" value="' + resp.vltsensor[i].sensor_name + '" type="text"/></td></tr>' ;
@@ -467,7 +502,8 @@ $( ".tdcdialog#dialog_sensorconfig" ).dialog({
 		"OK": function() {
 			$.getJSON("vltsensorsave.php", $( "form[name='sensorconfig']" ).serializeArray(), function(resp){
 				if( resp.res==1 ) {
-					$( ".tdcdialog#dialog_sensorconfig" ).dialog( "close" );				
+					$( ".tdcdialog#dialog_sensorconfig" ).dialog( "close" );			
+					load_sensors();					
 				}
 				else {
 					$( ".tdcdialog#dialog_sensorconfig" ).dialog( "close" );				
@@ -1172,16 +1208,16 @@ $('#rcontainer').show('slow', trigger_resize );
 <select multiple name="vltvehicle" size="10" style="min-width:13em;margin-left:10px;margin-right:10px"  > 
 </select>
 
-<div style="text-align: center;"><button style="min-width:13em;" name="getcurrentpos">Get Current Pos</button></div>
-<div style="text-align: center;"><button style="min-width:13em;" name="clearallicons">Clear All Icons</button></div>
+<div style="text-align: center;"><button style="min-width:14em;" name="getcurrentpos">Get Current Pos</button></div>
+<div style="text-align: center;"><button style="min-width:14em;" name="clearallicons">Clear All Icons</button></div>
 <?php if( $_SESSION['user_type'] == "admin" ) {	?>
-<div style="text-align: center;"><button style="min-width:13em;" name="sensorconfig">Sensor Config...</button></div>
+<div style="text-align: center;"><button style="min-width:14em;" name="sensorconfig">Sensor Config...</button></div>
 <?php } ?>
-<div style="text-align: center;"><button style="min-width:13em;" name="reportconfiguration">Report Configuration...</button></div>
-<div style="text-align: center;"><button style="min-width:13em;" name="startautoreort">Start Auto Report</button></div>
-<div style="text-align: center;"><button style="min-width:13em;" name="stopautoreport">Stop Auto Report</button></div>
-<div style="text-align: center;"><button style="min-width:13em;" name="liveview">Live View</button></div>
-<div style="text-align: center;"><button style="min-width:13em;" name="setupdvr">Setup DVR</button></div>
+<div style="text-align: center;"><button style="min-width:14em;" name="reportconfiguration">Report Configuration...</button></div>
+<div style="text-align: center;"><button style="min-width:14em;" name="startautoreort">Start Auto Report</button></div>
+<div style="text-align: center;"><button style="min-width:14em;" name="stopautoreport">Stop Auto Report</button></div>
+<div style="text-align: center;"><button style="min-width:14em;" name="liveview">Live View</button></div>
+<div style="text-align: center;"><button style="min-width:14em;" name="setupdvr">Setup DVR</button></div>
 
 <form id="liveviewform" action="vltliveview.php" target="_blank" >
 <input type="hidden" name="dvrid"/>

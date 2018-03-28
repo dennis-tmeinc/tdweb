@@ -678,7 +678,7 @@ $("form#emailsetup input[name='tmSendDaily']").timepicker({
 // user theme
 $('#setting-ui input[type="image"]').click(function(){
 	// setcookie
-	setcookie("ui",$(this).attr("id"),10);
+	setcookie("ui",$(this).attr("id"),0);
 	location.reload();
 });
 
