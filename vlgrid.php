@@ -25,7 +25,7 @@
 				}
 			}
 		
-			if( $max_map_events<100000 || $max_map_events>2000000 ) {
+			if( empty($max_map_events) || $max_map_events<100000 || $max_map_events>2000000 ) {
 				$max_map_events=500000 ;
 			}
 			

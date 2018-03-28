@@ -860,7 +860,7 @@ function geofence_select( area )
 			var locrect = Microsoft.Maps.LocationRect.fromLocations( loc0, loc2 );
 			loccenter = locrect.center ;
 			pins[4].setLocation( loccenter );
-	<?php } else { ?>				
+	<?php } else { ?>
 			var loc = pins[ipin].getLocation();
 			var loccenter = pins[4].getLocation();
 			var h = 2*(loccenter.latitude - loc.latitude);

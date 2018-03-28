@@ -49,33 +49,30 @@
 	$session_timeout=900 ;	
 	$session_path= "session";
 	$session_idname = "touchdownid";
-	// $remote_fileserver = "http://209.167.16.254/tdc/fileservice.php" ;
 
-	// avaialbe ui: ui-lightness ui-darkness smoothness start redmond sunny 
-	//              overcast le-frog flick pepper-grinder eggplant dark-hive
-	//              cupertino south-street blitzer humanity hot-sneaks excite-bike 
-	//              vader dot-luv mint-choc black-tie trontastic swanky-purse
-	$default_ui_theme = "start" ;
-	
-	// web video playback
-	$webplay_support = 1 ;
-	
 	// Maximum videos cache size in Mega Bytes
-	$webplay_cache_size = 10000 ;
+	$webplay_cache_size = 20000 ;
 	
 	// enable or disable live track
 	$enable_livetrack = 1 ;
 	
 	// new td live support
 	$liveplay_protocol = "relay" ;
-	$liveplay_host = "" ;			// this is td live relay server's public ip address
+	$liveplay_host = "200.200.200.200" ;		// this is td live relay server's public ip address
 					
 	// live track server (AVL Service)
 	$avlservice = "http://localhost:40520/avlservice" ;
 	$avlcbserver = "http://localhost:80" ;
 	$avlcbapp = "vltevent.php" ;
 	
-	$support_videoviacellular = true ;
+	$enable_videos = true ;
+	// web video playback
+	$webplay_support = 1 ;
+	$use_conv266 = true ;
+	$conv266_text = false ;
 
-	return ;
-?>	
+	// don't show video uploaded number on dashboard
+	$show_vehicles_uploaded = false;
+
+	$support_videoviacellular = false ;
+?>

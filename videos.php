@@ -241,18 +241,17 @@ function webplay_play()
 {
 	var clipinfo = $( "video#webplay" ).data("clipinfo") ;
 	$( "video#webplay" )[0].onended = function(){
-		if( $( "video#webplay" )[0].currentTime > 2 ) {
-			webplay_playnext();
-		}
+		webplay_playnext();
 	}
+	$( "video#webplay" )[0].onerror = function(){
+		webplay_playnext();
+	}	
+	$( "video#webplay" )[0].oncanplay = webplay_preload ;
 	webplay_playtime = -1 ;
 	webplay_settitle();
 	$( "video#webplay" )[0].ontimeupdate = webplay_settitle ;
 	$( "video#webplay" )[0].src = clipinfo.mp4  ;
 	$( "video#webplay" )[0].play();
-	
-	webplay_preload();
-//	$( "video#webplay" )[0].load();
 }
 
 var webplay_1open=0 ;
@@ -510,7 +509,7 @@ Vehicles &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="selectallvehicle">Select All<
 </div>
 <!-- Video Clip Preview Dialog -->
 <div class="tdcdialog" id="dialog_webplay">
-<video id="webplay" width="480" height="360" src="" type="video/mp4" controls autoplay >
+<video id="webplay" width="480" height="360" src="" type="video/mp4" poster="res/vidloading.gif" controls autoplay >
 Your browser does not support the video tag.
 </video> 
 <hr />

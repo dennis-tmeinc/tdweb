@@ -13,17 +13,19 @@
 	
 	if( $logon ) {
 
-		$reqdate = new DateTime() ;
+		if( empty($_REQUEST['date']) ) {
+			$reqdate = new DateTime() ;
+		}
+		else {
+			$reqdate = new DateTime($_REQUEST['date']) ;
+		}
+		
 		if( strstr($_SESSION['dashboardpage'], 'dashboardmorning') ) {		// dashboard morning?
 			$reqdate->sub(new DateInterval('P1D'));
 		}
 
 		// dashboard options
-		if( $conf = vfile_open( $dashboard_conf ) ) {
-			$confstr = vfile_read( $conf, 32000 ) ;
-			$dashboard_option = parse_ini_string( $confstr );
-			vfile_close( $conf );
-		}
+		$dashboard_option = parse_ini_string( vfile_get_contents( $dashboard_conf  ) );
 		
 		// default value
 		if( empty( $dashboard_option ) ) $dashboard_option =  array(
@@ -61,6 +63,7 @@
 		
 		// vehicles list
 		$vcount = count($v_in_service) ;
+		$resp['count'] = $vcount ;
 		
 		for( $i=0; $i<$vcount; $i++ ) {
 		
@@ -97,7 +100,7 @@
 			$m = floor($v_duration/60)%60 ;
 			if( $m < 10 ) $m='0'.$m ;
 			$s = $v_duration%60 ;
-			if( $s < 10 ) $s='0'.$s ;			
+			if( $s < 10 ) $s='0'.$s ;
 			$vehicle[2] = "$h:$m:$s" ;
 		   
 			// M.Events
@@ -110,7 +113,7 @@
 			// }
 			
 			// M.Events (use panic alerts from td_alert instead)
-			$sql = "SELECT count(*) FROM `td_alert` WHERE  dvr_name = = '$v_in_service[$i]' AND alert_code = '11' AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
+			$sql = "SELECT count(*) FROM `td_alert` WHERE  dvr_name = '$v_in_service[$i]' AND alert_code = '11' AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
 			if( $result = $conn->query($sql) ) {
 				if( $row = $result->fetch_array(MYSQLI_NUM) ) {
 					$vehicle[4]=$row[0];

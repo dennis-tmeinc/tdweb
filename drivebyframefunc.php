@@ -125,7 +125,13 @@
 	{
 		global $cache_dir ;
 		
-		$imgfile = "$cache_dir\\frame".md5($videofile.$pos).".jpg" ;
+		if( vfile_remote() ) {
+			$imgfile = "videocache\\frame".md5($videofile.$pos).".jpg" ;
+		}
+		else {
+			$imgfile = "$cache_dir\\frame".md5($videofile.$pos).".jpg" ;
+		}
+		
 		$pos += 0.03 ;
 		$cmdline = "bin\\ffmpeg.exe -ss $pos -i $videofile -frames 1 $imgfile" ;
 

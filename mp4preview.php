@@ -12,14 +12,25 @@ $noredir=1 ;
 include_once "session.php" ;
 include_once 'vfile.php' ;
 
-header("Content-Type: video/mp4");	
-
 if( $logon ) {
 	@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+	
+	if( !empty( $_REQUEST['preloadsize'] ) )
+		$mp4preloadsize = (int)$_REQUEST['preloadsize'] ;
 
 	include 'mp4previewfunc.php' ;
-
-	outputvideo($_REQUEST[index]);
+	
+	if( empty( $_REQUEST['preload'] ) ) {
+		mp4cache_output($_REQUEST[index]);
+	}
+	else {
+		$cachefile = mp4cache_load($_REQUEST[index]); 
+		if( !empty( $cachefile ) && vfile_exists( $cachefile ) ) {
+			$resp['res'] = 1 ;
+		}
+		header("Content-Type: application/json");
+		echo json_encode($resp);
+	}
 }
 
 exit ;

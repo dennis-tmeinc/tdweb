@@ -22,11 +22,7 @@ $dashboard_option = array(
 );
 
 // dashboard options
-if( $conf = vfile_open( $dashboard_conf ) ) {
-	$confstr = vfile_read( $conf, 32000 ) ;
-	$dashboard_option = parse_ini_string( $confstr );
-	vfile_close( $conf );
-}
+$dashboard_option = parse_ini_string( vfile_get_contents( $dashboard_conf  ) );
 		
 if( empty($dashboard_option['nAverageDuration']) || $dashboard_option['nAverageDuration']<2) 
 	$dashboard_option['nAverageDuration']=60 ;

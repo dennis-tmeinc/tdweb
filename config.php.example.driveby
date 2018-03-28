@@ -33,12 +33,6 @@
 	// exact time range (seconds)
 	$exact_time_range=60;
 
-	// minimum travelling interval time.
-	// $min_traveltime = 30 ;
-
-	// zone moving mode, "cross" or "center"
-	// $zone_mode = "cross" ;
-
 	// bing map
 	$map_credentials="AnC6aHa2J8jWAluq14HQu6HDH1cDshGtPEPrYiotanIf-q6ZdoSiVGd96wzuDutw" ;
 
@@ -49,20 +43,7 @@
 	$session_timeout=900 ;
 	$session_path= "session";
 	$session_idname = "touchdownid";
-	//$remote_fileserver = "http://209.167.16.254/tdc/fileservice.php" ;
 
-	// avaialbe ui: ui-lightness ui-darkness smoothness start redmond sunny 
-	//              overcast le-frog flick pepper-grinder eggplant dark-hive
-	//              cupertino south-street blitzer humanity hot-sneaks excite-bike 
-	//              vader dot-luv mint-choc black-tie trontastic swanky-purse
-	$default_ui_theme = "start" ;
-	
-	// web video playback
-	$webplay_support = 1 ;
-	
-	// Maximum videos cache size in Mega Bytes
-	$webplay_cache_size = 10000 ;
-	
 	// enable or disable live track
 	$enable_livetrack = 1 ;
 	
@@ -75,6 +56,15 @@
 	$avlcbserver = "http://localhost:80" ;
 	$avlcbapp = "vltevent.php" ;
 	
+	$enable_videos = true ;
+	// web video playback
+	$webplay_support = 1 ;
+	$use_conv266 = true ;
+	$conv266_text = false ;
+	
+	// Maximum videos cache size in Mega Bytes
+	$webplay_cache_size = 10000 ;
+	
 	// multi company support
 	$support_multicompany = 0 ;
 	// script/excutable to create/remove com
@@ -84,7 +74,10 @@
 	// drive by demo
 	$support_driveby = 1 ;
 	$driveby_eventdir = "\\TouchDownCenter\\drivebydemo1" ;
+	
 	$support_videoviacellular = true ;
+	
+	$disable_mss = false ;
 	
 	return ;
 ?>	

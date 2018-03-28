@@ -63,7 +63,7 @@ if( !$active || $xsn == 0 ) {
 	$go = file_get_contents("http://localhost${reqdir}/liverun.php?phone=${phone}&camera=${camera}", false, NULL, 0, 1) ;
 }
 
-ob_end_clean();
+@ob_end_clean();
 ob_start();
 
 $starttime=time();

@@ -33,12 +33,6 @@
 	// exact time range (seconds)
 	$exact_time_range=60;
 
-	// minimum travelling interval time.
-	// $min_traveltime = 30 ;
-
-	// zone moving mode, "cross" or "center"
-	// $zone_mode = "cross" ;
-
 	// bing map
 	$map_credentials="AnC6aHa2J8jWAluq14HQu6HDH1cDshGtPEPrYiotanIf-q6ZdoSiVGd96wzuDutw" ;
 
@@ -50,14 +44,11 @@
 	$session_path= "session";
 	$session_idname = "touchdownid";
 
-	// avaialbe ui: ui-lightness ui-darkness smoothness start redmond sunny 
-	//              overcast le-frog flick pepper-grinder eggplant dark-hive
-	//              cupertino south-street blitzer humanity hot-sneaks excite-bike 
-	//              vader dot-luv mint-choc black-tie trontastic swanky-purse
-	$default_ui_theme = "start" ;
-	
+	$enable_videos = true ;
 	// web video playback
 	$webplay_support = 1 ;
+	$use_conv266 = true ;
+	$conv266_text = false ;
 	
 	// Maximum videos cache size in Mega Bytes
 	$webplay_cache_size = 10000 ;
@@ -80,5 +71,7 @@
 	$td_new    = "C:\\SmartSvrApps\\tdnew.exe create " ;
 	$td_clean  = "C:\\SmartSvrApps\\tdnew.exe remove " ;	
 	
+	$disable_mss = false ;
+		
 	return ;
 ?>	

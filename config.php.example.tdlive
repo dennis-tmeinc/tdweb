@@ -50,14 +50,11 @@
 	$session_path= "session";
 	$session_idname = "touchdownid";
 
-	// avaialbe ui: ui-lightness ui-darkness smoothness start redmond sunny 
-	//              overcast le-frog flick pepper-grinder eggplant dark-hive
-	//              cupertino south-street blitzer humanity hot-sneaks excite-bike 
-	//              vader dot-luv mint-choc black-tie trontastic swanky-purse
-	$default_ui_theme = "start" ;
-	
+	$enable_videos = true ;
 	// web video playback
 	$webplay_support = 1 ;
+	$use_conv266 = true ;
+	$conv266_text = false ;
 	
 	// Maximum videos cache size in Mega Bytes
 	$webplay_cache_size = 10000 ;
@@ -74,8 +71,6 @@
 	$avlcbserver = "http://localhost:80" ;		
 	$avlcbapp = "vltevent.php" ;
 	
-	$support_livepreview = true ;
-	$support_liveaudio = true ;
 	$support_videoviacellular = true ;
 	
 	return ;

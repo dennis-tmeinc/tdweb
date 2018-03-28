@@ -576,7 +576,9 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 <ul>
 	<li><a href="#summary_simple">Simple</a></li>
 	<li><a href="#summary_advance">Advanced</a></li>
+<?php if( empty($disable_mss) ) { ?>	
 	<li><a href="#summary_mss">MSS</a></li>
+<?php } ?>	
 </ul>
 
 <div id="summary_simple">
@@ -723,11 +725,11 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 <table id="vehicle_list"></table> 
 </div>
 </div>
-
+<?php if( empty($disable_mss) ) { ?>
 <div id="summary_mss">
 <table id="mss_status"></table> 
 </div>
-
+<?php } ?>
 </div>
 <p></p>
 </div>

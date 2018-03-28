@@ -9,6 +9,8 @@
 	// create mail body
 	function mail_body( &$to, &$sender, &$subject, &$message, &$attachments )
 	{
+		global $x_mailer ;
+		
 		// all mime content type I may use
 		$mime_type = array( 
 			"txt"  => "text/plain" ,
@@ -36,11 +38,11 @@
 		
 		// fix $to addressses
 		$to = str_replace(";", ",", $to );
-		$to = str_replace("\r", "", $to );
+		$to = str_replace("\r\n", ",", $to );
 		$to = str_replace("\n", ",", $to );
 
 		// fix $subject (no newlines)
-		$subject = str_replace("\r", "", $subject );
+		$subject = str_replace("\r\n", " ", $subject );
 		$subject = str_replace("\n", " ", $subject );
 	
 		// build email message
@@ -122,6 +124,22 @@
 		return $msg ;
 	}
 	
+	// send mail help , get my external ip address
+	function sm_myip()
+	{
+		return trim(file_get_contents("https://api.ipify.org"));
+	}
+	
+	// send mail help , receive smpt response
+	function sm_resp( $cli )
+	{
+		while( $l=fgets( $cli ) ) {
+			if( $l[3]=='-' ) continue ;
+			else return $l[0] ;
+		}
+		return 5 ;	// error
+	}
+
 	function sendmail($to, $sender, $subject, &$message, &$attachments )
 	{
 
@@ -130,23 +148,13 @@
 
 		$errors = 0 ;
 		
-		$myip = trim(file_get_contents("http://myip.dtdns.com/"));
+		$myip = sm_myip();
 		
 		// get sender address inside "<>" brackets
 		$from = trim($sender);
 		if( strpos($from, "<")!==false )
 		{	
 			$from = substr( $from, strpos( $from, "<" )+1, -1 ) ;
-		}
-			
-		// receive smpt response
-		function sm_resp( $cli )
-		{
-			while( $l=fgets( $cli ) ) {
-				if( $l[3]=='-' ) continue ;
-				else return $l[0] ;
-			}
-			return 5 ;	// error
 		}
 		
 		// group receipients by domain
@@ -258,8 +266,6 @@
 			$body = "Reply-To: $sender \r\n" . $body ;
 		}
 
-		$myip = trim(file_get_contents("http://myip.dtdns.com/"));
-		
 		// get sender address inside "<>" brackets
 		$mail_from = trim($mail_from);
 		if( strpos($mail_from, "<")!==false )
@@ -267,22 +273,12 @@
 			$mail_from = substr( $mail_from, strpos( $mail_from, "<" )+1, -1 ) ;
 		}
 
-		// receive smpt response
-		function sm_resp( $cli )
-		{
-			while( $l=fgets( $cli ) ) {
-				if( $l[3]=='-' ) continue ;
-				else return $l[0] ;
-			}
-			return 5 ;	// error
-		}
-
 		// send out email
 		$errors = 0 ;
 		socket_set_timeout($mxcli, 10);
 		if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
 
-		fwrite($mxcli, "EHLO [". $myip. "]\r\n" );
+		fwrite($mxcli, "EHLO [". sm_myip(). "]\r\n" );
 		if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
 
 		if( !empty($mail_account) ) {
@@ -293,7 +289,7 @@
 			fwrite($mxcli, base64_encode($mail_account)."\r\n");
 			if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
 			
-			fwrite($mxcli, $mail_password."\r\n");
+			fwrite($mxcli, base64_encode($mail_password)."\r\n");
 			if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
 		}
 

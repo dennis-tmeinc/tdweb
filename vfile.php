@@ -353,7 +353,7 @@ function vfile_put_contents( $filename, $data )
 	return false ;
 }
 
-// return file context, only able to open file as read only mode
+// return file context
 function vfile_open( $filename , $mode = "rb" )
 {
 	// file context
@@ -362,21 +362,17 @@ function vfile_open( $filename , $mode = "rb" )
 	if( vfile_remote() ) {
 		// remote file
 		$fctx = array(
-			'type'	=> 2 ,			// file type, 1: local file handle, 2: remote
+			'remote'=> 1 ,			// remote file, 0: local, 1: remote
 			'fn'	=> $filename ,	// filename
 			'p'		=> 0 ,			// file pointer
 			'mode'	=> $mode 
 		);
-		if( $mode[0] != 'w' ) {
-			$fctx['stat'] = vfile_stat( $filename ) ; 	
-		}
 	}
 	else {
 		// local file
 		$f = fopen( $filename, $mode ) ;
 		if( $f ) {
 			$fctx = array(
-				'type'		=> 1, 			// file type, 1: local file handle, 2: remote
 				'handle'	=> $f 
 			);
 		}
@@ -385,158 +381,366 @@ function vfile_open( $filename , $mode = "rb" )
 	return $fctx ;
 }
 
-function vfile_seek( &$fctx, $offset, $whence = SEEK_SET )
+function vfile_fstat( &$fctx ) 
 {
-	if( !empty( $fctx['type'] )) {
-		if( $fctx['type'] == 1 ) {
-			// local handle
-			fseek( $fctx['handle'], $offset, $whence );
-		}
-		else if( $fctx['type'] == 2 ) {
-			// remote file
-			if( $whence == SEEK_SET ) {
-				$fctx['p'] = $offset ;
-			}
-			else if( $whence == SEEK_END ) {
-				if( empty( $fctx['stat'] ) || $fctx['mode'][0] == 'w' ) {
-					$fctx['stat'] = vfile_stat( $fctx['fn'] ) ;
-				}
-				$fctx['p'] = $offset + $fctx['stat']['size'] ;
-			}
-			else if( $whence == SEEK_CUR ) {
-				$fctx['p'] += $offset ;
-			}
-			if( $fctx['p'] < 0 ) $fctx['p'] = 0 ;
-		}
+	if( !empty( $fctx['remote'] ) ) {	
+		$j = vfile_http_post( array(
+			'c' => "i",
+			'n' => $fctx['fn']
+		));
+		@$st = json_decode( $j, true );
+		if( !empty( $st['res'] ) ) {
+			unset( $st['res'] );
+			return $st ;
+		}	
 	}
-}
-
-function vfile_tell( &$fctx )
-{
-	if( !empty( $fctx['type'] )) {
-		if( $fctx['type'] == 1 ) {
-			// local handle
-			return ftell( $fctx['handle'] );
-		}
-		else if( $fctx['type'] == 2 ) {
-			// remote file
-			return $fctx['p'] ;
-		}
-	}
-	return 0;
-}
-
-function vfile_read( &$fctx, $length ) 
-{
-	if( !empty( $fctx['type'] )) {
-		if( $fctx['type'] == 1 ) {
-			return fread( $fctx['handle'], $length ) ;
-		}
-		else if( $fctx['type'] == 2 ) {
-			$d = vfile_http_post( array( 
-				'c' => "r" ,
-				'n' => $fctx['fn'] ,
-				'o' => $fctx['p'] ,
-				'l' => $length
-			));
-			$l = strlen( $d );
-			if( $l>0 ) {
-				$fctx['p'] += $l ;
-			}
-			return $d ;
-		}
+	else if( !empty( $fctx['handle'] ) ) {
+		return fstat( $fctx['handle'] );
 	}
 	return false ;
 }
 
+
+function vfile_seek( &$fctx, $offset, $whence = SEEK_SET )
+{
+	if( !empty( $fctx['remote'] ) ) {
+		// remote file
+		if( $whence == SEEK_SET ) {
+			$fctx['p'] = $offset ;
+		}
+		else if( $whence == SEEK_CUR ) {
+			$fctx['p'] += $offset ;
+		}
+		else if( $whence == SEEK_END ) {
+			$fctx['p']  = vfile_size( $fctx['fn'] ) + $offset ;
+		}
+		if( $fctx['p'] < 0 ) $fctx['p'] = 0 ;		
+		return 0 ;
+	}
+	else if( !empty( $fctx['handle'] ) ) {
+		return fseek( $fctx['handle'], $offset, $whence );
+	}
+	return -1 ;
+}
+
+function vfile_tell( &$fctx )
+{
+	if( !empty( $fctx['remote'] ) ) {
+		// remote file
+		return $fctx['p'] ;
+	}
+	else if( !empty( $fctx['handle'] ) ) {
+		// local handle
+		return ftell( $fctx['handle'] );
+	}
+	return 0 ;
+}
+
+
+function vfile_read( &$fctx, $length ) 
+{
+	if( !empty( $fctx['remote'] ) ) {
+		// remote file
+		$d = vfile_http_post( array( 
+			'c' => "r" ,
+			'n' => $fctx['fn'] ,
+			'o' => $fctx['p'] ,
+			'l' => $length
+		));
+		$l = strlen( $d );
+		if( $l>0 ) {
+			$fctx['p'] += $l ;
+		}
+		return $d ;
+	}
+	else if( !empty( $fctx['handle'] ) ) {
+		// local handle
+		return fread( $fctx['handle'], $length ) ;
+	}
+	return false ;
+}
+
+
 function vfile_write( &$fctx, $wdata ) 
 {
-	if( !empty( $fctx['type'] )) {
-		if( $fctx['type'] == 1 ) {
-			return fwrite( $fctx['handle'], $wdata ) ;
+	if( !empty( $fctx['remote'] ) ) {
+		// remote file
+		$j = vfile_http_post( array( 
+			'c' => "w" ,
+			'n' => $fctx['fn'] ,
+			'o' => $fctx['p'] ,
+			'l' => $wdata
+		));
+		@$jd = json_decode( $j, true );
+		if( !empty( $jd['res'] ) ) {
+			$fctx['p'] = $jd['pos'] ;	// update position
+			return $jd['ret'] ;
 		}
-		else if( $fctx['type'] == 2 && $fctx['mode'][0] == 'w' ) {
-			$j = vfile_http_post( array( 
-				'c' => "w" ,
-				'n' => $fctx['fn'] ,
-				'o' => $fctx['p'] ,
-				'l' => $wdata
-			));
-			@$jd = json_decode( $j, true );
-			if( !empty( $jd['res'] ) ) {
-				$fctx['p'] = $jd['pos'] ;
-				return $jd['ret'] ;
-			}
+	}
+	else if( !empty( $fctx['handle'] ) ) {
+		// local handle
+		return fwrite( $fctx['handle'], $wdata ) ;
+	}
+	return false ;
+}
+
+
+// nol: max number of lines, return array of struct lines
+function vfile_readlines( &$fctx, $nol=1 ) 
+{
+	if( empty($nol) )
+		$nol = 1 ;	
+	if( !empty( $fctx['remote'] ) ) {
+		// remote file
+		$j = vfile_http_post( array( 
+			'c' => "rm" ,
+			'n' => $fctx['fn'] ,
+			'o' => $fctx['p'] ,
+			'l' => $nol
+		));
+		$lines = json_decode( $j, true );
+		if( !empty($lines['lines']) ) {
+			$fctx['p'] = (int)$lines['pos'] ;
+			return $lines['lines'] ;
 		}
+	}
+	else if( !empty( $fctx['handle'] ) ) {
+		// local handle
+		$lines = array();
+		while( $nol-- > 0 && $line = fgets( $fctx['handle'] ) ) {
+			$li = array();
+			$li['text'] = $line ;
+			$li['npos'] = ftell( $fctx['handle'] );
+			$lines[] = $li ;
+		}
+		return $lines ;
 	}
 	return false ;
 }
 
 function vfile_gets( &$fctx, $length = 8192 ) 
 {
-	if( !empty( $fctx['type'] )) {
-		if( $fctx['type'] == 1 ) {
-			return fgets( $fctx['handle'], $length ) ;
-		}
-		else if( $fctx['type'] == 2 ) {
-			$d = vfile_http_post( array( 
-				'c' => "rl" ,
-				'n' => $fctx['fn'] ,
-				'o' => $fctx['p'] ,
-				'l' => $length
-			));
-			$l = strlen( $d );
-			if( $l>0 ) {
-				$fctx['p'] += $l ;
-			}
-			return $d ;
+	if( !empty( $fctx['remote'] ) ) {
+		// remote file
+		$lines = vfile_readlines( $fctx , 1);
+		if( !empty($lines) ) {
+			return $lines[0]['text'] ;
 		}
 	}
-	return false ;
-}
-
-// nol: max number of lines
-function vfile_readlines( &$fctx, $nol ) 
-{
-
-	if( !empty( $fctx['type'] )) {
-		if( empty($nol) )
-			$nol = 1 ;
-		if( $fctx['type'] == 1 ) {
-			$lines = array();
-			while( $nol-- > 0 && $line = fgets( $fctx['handle'] ) ) {
-				$li = array();
-				$li['text'] = $line ;
-				$li['npos'] = ftell( $fctx['handle'] );
-				$lines[] = $li ;
-			}
-			return $lines ;
-		}
-		else if( $fctx['type'] == 2 ) {
-			$j = vfile_http_post( array( 
-				'c' => "rm" ,
-				'n' => $fctx['fn'] ,
-				'o' => $fctx['p'] ,
-				'l' => $nol
-			));
-			$lines = json_decode( $j, true );
-			if( !empty($lines['lines']) ) {
-				$fctx['p'] = (int)$lines['pos'] ;
-				return $lines['lines'] ;
-			}
-		}
+	else if( !empty( $fctx['handle'] ) ) {
+		// local handle
+		return fgets( $fctx['handle'], $length ) ;
 	}
 	return false ;
 }
 
 function vfile_close( &$fctx ) 
 {
-	if( !empty( $fctx['type'] )) {
-		if( $fctx['type'] == 1 ) {
-			fclose( $fctx['handle'] ) ;
-		}
+	if( !empty( $fctx['remote'] ) ) {
+		unset( $fctx['remote'] );
+		unset( $fctx['fn'] );
+		return true ;
 	}
-	unset( $fctx );
+	else if( !empty( $fctx['handle'] ) ) {
+		// local handle
+		$res = fclose( $fctx['handle'] ) ;
+		unset( $fctx['handle'] );
+		return $res ;
+	}
+	return false ;
+}
+
+
+class vfile {
+
+	protected  $handle = false ;
+	protected  $remote = false ;
+	protected  $rname = "" ;
+	protected  $p = 0 ;
+	
+	function __destruct() {
+		$this->close();
+	}
+   
+   	public function open($filename , $mode = "rb") {
+		if( vfile_remote() ) {
+			// remote file
+			$this->remote = true ;
+			$this->rname = $filename ;
+			$this->p = 0 ;
+		}
+		else {
+			// local file
+			$this->remote = false ;
+			$this->handle = fopen( $filename, $mode ) ;
+		}		
+	}
+   
+	public function close() {
+		if( $this->handle ) {
+			fclose( $this->handle ) ;
+			$this->handle = false ;
+		}
+	}   
+   
+	public function fstat() 
+	{
+		if( $this->remote ) {
+			// remote file
+			$j = vfile_http_post( array(
+				'c' => "i",
+				'n' => $this->rname 
+			));
+			@$st = json_decode( $j, true );
+			if( !empty( $st['res'] ) ) {
+				unset( $st['res'] );
+				return $st ;
+			}
+		}
+		else if( $this->handle ) {
+			// local handle
+			return fstat( $this->handle );
+		}
+		return false ;
+	}
+	
+	public function seek( $offset, $whence = SEEK_SET )
+	{
+		if( $this->remote ) {
+			// remote file
+			if( $whence == SEEK_SET ) {
+				$this->p = $offset ;
+			}
+			else if( $whence == SEEK_CUR ) {
+				$this->p += $offset ;
+			}
+			else if( $whence == SEEK_END ) {
+				$this->p  = $offset ;
+				$st = $this->fstat() ;
+				if( $st ) {
+					$this->p += $st['size'] ;
+				}
+			}
+			if( $this->p < 0 ) $this->p = 0 ;		
+			return 0 ;
+		}
+		else if( $this->handle ) {
+			return fseek( $this->handle, $offset, $whence );
+		}
+		return -1 ;
+	}
+
+	public function tell()
+	{
+		if( $this->remote ) {
+			// remote file
+			return $this->p;
+		}
+		else if( $this->handle ) {
+			// local handle
+			return ftell( $this->handle );
+		}
+		return 0 ;
+	}
+	
+		
+	public function read( $length ) 
+	{
+		if( $this->remote ) {
+			// remote file
+			$d = vfile_http_post( array( 
+				'c' => "r" ,
+				'n' => $this->rname,
+				'o' => $this->p,
+				'l' => $length
+			));
+			$l = strlen( $d );
+			if( $l>0 ) {
+				$this->p += $l ;
+			}
+			return $d ;
+		}
+		else if( $this->handle ) {
+			// local handle
+			return fread( $this->handle, $length ) ;			
+		}
+		return false ;
+	}
+
+
+	public function write( $wdata ) 
+	{
+		if( $this->remote ) {
+			// remote file
+			$d = vfile_http_post( array( 
+				'c' => "w" ,
+				'n' => $this->rname,
+				'o' => $this->p,
+				'l' => $wdata
+			));
+			@$jd = json_decode( $j, true );
+			if( !empty( $jd['res'] ) ) {
+				$this->p = $jd['pos'] ;	// update position
+				return $jd['ret'] ;
+			}
+		}
+		else if( $this->handle ) {
+			// local handle
+			return fwrite( $this->handle, $wdata ) ;			
+		}
+		return false ;
+	}
+
+	// read multiple line in one short to save IO/network time	
+	// nol: max number of lines, return array of struct lines
+	public function readlines( $nol=1 ) 
+	{
+		if( empty($nol) )
+			$nol = 1 ;	
+		if( $this->remote ) {
+			// remote file
+			$j = vfile_http_post( array( 
+				'c' => "rm" ,
+				'n' => $this->rname,
+				'o' => $this->p,
+				'l' => $nol
+			));
+			$lines = json_decode( $j, true );
+			if( !empty($lines['lines']) ) {
+				$this->p = (int)$lines['pos'] ;
+				return $lines['lines'] ;
+			}
+		}
+		else if( $this->handle ) {
+			// local handle
+			$lines = array();
+			while( $nol-- > 0 && $line = fgets( $this->handle ) ) {
+				$li = array();
+				$li['text'] = $line ;
+				$li['npos'] = ftell( $this->handle );
+				$lines[] = $li ;
+			}
+			return $lines ;			
+		}
+		return false ;
+	}
+
+	// read one line
+	public function gets( $length = 8192 ) 
+	{
+		if( $this->remote ) {
+			// remote file
+			$lines = $this->readlines( 1 );
+			if( !empty($lines) ) {
+				return $lines[0]['text'] ;
+			}
+		}
+		else if( $this->handle ) {		
+			// local handle
+			return fgets(  $this->handle, $length ) ;
+		}
+		return false ;
+	}	
 }
 
 ?>

@@ -480,7 +480,7 @@ switch ( $_REQUEST['cmd'] ) {
 	case 'videoclipfile' :
 		if( check_tfsession() ) {
 			include 'mp4previewfunc.php' ;
-			outputvideo($_REQUEST[index]);
+			mp4cache_output($_REQUEST[index]);
 		}
 		unset($result);
 		break;

@@ -720,7 +720,9 @@ bus2 : high tempterature
 <ul>
 	<li><a href="#setting-storage">Storage&amp;Backup</a></li>
 	<li><a href="#setting-event">Default Event Parameters</a></li>
+<?php if( empty($disable_mss) ) { ?>	
 	<li><a href="#setting-mss">MSS Setup</a></li>
+<?php } ?>	
 <?php if( empty( $_SESSION['clientid'] )) { ?>
 	<li><a href="#setting-localmss">Local MSS Setup</a></li>
 <?php } ?>	
@@ -836,6 +838,8 @@ bus2 : high tempterature
 <p><button id="eventsave">Save</button><button id="eventreset">Cancel</button></p>
 </div>
 
+<?php if( empty($disable_mss) ) { ?>	
+
 <div id="setting-mss"><!-- Add / Edit User dialog -->
 <div class="tdcdialog" id="dialog_mss" title="Edit MSS">
 <form id="mssform">&nbsp;
@@ -888,6 +892,7 @@ bus2 : high tempterature
 </table>
 <button id="addmss"><img src="res/button_add.png" />New MSS</button></div>
 
+<?php } ?>
 
 <div id="setting-localmss" style="display:none;">
 <p>&nbsp;</p>
