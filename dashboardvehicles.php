@@ -58,9 +58,8 @@
 			}
 			$result->free();
 		}
-
-		// vehicles list
 		
+		// vehicles list
 		$vcount = count($v_in_service) ;
 		
 		for( $i=0; $i<$vcount; $i++ ) {

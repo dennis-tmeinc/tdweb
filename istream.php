@@ -220,7 +220,7 @@ switch ( $_REQUEST['cmd'] ) {
 		else {
 			$busname = $_SESSION['playlist']['info']['name'] ;
 			$channel = getChannel( $_REQUEST['camera'] );
-			$sql = "SELECT DISTINCT DATE(time_start) as `dat` from videoclip where vehicle_name = '$busname' AND channel = $channel" ;
+			$sql = "SELECT DISTINCT DATE(time_start) as `dat` from videoclip where vehicle_name = '$busname' AND channel = $channel " ;
 			if( !empty( $_REQUEST['begin'] ) ){
 				$resp['begin']=$_REQUEST['begin'] ;
 				$sql = $sql . " AND time_start >= '$_REQUEST[begin]'" ;
@@ -229,7 +229,7 @@ switch ( $_REQUEST['cmd'] ) {
 				$resp['end']=$_REQUEST['end'] ;
 				$sql = $sql . " AND time_start < '$_REQUEST[end]'" ;
 			}
-			$sql .= "ORDER BY `dat`" ;
+			$sql .= " ORDER BY `dat`" ;
 			$resp['number'] = 0 ;
 			
 			if( $result = $conn->query($sql) ) {

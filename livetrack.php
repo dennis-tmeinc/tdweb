@@ -12,7 +12,7 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 <meta name="description" content="Touch Down Center by TME">
 <meta name="author" content="Dennis Chen @ TME, 2013-05-15">		
-<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type="text/javascript" src="https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0&s=1"></script><script src="picker.js"></script>
+<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
 <style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	select#webplay_camera {
 	min-width: 100px ;
@@ -186,7 +186,8 @@ function showpin( avlp, id, iconimg, clean )
 				delete vlt_pins[did].vpushpin ;
 			}
 			if( vlt_pins[did].vinfobox ) {
-				map.entities.remove(vlt_pins[did].vinfobox);
+				// map.entities.remove(vlt_pins[did].vinfobox);
+				vlt_pins[did].vinfobox.setMap(null);
 				delete vlt_pins[did].vinfobox ;
 			}
 		}
@@ -269,7 +270,8 @@ function showpin( avlp, id, iconimg, clean )
 			width: 14 * (did.length) + 8  
 			}
 		);
-		map.entities.push( infobox );
+		// map.entities.push( infobox );
+		infobox.setMap(map);
 		
 		vlt_pins[did] = { vavlp: avlp, vicon: iconimg, vpushpin: pushpin, vinfobox: infobox };
 		
@@ -290,11 +292,12 @@ function showpin( avlp, id, iconimg, clean )
 					}
 					return ;
 				}
-				map.entities.remove(vlt_pins[did].vinfobox);  
+				// map.entities.remove(vlt_pins[did].vinfobox);  
+				vlt_pins[did].vinfobox.setMap(null);
 				delete vlt_pins[did].vinfobox ;
 			}
 
-			var infotitle =   '<img src="'+e.target.getIcon()+'" /> ' + did ;
+			var infotitle = did ;
 			
 			// date & time
 			var dstr = '20'+avlp.pos.substr(0,2)+'-'+avlp.pos.substr(2,2)+'-'+avlp.pos.substr(4,2)+'T'+avlp.pos.substr(6,2)+':'+avlp.pos.substr(8,2)+':'+avlp.pos.substr(10,2)+'Z' ;
@@ -310,7 +313,7 @@ function showpin( avlp, id, iconimg, clean )
 			if( dmin < 10 ) dmin = "0" + dmin ;
 			var dsec = dt.getSeconds() ;
 			if( dsec < 10 ) dsec = "0" + dsec ;
-			var desc = dyear + "-" + dmon + "-" + ddate + ' ' + dhour + ":" + dmin + ":" + dsec ;
+			var desc = '<img src="'+e.target.getIcon()+'" /><br/>' + dyear + "-" + dmon + "-" + ddate + ' ' + dhour + ":" + dmin + ":" + dsec ;
 			if( avlp.utc ) {
 				desc += " UTC" ;
 			}
@@ -380,10 +383,13 @@ function showpin( avlp, id, iconimg, clean )
 				// remove infobox and this pushpin
 				if( vlt_pins[did] ) {
 					if( vlt_pins[did].vinfobox ) {
-						map.entities.remove( vlt_pins[did].vinfobox );  
+						vlt_pins[did].vinfobox.setMap(null);
+						//map.entities.remove( vlt_pins[did].vinfobox );  
+						delete vlt_pins[did].vinfobox ;
 					}
 					if( vlt_pins[did].vpushpin ) {
 						map.entities.remove( vlt_pins[did].vpushpin );  
+						delete vlt_pins[did].vpushpin ;
 					}
 					delete vlt_pins[did] ;
 				}
@@ -395,8 +401,8 @@ function showpin( avlp, id, iconimg, clean )
 				id: did,
 				title:infotitle, description: desc, height: iheight,  zIndex: 10, actions: iaction
 				}) ;
-			
-			map.entities.push( vlt_pins[did].vinfobox );
+			//map.entities.push( vlt_pins[did].vinfobox );
+			vlt_pins[did].vinfobox.setMap(map);
 		}		
 
 		Microsoft.Maps.Events.addThrottledHandler(pushpin, 'mouseover', pushpin_info, 100 );  
@@ -776,10 +782,10 @@ $( ".tdcdialog#dialog_reportconfig" ).dialog({
 var geofencemap = null ;
 var geofence_toparea = null ;
 var geofence_color = {
-	"In": new Microsoft.Maps.Color( 80, 17, 238, 50),
-	"Out": new Microsoft.Maps.Color( 80, 248, 80, 7),
-	"Both": new Microsoft.Maps.Color( 128, 182, 41, 69),
-	"Disable": new Microsoft.Maps.Color( 192, 70, 72, 94)
+	"In": { a:80, r: 17, g: 238, b: 50 },
+	"Out": { a:80, r: 248, g: 80, b: 7 }, 
+	"Both": { a:128, r: 182, g: 41, b: 69 }, 
+	"Disable": { a:192, r: 70, g: 72, b: 94 }
 };
 
 function geofence_select( area )
@@ -838,10 +844,9 @@ function geofence_select( area )
 			];
 		
 		var ondragcorner = function(e){
-			var thispin=e.entity ;
 			var ipin ;
 			for( ipin=0; ipin<4; ipin++) {
-				if( pins[ipin] == e.entity ) {
+				if( pins[ipin] == e.target ) {
 					break;
 				}
 			}
@@ -874,16 +879,14 @@ function geofence_select( area )
 		};
 
 		var ondragmove = function(e){
-			var nloc = e.entity.getLocation();
-			var mvlat = nloc.latitude - loccenter.latitude ;
-			var mvlon = nloc.longitude - loccenter.longitude;
-			loccenter=nloc ;
-			for(var i=0;i<4;i++) {
-				nloc=pins[i].getLocation();
-				nloc.latitude+=mvlat ;
-				nloc.longitude+=mvlon ;
-				pins[i].setLocation( nloc );
-			}
+			var cloc = pins[4].getLocation();
+			var crect = Microsoft.Maps.LocationRect.fromLocations( [pins[0].getLocation(), pins[2].getLocation()] );
+			var h2 = crect.height/2 ;
+			var w2 = crect.width/2 ;
+			pins[0].setLocation(new Microsoft.Maps.Location( cloc.latitude + h2,  cloc.longitude + w2 ));
+			pins[1].setLocation(new Microsoft.Maps.Location( cloc.latitude + h2,  cloc.longitude - w2 ));
+			pins[2].setLocation(new Microsoft.Maps.Location( cloc.latitude - h2,  cloc.longitude - w2 ));
+			pins[3].setLocation(new Microsoft.Maps.Location( cloc.latitude - h2,  cloc.longitude + w2 ));
 			area.setLocations([
 				pins[0].getLocation(),
 				pins[1].getLocation(),
@@ -1253,6 +1256,9 @@ $( ".tdcdialog#dialog_webplay" ).dialog({
 		$("select#webplay_camera").change();
 	},
 	create: function( event, ui ) {
+		$("video#webplay").on('contextmenu', function(e){
+			return false;
+		}); 		
 		$("button#webplay_reload").click(function(){
 			$("select#webplay_camera").change();
 		});
@@ -1334,56 +1340,63 @@ $("select[name='vehicle']").change(function(e){
 
 function showup()
 {
-	trigger_resize();
-
 	// load bing theme
-	Microsoft.Maps.loadModule('Microsoft.Maps.Themes.BingTheme', { callback: themesModuleLoaded });
-	function themesModuleLoaded() {
-		var mapcenter = new Microsoft.Maps.Location(35, -100);
-		var mapzoom = 4 ;
-		var mapinit=false ;
-		if( sessionStorage ) {
-			var tdsess = sessionStorage.getItem('tdsess');
-			var localsession ;
-			if( tdsess ) {
-				localsession = JSON.parse(tdsess);
-			}
-			if( localsession && localsession.tdcmap ) {
-				if( localsession.tdcmap.zoom ) {
-					mapcenter = new Microsoft.Maps.Location(localsession.tdcmap.lat, localsession.tdcmap.lon);
-					mapzoom = localsession.tdcmap.zoom ;
-					mapinit=true ;
-				}
+//	Microsoft.Maps.loadModule('Microsoft.Maps.Themes.BingTheme', { callback: themesModuleLoaded });
+
+	var mapcenter = new Microsoft.Maps.Location(35, -100);
+	var mapzoom = 4 ;
+	var mapinit=false ;
+	if( sessionStorage ) {
+		var tdsess = sessionStorage.getItem('tdsess');
+		var localsession ;
+		if( tdsess ) {
+			localsession = JSON.parse(tdsess);
+		}
+		if( localsession && localsession.tdcmap ) {
+			if( localsession.tdcmap.zoom ) {
+				mapcenter = new Microsoft.Maps.Location(localsession.tdcmap.lat, localsession.tdcmap.lon);
+				mapzoom = localsession.tdcmap.zoom ;
+				mapinit=true ;
 			}
 		}
-
-		map = new Microsoft.Maps.Map(document.getElementById("tdcmap"),
-		{	credentials: <?php echo "'$map_credentials'"; ?> ,
-			center: mapcenter,
-			zoom: mapzoom,
-			enableSearchLogo: false,
-			enableClickableLogo: false,
-			mapTypeId : Microsoft.Maps.MapTypeId.road
-		});
-
-		if( !mapinit ) {
-			$.getJSON("mapquery.php", function(resp){
-				if( resp.res && resp.map && resp.map.bbox && resp.map.bbox.length>=4) {
-					setTimeout( function(){
-						var nbounds = Microsoft.Maps.LocationRect.fromLocations( [
-							new Microsoft.Maps.Location( resp.map.bbox[0], resp.map.bbox[1] ),
-							new Microsoft.Maps.Location( resp.map.bbox[2], resp.map.bbox[3] )
-							] );
-						map.setView({bounds:nbounds});
-					}, 1000 ) ;
-				}
-			});
-		}		
 	}
+
+	map = new Microsoft.Maps.Map(document.getElementById("tdcmap"),
+	{credentials: <?php echo "'$map_credentials'"; ?> ,
+	center: mapcenter,
+	zoom: mapzoom,
+	enableSearchLogo: false,
+	enableClickableLogo: false,
+	mapTypeId : Microsoft.Maps.MapTypeId.road
+	});
+
+	geofence_color = {
+		"In": new Microsoft.Maps.Color( 80, 17, 238, 50),
+		"Out": new Microsoft.Maps.Color( 80, 248, 80, 7),
+		"Both": new Microsoft.Maps.Color( 128, 182, 41, 69),
+		"Disable": new Microsoft.Maps.Color( 192, 70, 72, 94)
+	};
+
+	if( !mapinit ) {
+		$.getJSON("mapquery.php", function(resp){
+			if( resp.res && resp.map && resp.map.bbox && resp.map.bbox.length>=4) {
+				setTimeout( function(){
+					var nbounds = Microsoft.Maps.LocationRect.fromLocations( [
+						new Microsoft.Maps.Location( resp.map.bbox[0], resp.map.bbox[1] ),
+						new Microsoft.Maps.Location( resp.map.bbox[2], resp.map.bbox[3] )
+						] );
+					map.setView({bounds:nbounds});
+				}, 1000 ) ;
+			}
+		});
+	}		
+	
+	trigger_resize();
+
 }
 
 // load bing theme
-Microsoft.Maps.loadModule('Microsoft.Maps.Themes.BingTheme');
+// Microsoft.Maps.loadModule('Microsoft.Maps.Themes.BingTheme');
 
 // show up 
 $('#rcontainer').show('slow', showup );
@@ -1631,7 +1644,7 @@ Pre-Defined Zone:
 </select> 
 <button id="geofenceloadzone">Add</button>
 <div id="geofencemaparea" style="position: relative; height:380px; width:500px;">
-<div id="geofencemap">Geo Fence Map</div>
+<div id="geofencemap" style="height:100%;width:100%;">Geo Fence Map</div>
 </div>
 </td>
 </tr>

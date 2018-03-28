@@ -18,7 +18,7 @@ else {
 ?>
 	<title>TouchDown&trade Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-	<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type="text/javascript" src="https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0&s=1"></script><script src="picker.js"></script>
+	<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
 	<link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
 	<link href="tdclayout.css" rel="stylesheet" type="text/css" />
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
@@ -376,7 +376,8 @@ $("td.system_alert").click(function(e){
 });
 
 var mssmap = null ;
-var mssloc = new Microsoft.Maps.Location(0, 0) ;
+var mssloc = null ;
+
 $("#mss_status").jqGrid({        
     scroll: true,
 	url:'dashboardmssgrid.php',
@@ -410,18 +411,27 @@ $("div#dialog_mss_location").dialog({
 	height:"auto",
 	modal: true,
 	close: function(event, ui) {
-		if( mssmap ) {
-			mssmap.dispose(); 
-			mssmap = null; 
-		}
+		//if( mssmap ) {
+			// mssmap.dispose(); 
+			// mssmap = null; 
+		//}
 	},
 	open: function(event, ui) {
-		mssmap = new Microsoft.Maps.Map(document.getElementById("mssmap"), 
-			{credentials: <?php echo '"'. $map_credentials . '"'; ?> ,
+		
+		if( mssmap == null ) {
+			mssmap = new Microsoft.Maps.Map(document.getElementById("mssmap"), 
+				{credentials: <?php echo '"'. $map_credentials . '"'; ?> ,
+				enableSearchLogo: false,
+				enableClickableLogo: false,
+			});
+		}
+
+		if( mssloc == null ) {
+			mssloc = new Microsoft.Maps.Location(47.60357, -122.32945)
+		}
+		mssmap.setView({
 			zoom: 12,
-			center: mssloc,
-			enableSearchLogo: false,
-			enableClickableLogo: false,
+			center: mssloc 
 		});
 		
 		var pin=new Microsoft.Maps.Pushpin(mssloc, {draggable: false});

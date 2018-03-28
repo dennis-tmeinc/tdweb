@@ -46,7 +46,7 @@
 					if( vfile_size( $imgfile ) < 10 ) {
 						set_time_limit(60) ;
 					
-						$cachefn = $cache_dir."\\".$namehash.'_'.$time.'_%d.jpg' ;  
+						$cachefn = str_replace ( '/' , DIRECTORY_SEPARATOR , $cache_dir."\\".$namehash.'_'.$time.'_%d.jpg' ) ;  
 						$cmdline = "bin\\ffmpeg.exe -i $vid -ss $time -t 1.02 -y $cachefn" ;
 						$eoutput = array();
 						$eret = 1 ;

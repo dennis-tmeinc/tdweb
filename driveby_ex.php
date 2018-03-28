@@ -1,9 +1,8 @@
-<?php 
-require 'session.php' ;
-header( 'Location: drivebyevents.php' ) ;
-?><!DOCTYPE html>
+<!DOCTYPE html>
 <html>
-<head>
+<head><?php 
+require 'session.php'; 
+?>
 	<title>Drive By Event</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta content="Touch Down Center by TME" name="description" />
@@ -33,6 +32,7 @@ $("#tag_list").jqGrid({
 	datatype: "local",
 	height: 142,
 	width: 480,
+	multiselect: true ,
 	caption: 'Drive By Event Tags',
     colNames:['Client ID', 'Bus ID', 'Date/Time'],
     colModel :[ 
@@ -135,13 +135,6 @@ $("#tag_list").jqGrid({
 			}
 			$("#tag_list").jqGrid('addRowData','tagname',griddata);		
 			$("#tag_list").jqGrid('setGridParam',{sortname:'datetime'}).trigger('reloadGrid');
-			 
-			if( resp.tags.length>0 ) {
-				// to select first tag
-				var ids = $("#tag_list").jqGrid('getDataIDs');
-				if( ids[0] ) 
-					$("#tag_list").jqGrid('setSelection',ids[0],true);		
-			}
 		}
 	});	
 })();
@@ -186,6 +179,22 @@ $("button#GenerateReport").click( function() {
 		param['pos'+i] = $("video[name='"+ camname +"']")[0].currentTime ;
 	}
 	window.open("drivebymkpdf.php?"+$.param(param));
+});
+
+// button delete event
+$("button#deleteevent").click( function() {
+	var tags = $("#tag_list").jqGrid('getGridParam', 'selarrrow') ;
+	var param = {} ;
+	param.tag = tags ;
+	$.getJSON("drivebytagdelex.php", param, function(resp){
+		if( resp.res == 1 ) {
+			var i ; for( i=0; i<tags.length ; i++ ) {
+				$("#tag_list").jqGrid('delRowData', tags[i]);	
+			}
+			selectedtag = "" ;
+			$("#tag_list").jqGrid('setGridParam',{sortname:'datetime'}).trigger('reloadGrid');
+		}
+	}) ;
 });
 
 // current zoom level
@@ -387,6 +396,7 @@ $("#rcontainer").show('slow');
 <p>Notes:</p>
 <textarea name="notes" maxlength="100" style="margin: 2px; width: 180px; height: 80px;"></textarea>
 <button id="GenerateReport">Generate Report</button>
+<button id="deleteevent">Delete Event</button>
 <!-- <button style="width:180px" id="EditContacts">Edit Contacts</button> -->
 </td>
 </tr>
@@ -414,12 +424,11 @@ $("#rcontainer").show('slow');
 			<button class="step" name="lpr2stepback"><span class="ui-icon ui-icon-seek-prev"></button><button class="step" name="lpr2stepforw"><span class="ui-icon ui-icon-seek-next"></button>
 			</div>
 			</td>
-		
-			<td  rowspan="2">
-			<img id="mapimage" alt="MAP NOT AVAILABLE" src="" />
-			<div>MAP:&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;<label for="spinner">Zoom Level: </label><input id="zoomlevel" value="15"></div>
-			<p>Address: <span id="mapaddress"></span></p>
-			<p>Coordinate: <span id="coordinate"></span></p>
+			
+			<td>
+			<video id="avivideo" width="360" src="" type="video/mp4" controls>Your browser does not support the video tag.</video>
+			<div>Video Clip:&nbsp; &nbsp;&nbsp;&nbsp;
+			<select name="vidcam"></select></div>
 			</td>			
 		</tr>
 		<tr>
@@ -442,17 +451,18 @@ $("#rcontainer").show('slow');
 			<button class="step" name="ov2stepback"><span class="ui-icon ui-icon-seek-prev"></button><button class="step" name="ov2stepforw"><span class="ui-icon ui-icon-seek-next"></button>
 			</div>
 			</td>
+			
+			<td>
+			<img id="mapimage" alt="MAP NOT AVAILABLE" src="" />
+			<div>MAP:&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;<label for="spinner">Zoom Level: </label><input id="zoomlevel" value="15"></div>
+			<p>Address: <span id="mapaddress"></span></p>
+			<p>Coordinate: <span id="coordinate"></span></p>
+			</td>			
 		</tr>
 
 	</tbody>
 </table>
 
-<!-- disabled video screen -->
-<div style="display:none">
-			<video id="avivideo" width="360" src="" type="video/mp4" controls>Your browser does not support the video tag.</video>
-			<div>Video Clip:&nbsp; &nbsp;&nbsp;&nbsp;
-			<select name="vidcam"></select></div>
-</div>			
 <p/>
 
 </div>

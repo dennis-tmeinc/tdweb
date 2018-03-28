@@ -1,7 +1,7 @@
 <?php
 // dashboardsoloalertsgrid.php - get dashboard report on solo alerts list (grid data)
 // Requests:
-//             
+//      rows, page, sidx, sord, (optional: alertcode)
 // Return:
 //      JSON object, (contain event list)
 // By Dennis Chen @ TME	 - 2016-06-02
@@ -48,6 +48,11 @@
 		{
 			$escape_req[$key]=$conn->escape_string($value);
 		}
+		
+		if( empty( $escape_req['alertcode'] ) ) {
+			$escape_req['alertcode'] = "-1" ;
+		}
+		
 		$filter = " WHERE alert_code IN ($escape_req[alertcode]) AND date_time BETWEEN '$date_begin' AND '$date_end' ";
 		
 		// get total records	

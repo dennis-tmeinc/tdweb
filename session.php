@@ -6,19 +6,37 @@
 include_once 'config.php' ;
 
 // all default global path/dir
-if( empty($session_path) ) {
+if( !empty($session_path) ) {
+	if( !is_dir($session_path) ) {
+		if( !mkdir( $session_path,0777,true ) ) {
+			$session_path= "session";
+		}
+	}
+}
+else {
 	$session_path= "session";
 }
-if( empty($session_idname) ) {
-	$session_idname = "touchdownid";
+if( !empty($cache_dir) ) {
+	if( !is_dir($cache_dir) ) {
+		if( !mkdir( $cache_dir,0777,true ) ) {
+			$cache_dir= "videocache";
+		}
+	}
 }
-if( empty($cache_dir) || !is_dir($cache_dir) ) {
-	$cache_dir = "videocache" ;
+else {
+	$cache_dir= "videocache";
 }
+$cache_dir = realpath( $cache_dir );
 if( empty($client_dir) || !is_dir($client_dir) ) {
 	$client_dir = "client" ;
 }
+if( !is_dir($client_dir) ) {
+	mkdir( $client_dir,0777,true );
+}
 
+if( empty($session_idname) ) {
+	$session_idname = "touchdownid";
+}
 session_save_path( $session_path );
 session_name( $session_idname );
 
@@ -27,7 +45,7 @@ if( !empty($_REQUEST[session_name()]) ) {
 }
 
 if( empty($product_name) ) {
-	$product_name = "TouchDown™ Video Command Center" ;
+	$product_name = "TouchDown Center" ;
 }
 
 if( empty($td_conf) )

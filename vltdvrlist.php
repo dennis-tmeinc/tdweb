@@ -52,7 +52,13 @@
 			$xml->company = $_SESSION['clientid'] ;
 		
 		if( empty($avlcbserver) ) {
-			$avlcbserver = $_SERVER['REQUEST_SCHEME'] . "://". $_SERVER['HTTP_HOST'] . ":". $_SERVER['SERVER_PORT']; 
+			if( empty($_SERVER['REQUEST_SCHEME']) ) {
+				$avlcbserver = "http" ;
+			}
+			else {
+				$avlcbserver = $_SERVER['REQUEST_SCHEME'] ;
+			}
+			$avlcbserver .= "://" . $_SERVER['HTTP_HOST']  ;
 		}
 		$xml->callbackurl = $avlcbserver . dirname($_SERVER['REQUEST_URI']).'/vltevent.php' ;
 		$xml->session = $vltsession ;

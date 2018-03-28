@@ -78,6 +78,7 @@
 	$product_name = "TD FLEET MONITOR" ;
 	$enable_videos = false ;
 	$support_fleetmonitor_logo = true ;
+	$support_videoviacellular = true ;	
 
 	return ;
 ?>	

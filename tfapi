@@ -8,7 +8,7 @@
 // Copyright 2016 Toronto MicroElectronics Inc.
 //
 $noredir=1;
-include "session.php" ;
+include_once "session.php" ;
 include_once 'vfile.php' ;
 
 if( empty($conn) ) {
@@ -475,6 +475,14 @@ switch ( $_REQUEST['cmd'] ) {
 		else {
 			$result['errormsg'] = "Session error!" ;
 		}
+		break;
+
+	case 'videoclipfile' :
+		if( check_tfsession() ) {
+			include 'mp4previewfunc.php' ;
+			outputvideo($_REQUEST[index]);
+		}
+		unset($result);
 		break;
 		
 	case 'getplaybackcontext' :

@@ -12,14 +12,15 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">
 	<meta name="author" content="Dennis Chen @ TME, 2013-05-15">		
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type="text/javascript" src="https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0&s=1"></script><script src="picker.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	</style>
 	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
 	<script src="td_alert.js"></script>
 	<script>
 // start up 
-var map ;
+var map = null ;
+var map_infobox = null ;
 
 // const external 
 pinicons = {
@@ -127,10 +128,10 @@ function map_showaddress( latitude, longitude, address )
 		$("input[name='txtaddress']").val( address );
 	} 
 	var iaction = [{label: 'Copy address', eventHandler: copyaddress}] ;
-	var ibox = map_infobox() ;
-	ibox.setLocation( new Microsoft.Maps.Location(latitude, longitude) ); 
+	map_infobox.setLocation( new Microsoft.Maps.Location(latitude, longitude) ); 
 	var desc = "<div>"+address+"</div>" ;
-	ibox.setOptions( { title:"Address", description: desc, actions: iaction, height: 128, id: "-1", visible: true, zIndex: 10 } );
+	map_infobox.setOptions( { title:"Address", description: desc, actions: iaction, maxHeight: 300, visible: true, zIndex: 10 } );
+	map_infobox.vlid = -1;
 }
 
 // disable context menu (rightclick) on map
@@ -325,6 +326,11 @@ $( ".tdcdialog#dialog_webplay" ).dialog({
 		webplay_play();
 	},
 	create: function( event, ui ) {
+		
+		$( "video#webplay" ).on('contextmenu', function(e){
+			return false;
+		}); 
+		
 		$("select#webplay_camera").change( function(){
 			var clipinfo = $( "video#webplay" ).data("clipinfo") ;
 			var param=new Object ;
@@ -410,9 +416,11 @@ function showup()
 	center: mapcenter,
 	zoom: mapzoom,
 	enableSearchLogo: false,
-	enableClickableLogo: false,
-	mapTypeId : Microsoft.Maps.MapTypeId.road
+	enableClickableLogo: false
 	});
+	map_infobox = new Microsoft.Maps.Infobox(map.getCenter(), {visible:false, showPointer:true, showCloseButton:true} );    
+	map_infobox.setMap(map);
+	map_infobox.vlid=-1 ;
 
 	Microsoft.Maps.Events.addThrottledHandler( map, "viewchangeend", function(){
 		loadvlmap();
@@ -516,18 +524,6 @@ function map_clear()
 	map_search = false ;
 	map.entities.clear();
 }
-function map_infobox()
-{
-	for( var i=map.entities.getLength()-1; i>=0; i--) {
-		var e = map.entities.get(i);
-		if( e instanceof Microsoft.Maps.Infobox ) {
-			return e ;
-		}
-	}
-	var ibox = new Microsoft.Maps.Infobox(map.getCenter(), {visible:false, showPointer:true, showCloseButton:true} );    
-	map.entities.push(ibox);	
-	return ibox ;
-}
 
 // remove map entitiy
 function map_remove( entity )
@@ -594,13 +590,13 @@ function loadvlmap()
 			mapevent = resp.mapevent ;
 			
 			var infoindex = -1 ;
-			var ibox = map_infobox();
-			if( ibox.getVisible() ) {
-				infoindex = ibox.getId();
+			if( map_infobox.getVisible() ) {
+				infoindex = map_infobox.vlid ;
 			}
-				
+			
+			var i;
 			// clear pushpin only
-			for( var i=map.entities.getLength()-1; i>=0; i--) {
+			for( i=map.entities.getLength()-1; i>=0; i--) {
 				var e = map.entities.get(i);
 				if( e instanceof Microsoft.Maps.Pushpin ) {
 					if( parseInt(e.getText()) != infoindex ) {
@@ -609,7 +605,6 @@ function loadvlmap()
 				}
 			}
 			
-			var i;
 			var len=mapevent.length ;
 			if(len<1)
 				return ;
@@ -635,26 +630,25 @@ function loadvlmap()
 				function pin_info(e){
 
 					var vl_id=parseInt(e.target.getText()); 
-					var eventInfobox = map_infobox() ;
-					if( eventInfobox.getVisible() && eventInfobox.getId() == vl_id ) {
+					if( map_infobox.getVisible() && map_infobox.vlid == vl_id ) {
 						return ;
 					}
-					map_remove(eventInfobox) ;
-					eventInfobox = map_infobox() ;
+					
 					// e.target.setOptions( {zIndex: 10 } );		// to prevent Infobox flashing
 					var loc=e.target.getLocation() ;
 			
-					eventInfobox.setLocation( loc );
+					map_infobox.setLocation( loc );
 					var icon = e.target.getIcon() ;
-					eventInfobox.setOptions( { title:'<img src="'+icon+'" />', description:"Loading...", actions: [], id: vl_id, visible: true,  zIndex: 10 } );
+					map_infobox.setOptions( { title: "" ,description: '<img src="'+icon+'" /><br/>' + "Loading... " , actions: [], visible: true,  zIndex: 10 } );
+					map_infobox.vlid = vl_id ;
 					
 					$.getJSON("vllist.php?vl_id="+vl_id, function(v){
 						if( v.res == 1 && v.vl.vl_id == vl_id ) {
-							var ititle = '<img src="'+icon+'" /> '+v.vl.vl_vehicle_name ;
+							var ititle = v.vl.vl_vehicle_name ;
 							var dtitle = getEventTitle(v.vl.vl_incident) ;
-							var desc = "";
+							var desc = '<img src="'+icon+'" /><br/>';
 							if( dtitle ) {
-								desc += "Event: "+dtitle+"<br/>" ;
+								desc += "Event: "+ dtitle + "<br/>" ;
 							}
  							desc += 'Event Time: '+v.vl.vl_datetime ;
 							if( v.vl.vl_speed>0 ) {
@@ -668,12 +662,12 @@ function loadvlmap()
 								if( s<10 ) s='0'+s ;
 								desc += "<br/>Duration: "+h+':'+m+':'+s;
 							}
-							var iheight=145 ;
+							var iheight=180 ;
 							if( v.vl.vl_impact_x != 0 || v.vl.vl_impact_y != 0 || v.vl.vl_impact_z != 0 ) {
 								desc += "<br/>X: "+v.vl.vl_impact_x +
 										" Y: "+v.vl.vl_impact_y +
 										" Z: "+v.vl.vl_impact_z ;
-								iheight = 160 ;
+								iheight += 20 ;
 							}
 							function iplayvideo() 
 							{ 
@@ -687,17 +681,16 @@ function loadvlmap()
 							{ 
 								webplay_open(v.vl.videoid);
 							} 
-							
 							var iaction = [] ;
 							if( v.vl.video > 0 ) {
 								if(navigator.platform == 'Win32' || navigator.platform == 'Win64') {
-									iaction = [{label: 'Play Video', eventHandler: iplayvideo}] ;
+									iaction[0] = {label: 'Play Video', eventHandler: iplayvideo} ;
 								}
 								iaction[iaction.length] = {label: 'Preview Video', eventHandler: ipreviewvideo} ;
 							}
-							var ibox = map_infobox() ;
-							if( ibox )
-								ibox.setOptions( { title:ititle, description: desc, actions: iaction, id: v.vl.vl_id, height: iheight,  zIndex: 10 } );
+							if( map_infobox.getVisible() && map_infobox.vlid == v.vl.vl_id ) {
+								map_infobox.setOptions( { title:ititle, description: desc, actions: iaction, maxHeight: iheight,  zIndex: 10 } );
+							}
 						}
 					});				
 				}

@@ -76,7 +76,7 @@
 	
 	$support_livepreview = true ;
 	$support_liveaudio = true ;
-	$cache_dir = "G:\\" ;
+	$support_videoviacellular = true ;
 	
 	return ;
 ?>	

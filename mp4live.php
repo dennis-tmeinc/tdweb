@@ -35,10 +35,6 @@ else {
 	$xsn = 0 ;
 }
 
-if( empty($cache_dir) || !is_dir($cache_dir) ) {
-	$cache_dir = "videocache" ;
-}
-$cache_dir = realpath( $cache_dir );
 $video_prefix = $cache_dir . DIRECTORY_SEPARATOR . "vlp${phone}c${camera}" ;
 $video_runfile = fopen( "${video_prefix}run", "c+" );
 if(!$video_runfile){

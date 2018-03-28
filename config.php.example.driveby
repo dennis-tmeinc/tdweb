@@ -84,6 +84,7 @@
 	// drive by demo
 	$support_driveby = 1 ;
 	$driveby_eventdir = "\\TouchDownCenter\\drivebydemo1" ;
+	$support_videoviacellular = true ;
 	
 	return ;
 ?>	

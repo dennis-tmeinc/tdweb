@@ -11,8 +11,7 @@ session_save('settingpage', $_SERVER['REQUEST_URI'] );
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta content="Touch Down Center by TME" name="description" />
 	<meta content="Dennis Chen @ TME, 2013-05-15" name="author" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /><script src="jq/jquery-ui.js"></script><script>(window.jQuery || document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>'));</script>
-	<script src="https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 
 	option.dirty {
@@ -723,20 +722,8 @@ function showzone(zone)
 		left=-150;
 		right=-50;
 	}
-	var locs=[
-	new Microsoft.Maps.Location( top, left ),
-	new Microsoft.Maps.Location( top, right ),
-	new Microsoft.Maps.Location( bottom, right ),
-	new Microsoft.Maps.Location( bottom, left )
-	] ;
-	var locrect=Microsoft.Maps.LocationRect.fromLocations( locs );
-	locrect.width *= 1.02 ;
-	var loccenter = locrect.center ;
-	zonemap.setView({ bounds: locrect});
+	
 	zonemap.entities.clear(); 		
-	var polyline = new Microsoft.Maps.Polyline(
-		[locs[0], locs[1], locs[2], locs[3], locs[0]],
-		null); 
 
 	var pushpinOptions = {
 		icon:'res/pin_24.png', 
@@ -747,13 +734,25 @@ function showzone(zone)
 	}; 
 
 	var pins=[
-		new Microsoft.Maps.Pushpin(locs[0], pushpinOptions),
-		new Microsoft.Maps.Pushpin(locs[1], pushpinOptions),
-		new Microsoft.Maps.Pushpin(locs[2], pushpinOptions),
-		new Microsoft.Maps.Pushpin(locs[3], pushpinOptions),
-		new Microsoft.Maps.Pushpin(loccenter, pushpinOptions)
+		new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location( top, left ), pushpinOptions),
+		new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location( top, right ), pushpinOptions),
+		new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location( bottom, right ), pushpinOptions),
+		new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location( bottom, left ), pushpinOptions),
+		new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location( (top+bottom)/2, (right+left)/2 ), pushpinOptions)
 		];
 
+	var locs = [pins[0].getLocation(),
+			pins[1].getLocation(),
+			pins[2].getLocation(),
+			pins[3].getLocation(),
+			pins[0].getLocation()] ;
+	
+	var polyline = new Microsoft.Maps.Polyline(locs, null); 
+
+	var locrect=Microsoft.Maps.LocationRect.fromLocations( locs );
+	locrect.width *= 1.05 ;
+	zonemap.setView({ bounds: locrect});
+		
 	zonemap.entities.push(polyline);
 	zonemap.entities.push(pins[0]);
 	zonemap.entities.push(pins[1]);
@@ -761,11 +760,10 @@ function showzone(zone)
 	zonemap.entities.push(pins[3]);
 	zonemap.entities.push(pins[4]);
 
-	var ondragcorner = function(e){
-		var thispin=e.entity ;
+	function ondragcorner(e){
 		var ipin ;
 		for( ipin=0; ipin<4; ipin++) {
-			if( pins[ipin] == e.entity ) {
+			if( pins[ipin] == e.target ) {
 				break;
 			}
 		}
@@ -777,7 +775,7 @@ function showzone(zone)
 		pins[(ipin+1)%4].setLocation( new Microsoft.Maps.Location( loc0.latitude, loc2.longitude ) );
 		pins[(ipin+3)%4].setLocation( new Microsoft.Maps.Location( loc2.latitude, loc0.longitude ) );
 		var locrect = Microsoft.Maps.LocationRect.fromLocations( loc0, loc2 );
-		loccenter = locrect.center ;
+		var loccenter = locrect.center ;
 		pins[4].setLocation( loccenter );
 <?php } else { ?>				
 		var loc = pins[ipin].getLocation();
@@ -798,17 +796,15 @@ function showzone(zone)
 		$("button#savezone").show();
 	};
 
-	var ondragmove = function(e){
-		var nloc = e.entity.getLocation();
-		var mvlat = nloc.latitude - loccenter.latitude ;
-		var mvlon = nloc.longitude - loccenter.longitude;
-		loccenter=nloc ;
-		for(var i=0;i<4;i++) {
-			nloc=pins[i].getLocation();
-			nloc.latitude+=mvlat ;
-			nloc.longitude+=mvlon ;
-			pins[i].setLocation( nloc );
-		}
+	function ondragmove(e) {
+		var cloc = pins[4].getLocation();
+		var crect = Microsoft.Maps.LocationRect.fromLocations( [pins[0].getLocation(), pins[2].getLocation()] );
+		var h2 = crect.height/2 ;
+		var w2 = crect.width/2 ;
+		pins[0].setLocation(new Microsoft.Maps.Location( cloc.latitude + h2,  cloc.longitude + w2 ));
+		pins[1].setLocation(new Microsoft.Maps.Location( cloc.latitude + h2,  cloc.longitude - w2 ));
+		pins[2].setLocation(new Microsoft.Maps.Location( cloc.latitude - h2,  cloc.longitude - w2 ));
+		pins[3].setLocation(new Microsoft.Maps.Location( cloc.latitude - h2,  cloc.longitude + w2 ));
 		polyline.setLocations([
 			pins[0].getLocation(),
 			pins[1].getLocation(),
@@ -818,6 +814,7 @@ function showzone(zone)
 			]);
 		$("button#savezone").show();
 	};
+	
 	$("button#savezone").hide();
 	
 	Microsoft.Maps.Events.addHandler(pins[0], 'drag', ondragcorner);  
@@ -1477,13 +1474,14 @@ if( $_SESSION['user'] == 'admin' ) {
 <select id="zonelist" name="zonelist" style="min-width: 12em;">
 </select> &nbsp; &nbsp;<button id="newzone"><img src="res/button_add.png" style="width: 20px; height: 20px;" />New Zone</button><button id="newmyzone"><img src="res/button_add.png" style="width: 20px; height: 20px;" />New My Zone</button><button id="deletezone"><img src="res/button_delete.png" style="width: 20px; height: 20px;" />Delete Zone</button><button id="renamezone">Rename</button><button id="mapsearch">Search</button><button id="savezone">Save</button></p>
 
-<div id="zonemaparea" style="width: auto; position: relative; min-height: 300px;">
-<div id="zonemap">Zone Map</div>
+<div id="zonemaparea" style="width: auto; position: relative; min-height: 300px">
+<div id="zonemap" style="height:100%;width:100%;">Zone Map</div>
 </div>
 
 <div class="tdcdialog" id="dialog_renamezone" title="Rename Zone">
 <p>Rename Zone (<span id="oldzonename">zoneup</span>) To:</p>
-<input id="newzonename" type="text" maxlength="45" /></div>
+<input id="newzonename" type="text" maxlength="45" />
+</div>
 <!-- rename group dialog --></div>
 
 <!-- Generic Delete Dialog -->

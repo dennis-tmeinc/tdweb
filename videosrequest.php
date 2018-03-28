@@ -213,11 +213,15 @@ $("#rcontainer").show('slow');
 </div>
 
 <div id="workarea" style="width:auto;">
-  
+
 <p class="btset">
   <input   name="btset" href="videos.php" id="btvideo" type="radio" /><label for="btvideo"> Browse &amp; Manage Video </label> 
+<?php if( !empty($support_videoviacellular) ) { ?>
   <input   name="btset" checked="checked" href="videosrequest.php" id="btvideoreq" type="radio" /><label for="btvideoreq"> Request Video Clips Via WiFi </label>
   <input   name="btset" href="videosrequestcell.php" id="btvideoreqcell" type="radio" /><label for="btvideoreqcell"> Request Video Clips Via Cellular </label>
+<?php } else { ?>
+  <input   name="btset" checked="checked" href="videosrequest.php" id="btvideoreq" type="radio" /><label for="btvideoreq"> Request Video Clips </label>
+<?php } ?>
 </p>
   
 <h4>Request Video Clips</h4>

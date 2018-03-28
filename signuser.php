@@ -142,11 +142,19 @@ done:
 
 	echo json_encode($resp) ;
 	
+	// forced close connection
+	header( "Content-Length: ". ob_get_length() );
+	header( "Connection: close" );
+	
+	ob_flush();
+	flush();
+	ignore_user_abort( true );
+	
 	// clean old session files
-	$xt = time() ;
+	$xtime = time() ;
 	// clean old session files
 	foreach (glob($session_path.'/sess_*') as $filename) {
-		if( filemtime($filename) + 86400 < $xt ) {
+		if( $xtime - fileatime($filename) > 86420 ) {
 			@unlink($filename);
 		}
 	}
