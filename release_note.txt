@@ -1,6 +1,23 @@
 Touch Down Center 
 Release Notes
 
+V3.6 (2013-12-17)
+	Add target="_blank" to all file downloading links, to fix incompatibility between IE and other web browser
+	Fix date error on live track infofox
+	Fix normal user delete quick filter of other users
+	Change "user defined" zone name to "Current Map"
+	Add "Default Area" to zone list on "Map View" page
+	Add "Default Area" to zone setup page
+	"Default Area" defined by "$map_area" variable in config.php file.
+	Create new zone on current displayed map
+	Options to disable "live track" feature, by modify "$enable_livetrack" variable in config.php file
+	Add address search for "Create Zone" page
+	Prompt keep video data warning
+	Prompt keep gps data warning
+	Add more space on map filter inputs
+	Use accordion to hide/show map filter events and g-force inputs
+	
+
 V3.5 (2013-12-05)
 	Add a few new icons for live track events
 	Add "Setup DVR" button on live track

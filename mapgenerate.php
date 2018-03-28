@@ -39,12 +39,17 @@
 		$endTime=$endTime->format("Y-m-d H:i:s");	    			// MYSQL format
 
 		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+		// secaped sql values
+		$esc_req=array();		
+		foreach( $_REQUEST as $key => $value ){
+			$esc_req[$key]=$conn->escape_string($value);
+		}
 
 		// for group
 		$vehiclelist='';
 		if( $_REQUEST['vehicleType'] != 0 ) {	// group
 			// to read group 
-			$sql="SELECT `vehiclelist` FROM `vgroup` WHERE `name` = '$_REQUEST[vehicleGroupName]';" ;
+			$sql="SELECT `vehiclelist` FROM `vgroup` WHERE `name` = '$esc_req[vehicleGroupName]';" ;
 			if( $result=$conn->query($sql) ) {
 				if( $row = $result->fetch_array( MYSQLI_NUM ) ) {
 					$row=explode(",",$row[0]);
@@ -93,8 +98,13 @@
 		// zone
 		$north=100 ;	// invalid value for no zone
 
-		if( !empty($_REQUEST['zoneName']) && strcasecmp ( $_REQUEST['zoneName'] , 'No Restriction') && strcasecmp ( $_REQUEST['zoneName'] , 'User Define') ) {
-			$sql = "SELECT * FROM zone WHERE `name` = '$_REQUEST[zoneName]' ;";
+		if( !empty($_REQUEST['zoneName']) && 
+			strcasecmp ( $_REQUEST['zoneName'] , 'No Restriction') && 
+			strcasecmp ( $_REQUEST['zoneName'] , 'Default Area') && 
+			strcasecmp ( $_REQUEST['zoneName'] , 'Current Map') && 
+			strcasecmp ( $_REQUEST['zoneName'] , 'User Define') ) 
+		{
+			$sql = "SELECT * FROM zone WHERE `name` = '$esc_req[zoneName]' AND (`type` = 1 OR `user` = '$_SESSION[user]') ";
 			if( $result = $conn->query($sql) ) {
 				if( $row=$result->fetch_assoc() ) {
 					$north=$row['top'];
@@ -103,6 +113,30 @@
 					$east=$row['right'];
 				}
 				$result->free();
+			}
+		}
+		
+		if( !empty($_REQUEST['zoneName']) && 
+			strcasecmp ( $_REQUEST['zoneName'] , 'Default Area') == 0 ) 
+		{
+			if( empty( $map_area ) ) {
+				$query = "United States" ;
+			}
+			else {
+				$query = $map_area ;
+			}
+			
+			$url =  "http://dev.virtualearth.net/REST/v1/Locations?q=".rawurlencode($query)."&o=json&maxResults=1&key=".$map_credentials ;
+			@$maparea = file_get_contents( $url );
+			if( !empty($maparea) ) {
+				$maparea = json_decode($maparea, true) ;
+			}
+			$resp['map'] = array();
+			if( !empty( $maparea['resourceSets'][0]['resources'][0]['bbox'] )) {
+				$south=$maparea['resourceSets'][0]['resources'][0]['bbox'][0] ;
+				$west=$maparea['resourceSets'][0]['resources'][0]['bbox'][1] ;
+				$north=$maparea['resourceSets'][0]['resources'][0]['bbox'][2];
+				$east=$maparea['resourceSets'][0]['resources'][0]['bbox'][3];				
 			}
 		}
 		

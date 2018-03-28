@@ -42,8 +42,10 @@
 
 			if( $result = $conn->query("SELECT * FROM `_tmp_tdweb` WHERE `vname` = 'vltevent' AND `session` = '$vltsession' " ) ) {
 				while( $row=$result->fetch_array() ) {
-					if( !empty( $row['vdata'] ) ) 
-						$tdwebc[] = json_decode( $row['vdata'] );
+					if( !empty( $row['vdata'] ) ) {
+						$vdata = json_decode( $row['vdata'], true ) ;
+						$tdwebc[] = $vdata ;
+					}
 				}
 				$result->free();
 				$conn->query("DELETE FROM `_tmp_tdweb` WHERE `vname` = 'vltevent' AND `session` = '$vltsession' ");

@@ -8,13 +8,15 @@
 ?>
 
 <div class="ui-widget ui-widget-content ui-corner-all" id="rpanel"><button id="generate" style="font-size:1.3em;">Generate</button>
+<p/>
 
 <form action="#" id="filterform">
 <fieldset><legend>Quick Filter</legend> <input id="quickfilter" name="name" maxlength="45" type="text" style="background: white url(res/triangle_s.png) right no-repeat; padding-right: 12px; 
-" /><br />
+" /><p />
 <button id="savequickfilter">Save</button><button id="deletequickfilter">Delete</button></fieldset>
 
-<fieldset><legend>Select Time</legend> <input name="timeType" type="radio" value="0" />Exact Time<input checked="checked" name="timeType" type="radio" value="1" />Full Day<input name="timeType" type="radio" value="2" />Time Range<table border="0" cellpadding="0" cellspacing="0">
+<fieldset><legend>Select Time</legend> <input name="timeType" type="radio" value="0" />Exact Time<input checked="checked" name="timeType" type="radio" value="1" />Full Day<input name="timeType" type="radio" value="2" />Time Range
+<table id="timeinput" border="0" cellpadding="0" cellspacing="0">
 	<tbody>
 		<tr>
 			<td id="starttime">Date:</td>
@@ -29,20 +31,33 @@
 	</tbody>
 </table>
 </fieldset>
+<p/>
 
-<div><input checked="checked" name="vehicleType" type="radio" value="0" />Vehicle<input name="vehicleType" type="radio" value="1" />Group<select name="vehicleGroupName" style="width:150px" ></select></div>
-
-<div><input checked="checked" name="zoneType" type="radio" value="0" />Inside<input name="zoneType" type="radio" value="1" />Outside<select name="zoneName" style="width:150px"> <?php
+<p><input checked="checked" name="vehicleType" type="radio" value="0" />Vehicle<input name="vehicleType" type="radio" value="1" />Group<select name="vehicleGroupName" style="width:150px" ></select></p>
+<p><input checked="checked" name="zoneType" type="radio" value="0" />Inside<input name="zoneType" type="radio" value="1" />Outside<select name="zoneName" style="width:150px">
+<option>No Restriction</option>
+<?php
+	if( basename($_SERVER["REQUEST_URI"]) == "mapview.php" ) {
+		if( !empty($map_area) ) {
+			echo "<option>Default Area</option>" ;
+		}
+		echo "<option>Current Map</option>" ;
+	}
 	$sql="SELECT `name` FROM zone WHERE `type` = 1 OR `user` = '$_SESSION[user]';" ;
 	if( $result=$conn->query($sql) ){
 		while( $row = $result->fetch_array(MYSQLI_NUM) ) {
-			echo "<option>$row[0]</option>";
+			if( $row[0] != "No Restriction" && $row[0] != "User Define" ) {
+				echo "<option>$row[0]</option>";
+			}
 		}
 		$result->free();
 	}
-?> </select></div>
+?> </select></p>
 
-<fieldset><legend>Select checkbox to show</legend>
+<div id="accordion" >
+
+<h3>Select Events</h3>
+<div>
 
 <table border="0" cellpadding="0" cellspacing="0" id="event" width="100%">
 	<tbody>
@@ -64,7 +79,7 @@
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bSpeeding" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_speed.png" /> Speeding</td>
-			<td>Limit: <input maxlength="10" name="speedLimit" size="6" type="text" value="0" />mph</td>
+			<td>Limit:<input maxlength="10" name="speedLimit" size="3" type="text" value="0" />mph</td>
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bRoute" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_route.png" /> Route</td>
@@ -72,14 +87,12 @@
 		</tr>
 	</tbody>
 </table>
-</fieldset>
 
-<div>&nbsp;</div>
+</div>
 
-<fieldset><legend>G-Force Data/Parameters</legend>
-
+<h3>G-Force Parameters</h3>
 <div>
-<table border="0" cellpadding="0" cellspacing="1" id="gforceparameters" style="width: 100%;">
+<table border="0" cellpadding="0" cellspacing="0" id="gforceparameters" style="width: 100%;">
 	<tbody>
 		<tr>
 			<td><input checked="checked" name="bRacingStart" type="checkbox" />
@@ -119,7 +132,9 @@
 	</tbody>
 </table>
 </div>
-</fieldset>
+
+</div>
+
 </form>
 
 <p style="text-align: center;"><button id="reset">Reset</button></p>
@@ -127,6 +142,15 @@
 <script>
 // init mapfilter sections
 $(function(){
+
+$( "#accordion" ).accordion({
+    collapsible: true,
+	heightStyle: "content"
+});
+
+$("table#timeinput td").css("height", "32px");
+$("table#gforceparameters td").css("height", "32px");
+$("table#event td").css("height", "32px");
 
 var vehiclelist=<?php
 	$sql="SELECT vehicle_name FROM vehicle ORDER BY vehicle_name;" ;
@@ -403,6 +427,7 @@ $("button#reset").click(function(){
 			param.gSideImpact  = eventparameter.side_impact ;
 			param.gBumpyRide  = eventparameter.bumpy_ride ;
 			param.startTime = eventparameter.startTime ;
+			param.endTime = eventparameter.endTime ;
 			filterform_load( param );
 		}
 	});

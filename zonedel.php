@@ -21,7 +21,11 @@
 		}
 		
 		$query="DELETE FROM zone WHERE `name` = '$esc_req[name]' AND (`type` = 1 OR `user` = '$_SESSION[user]');" ;
-		if( $conn->query($query) ) {
+		if( $esc_req['name'] == "Default Area" ) {
+			$resp['res']=0;
+			$resp['errormsg']="Not allowed!" ;
+		}
+		else if( $conn->query($query) ) {
 			$resp['res']=1 ;	// success
 		}
 		else {

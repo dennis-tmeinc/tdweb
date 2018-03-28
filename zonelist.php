@@ -27,20 +27,20 @@
 			else 
 				$sql="SELECT `name` FROM `zone` WHERE `type` = 1 OR `user` = '$_SESSION[user]' ;" ;
 		}
-		if($result=$conn->query($sql)) {
-			$zonelist = array();
-			while( $row=$result->fetch_array(MYSQLI_ASSOC) ) {
-				if( $row['name']=='No Restriction' || $row['name']=='User Define' ) continue ;
-				$zonelist[]=$row;
+		if( !empty($sql) ) {
+			if($result=$conn->query($sql)) {
+				$zonelist = array();
+				while( $row=$result->fetch_array(MYSQLI_ASSOC) ) {
+					if( $row['name']=='No Restriction' || $row['name']=='User Define' ) continue ;
+					$zonelist[]=$row;
+				}
+				$result->free();
+				$resp['zonelist'] = $zonelist ;
+				$resp['res'] = 1 ;
 			}
-			echo json_encode($zonelist);
-			$result->free();
-		}
-		else {
-			echo "[]" ;
 		}
 	}
-	else {
-		echo "[]";
-	}
+
+done:	
+	echo json_encode( $resp );
 ?>

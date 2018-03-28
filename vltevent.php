@@ -25,6 +25,13 @@ if( empty( $tdwebc->session ) ) {
 	goto done ;
 }
 
+
+//$log = fopen("session/eventlog.log", "a");
+//if( $log ) {
+//	fwrite( $log, "\nEvent: ".date("h:i:s ").$_REQUEST['xml'] );
+//	fclose( $log );
+//}
+
 $vltsession = $tdwebc->session ;
 $resp->session=$vltsession ;
 $ss = explode('-', $vltsession);

@@ -25,7 +25,7 @@
 		else {
 			$sql="DELETE FROM `quickfilter` WHERE `name` = '$esc_req[name]' AND `user` = '$_SESSION[user]';" ;
 		}
-		if( $conn->query($sql) ) {
+		if( $conn->query($sql) && $conn->affected_rows > 0 ) {
 			$resp['res']=1 ;	// success
 		}
 		else {

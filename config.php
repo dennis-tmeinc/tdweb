@@ -1,4 +1,5 @@
 <?php
+	// SQL server
 	$smart_host="localhost" ;	
 	$smart_user="server" ;
 	$smart_password="password" ;
@@ -43,8 +44,8 @@
 	
 	// bing map
 	$map_credentials="AnC6aHa2J8jWAluq14HQu6HDH1cDshGtPEPrYiotanIf-q6ZdoSiVGd96wzuDutw";
-	// Default map location, comment it to auto detect
-	// $map_area="Toronto, Canada" ;
+	// Default map location, comment it for auto detect
+	$map_area="New York" ;
 	
 	// session timeout (max half hour)
 	$session_timeout=900 ;	
@@ -65,6 +66,8 @@
 	// Maximum videos cache size in Mega Bytes
 	$webplay_cache_size = 10000 ;
 	
+	// enable or disable live track
+	$enable_livetrack = 1 ;
 	// live track server (AVL Service)
 	$avlservice = "http://localhost:40520/avlservice" ;
 	$avlcbserver = "http://localhost:80" ;

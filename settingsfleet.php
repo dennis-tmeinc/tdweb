@@ -760,6 +760,7 @@ function showzone(zone)
 	new Microsoft.Maps.Location( bottom, left )
 	] ;
 	var locrect=Microsoft.Maps.LocationRect.fromLocations( locs );
+	locrect.width *= 1.02 ;
 	var loccenter = locrect.center ;
 	zonemap.setView({ bounds: locrect});
 	zonemap.entities.clear(); 		
@@ -862,24 +863,34 @@ $('#zonelist').change(function() {
 		showzone({top:0,bottom:0,left:0,right:0});
 		return ;
 	}
-	$.getJSON("zonelist.php?name="+zone, function(zonelist){
-		if( zonelist.length>0) {
-			showzone(zonelist[0]);
-		}
-	});	
+	else if($('#zonelist').val()=="Default Area") {
+		$.getJSON("mapquery.php", function(resp){
+			if( resp.res && resp.map.bbox.length>=4) {
+				showzone({bottom:resp.map.bbox[0], left:resp.map.bbox[1], top:resp.map.bbox[2], right:resp.map.bbox[3]});
+			}
+		});	
+	}
+	else 
+		$.getJSON("zonelist.php?name="+zone, function(resp){
+			if( resp.res && resp.zonelist.length>0) {
+				showzone(resp.zonelist[0]);
+			}
+		});	
 });	
 
 function updzonelist()
 {
-	$.getJSON("zonelist.php", function(zonelist){
-		$('#zonelist').empty();
-		for( var i=0; i<zonelist.length; i++ ) {
-			var htmlstr = '<option>' + zonelist[i].name + '</option>' ;
-			$('#zonelist').append(htmlstr);
+	$.getJSON("zonelist.php", function(resp){
+		if( resp.res && resp.zonelist ) {
+			var htmlstr = "<option>Default Area</option>" ;
+			for( var i=0; i<resp.zonelist.length; i++ ) {
+				htmlstr += '<option>' + resp.zonelist[i].name + '</option>' ;
+			}
+			$('#zonelist').html(htmlstr);
+			$('#zonelist').change();	// apply default zone;
 		}
-		$('#zonelist').change();	// apply default zone;
 	});		
-}	
+}
 
 // ztype:  1: public, 2: private
 function newzone(zname,ztype)
@@ -889,6 +900,13 @@ function newzone(zname,ztype)
 	form.zonetype = ztype ;
 	$.getJSON("zonenew.php", form, function(resp){
 		if( resp.res > 0 ) {	// success
+		
+			// use current map area
+			var b = zonemap.getBounds();
+			b.width /= 1.6 ;
+			b.height /= 1.6 ;
+			showzone({top:b.getNorth(), bottom:b.getSouth(),left:b.getWest(),right:b.getEast()});
+		
 			var htmlstr = '<option>'+zname+'</option>' ;
 			$('#zonelist').append(htmlstr);
 			$('#zonelist').val(zname);
@@ -1003,6 +1021,35 @@ buttons: {
 }
 });
 
+$( ".tdcdialog#dialog_mapsearch" ).dialog({
+autoOpen: false,
+show: {
+ effect: "blind",
+ duration: 300
+},
+width:"auto",
+modal: true,
+buttons: {
+	"Search": function() {
+		var query=$(".tdcdialog#dialog_mapsearch input#mapquery").val();
+		$.getJSON("mapquery.php?q="+query, function(resp){
+			if( resp.res && resp.map.bbox.length>=4) {
+				showzone({bottom:resp.map.bbox[0], left:resp.map.bbox[1], top:resp.map.bbox[2], right:resp.map.bbox[3]});
+				$("button#savezone").show();
+			}
+		});	
+		$( this ).dialog( "close" );
+	},
+	Cancel: function() {
+		$( this ).dialog( "close" );
+	}
+}
+});
+
+$("button#mapsearch").click(function(){
+	$( ".tdcdialog#dialog_mapsearch" ).dialog("open");
+});
+
 $("button#renamezone").click(function(){
 	var selected = $('#zonelist')[0].selectedIndex ;
 	var zonename = $($("#zonelist option")[selected]).text() ;
@@ -1099,7 +1146,7 @@ text-align: center;
 	<li><a class="lmenu" href="mapview.php"><img onmouseout="this.src='res/side-mapview-logo-clear.png'" onmouseover="this.src='res/side-mapview-logo-fade.png'" src="res/side-mapview-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="reportview.php"><img onmouseout="this.src='res/side-reportview-logo-clear.png'" onmouseover="this.src='res/side-reportview-logo-fade.png'" src="res/side-reportview-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="videos.php"><img onmouseout="this.src='res/side-videos-logo-clear.png'" onmouseover="this.src='res/side-videos-logo-fade.png'" src="res/side-videos-logo-clear.png" /> </a></li>
-	<li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li>
+<?php if( !empty($enable_livetrack) ){ ?><?php if( !empty($enable_livetrack) ){ ?><li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li><?php } ?><?php } ?>
 	<li><img src="res/side-settings-logo-green.png" /></li>
 </ul>
 </div>
@@ -1260,7 +1307,7 @@ if( $_SESSION['user'] == 'admin' ) {
 <input name="importfile" type="file" required />
 </form>
 
-<form id="formvehicleexport" enctype="application/x-www-form-urlencoded" method="get" action="vehicleexport.php" >
+<form id="formvehicleexport" enctype="application/x-www-form-urlencoded" method="get" action="vehicleexport.php" target="_blank" >
 <input class="xbutton" value="Export" type="submit" />
 </form>
 
@@ -1359,7 +1406,7 @@ if( $_SESSION['user'] == 'admin' ) {
 <input name="importfile" type="file" required />
 </form>
 
-<form id="formdriverexport" enctype="application/x-www-form-urlencoded" method="get" action="driverexport.php" >
+<form id="formdriverexport" enctype="application/x-www-form-urlencoded" method="get" action="driverexport.php" target="_blank" >
 <input class="xbutton" value="Export" type="submit" />
 </form>
 
@@ -1371,8 +1418,8 @@ if( $_SESSION['user'] == 'admin' ) {
 
 <div id="settingtabs-groups">
 <h4>Vehicle Group Management</h4>
-<!-- rename group dialog -->
 
+<!-- rename group dialog -->
 <div class="tdcdialog" id="dialog_renamegroup" title="Rename Group">
 <p>Rename Group [<span id="oldgroupname">group</span>] To:</p>
 <input id="newgroupname" type="text" maxlength="45" /></div>
@@ -1418,7 +1465,7 @@ if( $_SESSION['user'] == 'admin' ) {
 
 <p>Select a Zone:
 <select id="zonelist" name="zonelist" style="min-width: 12em;">
-</select> &nbsp; &nbsp;<button id="newzone"><img src="res/button_add.png" style="width: 20px; height: 20px;" />New Zone</button><button id="newmyzone"><img src="res/button_add.png" style="width: 20px; height: 20px;" />New My Zone</button><button id="deletezone"><img src="res/button_delete.png" style="width: 20px; height: 20px;" />Delete Zone</button><button id="renamezone">Rename</button><button id="savezone">Save</button></p>
+</select> &nbsp; &nbsp;<button id="newzone"><img src="res/button_add.png" style="width: 20px; height: 20px;" />New Zone</button><button id="newmyzone"><img src="res/button_add.png" style="width: 20px; height: 20px;" />New My Zone</button><button id="deletezone"><img src="res/button_delete.png" style="width: 20px; height: 20px;" />Delete Zone</button><button id="renamezone">Rename</button><button id="mapsearch">Search</button><button id="savezone">Save</button></p>
 
 <div id="zonemaparea" style="width: auto; position: relative; min-height: 300px;">
 <div id="zonemap">Zone Map</div>
@@ -1428,8 +1475,8 @@ if( $_SESSION['user'] == 'admin' ) {
 <p>Rename Zone (<span id="oldzonename">zoneup</span>) To:</p>
 <input id="newzonename" type="text" maxlength="45" /></div>
 <!-- rename group dialog --></div>
-<!-- Generic Delete Dialog -->
 
+<!-- Generic Delete Dialog -->
 <div class="tdcdialog" id="dialog_delete">
 <p id="deletemsg">delete:</p>
 
@@ -1437,6 +1484,13 @@ if( $_SESSION['user'] == 'admin' ) {
 
 <p>&nbsp;</p>
 </div>
+
+<!-- Map Search Dialog -->
+<div class="tdcdialog" id="dialog_mapsearch" title="Search" >
+<p id="deletemsg">Enter address , city name or coordinates:</p>
+<input id="mapquery" type="text" size="50" />
+</div>
+
 </div>
 </div>
 <!-- workarea --></div>

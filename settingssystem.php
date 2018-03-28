@@ -145,6 +145,24 @@ $("button#storagesave").click(function(){
 	});
 });
 
+$( "select[name='keepGpsLogDataForDays']").change(function(){
+	var i = $( "select[name='keepGpsLogDataForDays']")[0].selectedIndex ;
+	var t = $( "select[name='keepGpsLogDataForDays']")[0][i].innerText ;	
+	if( t != "Forever" ) {
+		var msg = "All the GPS data in the Database which older than " + t + " will be deleted." ;
+		alert( msg );
+	}
+});
+
+$( "select[name='keepVideoDataForDays']").change(function(){
+	var i = $( "select[name='keepVideoDataForDays']")[0].selectedIndex ;
+	var t = $( "select[name='keepVideoDataForDays']")[0][i].innerText ;
+	if( t != "Forever" ) {
+		var msg = "All the DVR Video clip files which older than " + t + " will be deleted." ;
+		alert( msg );
+	}
+});
+			
 // Backup Database Dialog
 $( "#dialog_backupdatabase" ).dialog(
 {
@@ -697,7 +715,7 @@ text-align: center;
 	<li><a class="lmenu" href="mapview.php"><img onmouseout="this.src='res/side-mapview-logo-clear.png'" onmouseover="this.src='res/side-mapview-logo-fade.png'" src="res/side-mapview-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="reportview.php"><img onmouseout="this.src='res/side-reportview-logo-clear.png'" onmouseover="this.src='res/side-reportview-logo-fade.png'" src="res/side-reportview-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="videos.php"><img onmouseout="this.src='res/side-videos-logo-clear.png'" onmouseover="this.src='res/side-videos-logo-fade.png'" src="res/side-videos-logo-clear.png" /> </a></li>
-	<li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li>
+	<?php if( !empty($enable_livetrack) ){ ?><li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li><?php } ?>
 	<li><img src="res/side-settings-logo-green.png" /></li>
 </ul>
 </div>

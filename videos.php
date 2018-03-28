@@ -336,7 +336,7 @@ $("#rcontainer").show('slow' );
 	<li><a class="lmenu" href="mapview.php"><img onmouseout="this.src='res/side-mapview-logo-clear.png'" onmouseover="this.src='res/side-mapview-logo-fade.png'" src="res/side-mapview-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="reportview.php"><img onmouseout="this.src='res/side-reportview-logo-clear.png'" onmouseover="this.src='res/side-reportview-logo-fade.png'" src="res/side-reportview-logo-clear.png" /> </a></li>
 	<li><img src="res/side-videos-logo-green.png" /></li>
-	<li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li>
+	<?php if( !empty($enable_livetrack) ){ ?><li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li><?php } ?>
 	<li><a class="lmenu" href="settings.php"><img onmouseout="this.src='res/side-settings-logo-clear.png'" onmouseover="this.src='res/side-settings-logo-fade.png'" src="res/side-settings-logo-clear.png" /> </a></li>
 </ul>
 </div>
@@ -408,7 +408,7 @@ Vehicles &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="selectallvehicle">Select All<
 <table id="videolist"></table> 
 <div id="videopager"></div> 
 <p>
-<form id="formplayvideo" enctype="application/x-www-form-urlencoded" method="get" action="playvideo.php" >
+<form id="formplayvideo" enctype="application/x-www-form-urlencoded" method="get" action="playvideo.php" target="_blank" >
 <input name="index" type="hidden" />
 <input name="vehicle_name" type="hidden"  />
 </form>
@@ -418,7 +418,7 @@ Vehicles &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="selectallvehicle">Select All<
 <button  id="webplay"> Preview Video Clip </button>
 <?php } ?>
 <a  id="playsync" href="mapview.php?sync=1" >Sync on Map View</a>
-<a  id="downloadplayer" href="downloadplayer.php" >Download Player</a>
+<a  id="downloadplayer" href="downloadplayer.php" target="_blank" >Download Player</a>
 </p>
 </div>
 

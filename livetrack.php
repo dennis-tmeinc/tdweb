@@ -58,9 +58,10 @@ function trigger_resize()
 		timer_resize = setTimeout(function(){
 			timer_resize = null ;
 			$workarea = $("#workarea");
-			var nh = window.innerHeight - $workarea.offset().top -$("#footer").outerHeight() ;
-			var rh = $("#rpanel").height();
-			if( nh<rh ) nh = rh ;
+//			var nh = window.innerHeight - $workarea.offset().top -$("#footer").outerHeight() ;
+			var nh = window.innerHeight - $workarea.offset().top - 2 ;			
+//			var rh = $("#rpanel").height();
+//			if( nh<rh ) nh = rh ;
 			if( nh != $workarea.height() ) {	// height changed
 				$workarea.height( nh );
 			}
@@ -236,9 +237,10 @@ function showpin( avlp, id, iconimg, clean )
 				}
 			}
 			
-			var d = new Date(Date.UTC('20'+avlp.pos.substr(0,2), avlp.pos.substr(2,2),avlp.pos.substr(4,2),avlp.pos.substr(6,2),avlp.pos.substr(8,2),avlp.pos.substr(10,2) ));
-			var desc = 'Time: ' + d.getFullYear() + '-'  +d.getMonth() + '-'  +d.getDate() + ' '  +d.getHours() + ':'  +d.getMinutes() + ':'  +d.getSeconds() ;
-			var lines = 1 ;
+			var dstr = '20'+avlp.pos.substr(0,2)+'-'+avlp.pos.substr(2,2)+'-'+avlp.pos.substr(4,2)+'T'+avlp.pos.substr(6,2)+':'+avlp.pos.substr(8,2)+':'+avlp.pos.substr(10,2)+'Z' ;
+			var d = new Date(dstr);
+			var desc = d.toString();
+			var lines = 2 ;
 			
 			var speed = parseFloat( avlp.pos.substr(34) ) ;
 			if( speed > 0.5 ) {
@@ -289,7 +291,7 @@ function tdwebc_message( tdwebc )
 		var cmd = tdwebc[i].command ;
 		var avlp = tdwebc[i].avlp ;
 		if( cmd == "23" ) {	//AVL_DVR_LIST(23)
-			if( avlp.list.item ) {
+			if( avlp.list && avlp.list.item ) {
 				var dvrlist = avlp.list.item ;
 				if( dvrlist instanceof Array  ) {
 					for( var i=0; i<dvrlist.length; i++ ) {
@@ -862,12 +864,14 @@ $( ".tdcdialog#dialog_geofence" ).dialog({
 				return ;
 			}
 			else{
-			$.getJSON("zonelist.php?name="+zone, function(zonelist){
-				if( zonelist.length>0) {
-					var zone=""+zonelist[0].top+","+zonelist[0].left+","+zonelist[0].bottom+","+zonelist[0].right+",In";
-					var area = showgeofence(zone);
-					if( area ) 
-						geofence_select( area ) ;
+			$.getJSON("zonelist.php?name="+zone, function(resp){
+				if( resp.res ) {
+					if( resp.zonelist.length>0) {
+						var zone=""+resp.zonelist[0].top+","+resp.zonelist[0].left+","+resp.zonelist[0].bottom+","+resp.zonelist[0].right+",In";
+						var area = showgeofence(zone);
+						if( area ) 
+							geofence_select( area ) ;
+					}
 				}
 			});	
 			}
@@ -936,12 +940,14 @@ $( ".tdcdialog#dialog_geofence" ).dialog({
 
 		// pre-def zone list
 		$('#zonelist').empty();
-		$.getJSON("zonelist.php", function(zonelist){
-			var zlist = '' ;
-			for( var i=0; i<zonelist.length; i++ ) {
-				zlist += '<option>' + zonelist[i].name + '</option>' ;
+		$.getJSON("zonelist.php", function(resp){
+			if( resp.res == 1 ) {
+				var zlist = '' ;
+				for( var i=0; i<resp.zonelist.length; i++ ) {
+					zlist += '<option>' + resp.zonelist[i].name + '</option>' ;
+				}
+				$('#zonelist').html(zlist);
 			}
-			$('#zonelist').html(zlist);
 		});	
 		
 		// init map size
@@ -1062,6 +1068,7 @@ enableClickableLogo: false,
 mapTypeId : Microsoft.Maps.MapTypeId.road
 });
 
+
 if( !mapinit ) {
 	var map_area="<?php echo isset($map_area)?$map_area:''; ?>";
 	if( map_area.length > 1 ) 
@@ -1070,12 +1077,30 @@ if( !mapinit ) {
 			data : {q: map_area,o:"json",key:<?php echo "'$map_credentials'"; ?>},
 			dataType : 'jsonp',	jsonp :'jsonp'
 		}).done(function(location){
-			var point = location.resourceSets[0].resources[0].geocodePoints[0].coordinates ;
-			if( point && location.resourceSets[0].resources[0].confidence=="High" ) {
-				map.setView({
+			if( location.statusCode == 200 && location.resourceSets[0].resources[0] && location.resourceSets[0].resources[0].confidence=="High" ) {
+				var resource = location.resourceSets[0].resources[0] ;
+				if( resource.geocodePoints[0].coordinates ) {
+					var qzoom=11 ;		// city 
+					if( resource.bbox && resource.bbox instanceof Array ) {
+						var nb = Microsoft.Maps.LocationRect.fromLocations( [
+							new Microsoft.Maps.Location( resource.bbox[0], resource.bbox[1] ),
+							new Microsoft.Maps.Location( resource.bbox[2], resource.bbox[3] )
+						] );
+						var w = 60 ;
+						for( var z=4; z<=18 ; z++ ) {
+							if( w/2 < nb.width ) {
+							    qzoom = z ;
+								break;
+							}
+							w/=2 ;
+						}
+					}
+					var point = location.resourceSets[0].resources[0].geocodePoints[0].coordinates ;
+					map.setView({
 					center: new Microsoft.Maps.Location(point[0], point[1]),
-					zoom : 11 });	
-			}	
+					zoom : qzoom });
+				}
+			}		
 		});
 	else 
 		$.getJSON("http://freegeoip.net/json/", function(geo){
@@ -1086,7 +1111,6 @@ if( !mapinit ) {
 			}
 		});
 }	
-
 
 $("select[name='vehicle']").change(function(e){
 	var x=this.value ;
@@ -1154,7 +1178,7 @@ $('#rcontainer').show('slow', trigger_resize );
 <div style="text-align: center;"><button style="min-width:13em;" name="liveview">Live View</button></div>
 <div style="text-align: center;"><button style="min-width:13em;" name="setupdvr">Setup DVR</button></div>
 
-<form id="liveviewform" action="vltliveview.php">
+<form id="liveviewform" action="vltliveview.php" target="_blank" >
 <input type="hidden" name="dvrid"/>
 <input type="hidden" name="phone"/>
 <input type="hidden" name="ip"/>

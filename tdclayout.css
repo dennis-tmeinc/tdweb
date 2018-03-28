@@ -21,8 +21,9 @@ background-color:#ffe;
 
 #push {
 clear:both;
-visibility:hidden;
 height:3em;
+visibility:hidden;
+display:none;
 }
 
 #header {

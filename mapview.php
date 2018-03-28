@@ -58,9 +58,10 @@ function trigger_resize()
 		timer_resize = setTimeout(function(){
 			timer_resize = null ;
 			$workarea = $("#workarea");
-			var nh = window.innerHeight - $workarea.offset().top -$("#footer").outerHeight() ;
-			var rh = $("#rpanel").height();
-			if( nh<rh ) nh = rh ;
+//			var nh = window.innerHeight - $workarea.offset().top -$("#footer").outerHeight() ;
+			var nh = window.innerHeight - $workarea.offset().top - 2 ;
+//			var rh = $("#rpanel").height();
+//			if( nh<rh ) nh = rh ;
 			if( nh != $workarea.height() ) {	// height changed
 				$workarea.height( nh );
 			}
@@ -116,12 +117,30 @@ if( !mapinit ) {
 			data : {q: map_area,o:"json",key:<?php echo "'$map_credentials'"; ?>},
 			dataType : 'jsonp',	jsonp :'jsonp'
 		}).done(function(location){
-			var point = location.resourceSets[0].resources[0].geocodePoints[0].coordinates ;
-			if( point && location.resourceSets[0].resources[0].confidence=="High" ) {
-				map.setView({
+			if( location.statusCode == 200 && location.resourceSets[0].resources[0] && location.resourceSets[0].resources[0].confidence=="High" ) {
+				var resource = location.resourceSets[0].resources[0] ;
+				if( resource.geocodePoints[0].coordinates ) {
+					var qzoom=11 ;		// city 
+					if( resource.bbox && resource.bbox instanceof Array ) {
+						var nb = Microsoft.Maps.LocationRect.fromLocations( [
+							new Microsoft.Maps.Location( resource.bbox[0], resource.bbox[1] ),
+							new Microsoft.Maps.Location( resource.bbox[2], resource.bbox[3] )
+						] );
+						var w = 60 ;
+						for( var z=4; z<=18 ; z++ ) {
+							if( w/2 < nb.width ) {
+							    qzoom = z ;
+								break;
+							}
+							w/=2 ;
+						}
+					}
+					var point = location.resourceSets[0].resources[0].geocodePoints[0].coordinates ;
+					map.setView({
 					center: new Microsoft.Maps.Location(point[0], point[1]),
-					zoom : 11 });	
-			}	
+					zoom : qzoom });
+				}
+			}		
 		});
 	else 
 		$.getJSON("http://freegeoip.net/json/", function(geo){
@@ -231,20 +250,31 @@ var syncLabel1 = "Player Sync" ;
 // zone changed
 function map_zonechanged( zone )
 {
-	if( zone == 'User Define' || zone == 'No Restriction' ) {
+	if( zone == 'User Define' || zone == 'Current Map' || zone == 'No Restriction' ) {
 		return ;
 	}
-	$.getJSON("zonelist.php?name="+zone, function(zoneinfo){
-		if( zoneinfo.length>0) {
-			if( zoneinfo[0].top==zoneinfo[0].bottom || zoneinfo[0].right==zoneinfo[0].left ) {
-				return ;
+	else if( zone == "Default Area" ) {
+		$.getJSON("mapquery.php", function(resp){
+			if( resp.res && resp.map.bbox.length >= 4 ) {
+				map.setView({ bounds: Microsoft.Maps.LocationRect.fromLocations( [
+					new Microsoft.Maps.Location( resp.map.bbox[0], resp.map.bbox[1] ),
+					new Microsoft.Maps.Location( resp.map.bbox[2], resp.map.bbox[3] )
+				] )});
 			}
-			map.setView({ bounds: Microsoft.Maps.LocationRect.fromLocations( [
-				new Microsoft.Maps.Location( zoneinfo[0].top, zoneinfo[0].left ),
-				new Microsoft.Maps.Location( zoneinfo[0].bottom, zoneinfo[0].right )
-			] )});
-		}
-	});
+		});
+	}
+	else 
+		$.getJSON("zonelist.php?name="+zone, function(resp){
+			if( resp.res && resp.zonelist.length>0) {
+				if( resp.zonelist[0].top==resp.zonelist[0].bottom || resp.zonelist[0].right==resp.zonelist[0].left ) {
+					return ;
+				}
+				map.setView({ bounds: Microsoft.Maps.LocationRect.fromLocations( [
+					new Microsoft.Maps.Location( resp.zonelist[0].top, resp.zonelist[0].left ),
+					new Microsoft.Maps.Location( resp.zonelist[0].bottom, resp.zonelist[0].right )
+				] )});
+			}
+		});
 }
 
 var map_search = false ;
@@ -264,7 +294,7 @@ function map_generate(mapevent, formdata)
 	$("button#playsync").button( "option", "label", syncLabel1 );
 			
 	if( mapevent.res==1 && mapevent.zone && mapevent.zone.north != null ) {
-		if( formdata.zoneName != "User Define" ) {	// don't change view on 'User Defined Zone'
+		if( formdata.zoneName != "Current Map" ) {	// don't change view on 'User Defined Zone'
 			if( mapevent.zone.north == mapevent.zone.south ) {
 				mapevent.zone.north=parseFloat(mapevent.zone.north)+0.003 ;
 				mapevent.zone.south=parseFloat(mapevent.zone.south)-0.003 ;
@@ -411,7 +441,7 @@ function loadvlmap()
 	<li><img src="res/side-mapview-logo-green.png" /></li>
 	<li><a class="lmenu" href="reportview.php"><img onmouseout="this.src='res/side-reportview-logo-clear.png'" onmouseover="this.src='res/side-reportview-logo-fade.png'" src="res/side-reportview-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="videos.php"><img onmouseout="this.src='res/side-videos-logo-clear.png'" onmouseover="this.src='res/side-videos-logo-fade.png'" src="res/side-videos-logo-clear.png" /> </a></li>
-	<li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li>
+	<?php if( !empty($enable_livetrack) ){ ?><li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li><?php } ?>
 	<li><a class="lmenu" href="settings.php"><img onmouseout="this.src='res/side-settings-logo-clear.png'" onmouseover="this.src='res/side-settings-logo-fade.png'" src="res/side-settings-logo-clear.png" /> </a></li>
 </ul>
 </div>
@@ -437,7 +467,7 @@ function loadvlmap()
 <div id="tdcmap">Bing Maps</div>
 </div>
 
-<form id="formplayvideo" enctype="application/x-www-form-urlencoded" method="get" action="playvideo.php" >
+<form id="formplayvideo" enctype="application/x-www-form-urlencoded" method="get" action="playvideo.php" target="_blank" >
 <input name="vehicle_name" type="hidden"  />
 <input name="playtime" type="hidden"  />
 </form>
