@@ -3,10 +3,9 @@
 //   Checking user password
 // By Dennis Chen @ TME	 - 2013-07-12
 // Copyright 2013 Toronto MicroElectronics Inc.
-
-	$noredir = 1 ;
-	require_once 'session.php' ;
-
+	
+    require 'sessionstart.php' ;
+	
 	header("Content-Type: application/json");
 	
 	$resp=array();
@@ -14,50 +13,36 @@
 	$resp['page']="#" ;
 	$savesess=$_SESSION ;
 	$_SESSION = array();
-	$_SESSION['xtime']=time() ;	
-	$_SESSION['release']=file_get_contents("release") ;
-	if( empty($_SESSION['release']) )
-		$_SESSION['release'] = "V3.7.23" ;	// known last release
-	$_SESSION['remote']=$_SERVER['REMOTE_ADDR'] ;
 	
-	if( $savesess['xuser'] == 'SuperAdmin' ) {
-		
-		$ha1=$savesess['key'] ;
-		$salt=$savesess['salt'] ;
-		$nonce=$savesess['nonce'] ;
-		$ha2=hash("md5", $_REQUEST['cnonce'] .":". $savesess['xuser'] .":". $nonce );
-		$rescmp=hash("md5", $ha1 . ":" . $ha2 . ":" . $nonce . ":" . $_REQUEST['cnonce'] );
-		if( $_REQUEST['result'] == $rescmp ) { // Matched!!!
-		
-			// what should be copied to new session
-			$_SESSION['superadmin']= "--SuperAdmin--" ;
-			$_SESSION['user']=$savesess['xuser'];
-			$_SESSION['user_type']=$savesess['xuser_type'];
-			$_SESSION['welcome_name'] = $savesess['welcome_name'];
-
-			$resp['user'] = $_SESSION['user'] ;
-		    $resp['res']=1 ;
-			$resp['page']="company.php" ;
-		}	
-	}
-	else if( !empty($savesess['xuser']) && !empty($_REQUEST['user']) && $savesess['xuser'] == $_REQUEST['user'] ) {
+	if( !empty($savesess['xuser']) && !empty($_REQUEST['user']) && $savesess['xuser'] == $_REQUEST['user'] ) {
 	    $ha1=$savesess['key'] ;
 		$salt=$savesess['salt'] ;
 		$nonce=$savesess['nonce'] ;
 		$ha2=hash("md5", $_REQUEST['cnonce'] .":". $savesess['xuser'] .":". $nonce );
 		$rescmp=hash("md5", $ha1 . ":" . $ha2 . ":" . $nonce . ":" . $_REQUEST['cnonce'] );
 		if( $_REQUEST['result'] == $rescmp ) { // Matched!!!
-		
 			// what should be copied to new session
 			$_SESSION['user']=$savesess['xuser'];
-			$_SESSION['user_type']=$savesess['xuser_type'];
-			if( !empty($savesess['clientid']) ) {
-				$_SESSION['clientid']=$savesess['clientid'];
-			}
+			$_SESSION['user_type']=$savesess['user_type'];
 			$_SESSION['welcome_name'] = $savesess['welcome_name'];
-						
+			$_SESSION['clientid']=hash("md5", $_SERVER['HTTP_USER_AGENT'].":".$_SERVER['REMOTE_ADDR']);
+			$_SESSION['xtime'] = time() ;
+			$_SESSION['ui'] = $default_ui_theme ;
+			$_SESSION['release']="V3.0" ;
+			session_regenerate_id(true);
+
+			// read ui theme from user setting
+			$userfile=@fopen( $user_path."/".$_SESSION['user'], "r" );
+			if( $userfile ) {
+				$ujs = fread ( $userfile, 4096 );
+				fclose($userfile);
+				$uset = json_decode($ujs,true);
+				if( isset($uset['ui']) )
+					$_SESSION['ui']=$uset['ui'];				
+			}
+			
 		    $resp['res']=1 ;
-			$resp['user']=$_SESSION['user'] ;
+			$resp['user']=$savesess['xuser'] ;
 			if( !empty($savesess['lastpage']) ) {
 				$resp['page']=$savesess['lastpage'];
 			}
@@ -66,14 +51,11 @@
 			}
 			
 			// update user last login time
-			$now = new DateTime() ;
-
-			// reconnect MySQL (don't remove this one)
-			@$conn = new mysqli("p:".$smart_host, $smart_user, $smart_password, $smart_database );
-		    $sql="UPDATE app_user SET last_logon = '".$now->format("Y-m-d H:i:s")."' WHERE user_name = '".$_SESSION['user']."';" ;
+			@$conn= new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+			$sql="UPDATE app_user SET last_logon=NOW() WHERE user_name = '".$_SESSION['user']."';" ;
 			$conn->query($sql);
+			$conn->close();
 		}
 	}
-	session_write();
 	echo json_encode($resp);
 ?>

@@ -7,26 +7,27 @@
 // By Dennis Chen @ TME	 - 2013-07-03
 // Copyright 2013 Toronto MicroElectronics Inc.
 
-    require_once 'session.php' ;
-	require_once 'vfile.php' ;
+    require 'session.php' ;
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
 
-		if( empty($_REQUEST['date']) ) {
-			$reqdate = new DateTime() ;
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+		$sql = "select now();" ;
+		$reqdate = new DateTime() ;
+		// use mysql time instead if possible
+		if($result=$conn->query($sql)) {
+			if( $row=$result->fetch_array() ) {
+				$reqdate = new DateTime( $row[0] );
+			}
+			$result->free();
 		}
-		else {
-			$reqdate = new DateTime($_REQUEST['date']) ;
-		}
-		
 		if( strstr($_SESSION['dashboardpage'], 'dashboardmorning') ) {		// dashboard morning?
 			$reqdate->sub(new DateInterval('P1D'));
 		}
 
 		// dashboard options
-		$dashboard_option = parse_ini_string( vfile_get_contents( $dashboard_conf  ) );
-		
+		@$dashboard_option = parse_ini_file($dashboard_conf) ;
 		// default value
 		if( empty( $dashboard_option ) ) $dashboard_option =  array(
 			'tmStartOfDay' => '3:00'
@@ -60,26 +61,22 @@
 			}
 			$result->free();
 		}
-		
+
 		// vehicles list
+		
 		$vcount = count($v_in_service) ;
-		$resp['count'] = $vcount ;
 		
 		for( $i=0; $i<$vcount; $i++ ) {
-		
-			set_time_limit(30);
 		
 			$vehicle = array();
 			$vehicle[0] = $v_in_service[$i] ;
 			
 			// Last Check-in
 			$vehicle[1]='';
-			// $sql = "SELECT MAX(de_datetime) FROM dvr_event WHERE de_vehicle_name = '$v_in_service[$i]' AND de_event = 1 AND de_datetime BETWEEN '$date_begin' AND '$date_end' ";
-			$sql = "SELECT MAX(de_datetime) FROM dvr_event WHERE de_vehicle_name = '$v_in_service[$i]' AND de_event = 1 AND de_datetime < '$date_end' ";
+			$sql = "SELECT de_datetime FROM dvr_event WHERE de_vehicle_name = '$v_in_service[$i]' AND de_event = 1 AND de_datetime BETWEEN '$date_begin' AND '$date_end' ORDER BY de_datetime DESC ;";
 			if( $result = $conn->query($sql) ) {
-				if( $row = $result->fetch_array() ) {
-					if( $row[0] )
-						$vehicle[1]=$row[0];
+				if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+					$vehicle[1]=$row[0];
 				}
 				$result->free();
 			}
@@ -100,20 +97,11 @@
 			$m = floor($v_duration/60)%60 ;
 			if( $m < 10 ) $m='0'.$m ;
 			$s = $v_duration%60 ;
-			if( $s < 10 ) $s='0'.$s ;
+			if( $s < 10 ) $s='0'.$s ;			
 			$vehicle[2] = "$h:$m:$s" ;
 		   
 			// M.Events
-			// $sql= "SELECT count(*) FROM `vl` WHERE vl_vehicle_name = '$v_in_service[$i]' AND vl_incident = '23' AND vl_datetime BETWEEN '$date_begin' AND '$date_end' ;";
-			// if( $result = $conn->query($sql) ) {
-			// 	if( $row = $result->fetch_array(MYSQLI_NUM) ) {
-			// 		$vehicle[4]=$row[0];
-			// 	}
-			// 	$result->free();
-			// }
-			
-			// M.Events (use panic alerts from td_alert instead)
-			$sql = "SELECT count(*) FROM `td_alert` WHERE  dvr_name = '$v_in_service[$i]' AND alert_code = '11' AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
+			$sql= "SELECT count(*) FROM `vl` WHERE vl_vehicle_name = '$v_in_service[$i]' AND vl_incident = '23' AND vl_datetime BETWEEN '$date_begin' AND '$date_end' ;";
 			if( $result = $conn->query($sql) ) {
 				if( $row = $result->fetch_array(MYSQLI_NUM) ) {
 					$vehicle[4]=$row[0];
@@ -179,10 +167,10 @@
 				}
 				$result->free();
 			}
-			if( $alerts>0 ) $alert_types[]="High Temperature" ;
+			if( $alerts>0 ) $alert_types[]="Fan Filter" ;
 			
 			$vehicle[5] = implode('/', $alert_types);
-			
+
 			// Good or Bad?
 			$vehicle[6] = empty($vehicle[5])?'<span style="color:#0f0;font-size:14px;"><strong>Good</strong></span>':'<span style="color:#B22;font-size:14px;"><strong>Bad</strong></span>' ;
 
@@ -190,6 +178,8 @@
 		}
 
 		$resp['res'] = 1 ;
+		
+		$conn->close();
 	}
 	echo json_encode( $resp );
 ?>

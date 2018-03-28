@@ -13,6 +13,8 @@
 	if( $logon ) {
 	
 		if( $_SESSION['user_type'] == "admin" ) {	
+			// MySQL connection
+			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			$query="DELETE FROM mss WHERE idx = '" . $_REQUEST['idx'] . "';" ;
 			if( $conn->query($query) ) {
 				$resp['res']=1 ;	// success

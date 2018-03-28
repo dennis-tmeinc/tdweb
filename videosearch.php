@@ -11,6 +11,7 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 
 		// to correct time
 		$fromdate=new DateTime($_REQUEST['fromdate']);
@@ -36,14 +37,14 @@
 		}
 		
 		if( count($vlist)<1 ) {
-			$videofilter=" (`time_start` BETWEEN '$fromdate 0:00:00' AND '$todate 23:59:59' ) AND (`time_end` BETWEEN '$fromdate 0:00:00' AND '$todate 23:59:59' ) " ;
+			$_SESSION['videofilter']=" (`time_start` BETWEEN '$fromdate 0:00:00' AND '$todate 23:59:59' ) AND (`time_end` BETWEEN '$fromdate 0:00:00' AND '$todate 23:59:59' ) " ;
 		}
 		else {
-			$videofilter=" (`time_start` BETWEEN '$fromdate 0:00:00' AND '$todate 23:59:59' ) AND (`time_end` BETWEEN '$fromdate 0:00:00' AND '$todate 23:59:59' ) AND ( vehicle_name IN ('".join("','",$vlist)."') ) " ;
+			$_SESSION['videofilter']=" (`time_start` BETWEEN '$fromdate 0:00:00' AND '$todate 23:59:59' ) AND (`time_end` BETWEEN '$fromdate 0:00:00' AND '$todate 23:59:59' ) AND ( vehicle_name IN ('".join("','",$vlist)."') ) " ;
 		}
 
 		// save session data
-		session_save('videofilter', $videofilter);
+		session_write();
 		
 		$resp['res']=1 ;	// success
 	}

@@ -9,12 +9,14 @@
 // Copyright 2013 Toronto MicroElectronics Inc.
 
     require 'session.php' ;
-	require_once 'vfile.php' ;
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
-		if( $_SESSION['user_type'] == "admin" ) {		// admin (power user) only
+		if( $_SESSION['user_type'] == "admin" ) {		// admin only
 		
+			// MySQL connection
+			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+
 			// secaped sql values
 			$esc_req=array();		
 			foreach( $_REQUEST as $key => $value ){
@@ -22,33 +24,21 @@
 					// keepGpsLogDataForDays	keepVideoDataForDays
 					$esc_req[$key]=$conn->escape_string($value);
 				}
-				else if(empty($company_root)) {	// others , save to registry
+				else {	// others , save to registry
 
 					$result=array();
 					$ret=-1 ;
-					
-					// double the last '\'
-					if( substr( $value, -1 ) == "\\" ) {
-						$value .= "\\" ;
+					exec("reg query HKLM\\Software\\tme\\touchdown",$result,$ret);
+					if( $ret == 0 ) {
+						exec("reg ADD HKLM\\Software\\tme\\touchdown /v $key /d \"$value\" /f");
 					}
-					
-					if( empty($stroage_regkey) ) {
-						vfile_exec("reg query HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown", $result, $ret);
-						if( $ret == 0 ) {
-							// 64bit OS
-							$stroage_regkey = "HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown" ;
-						}
-						else {
-							// 32bit OS
-							$stroage_regkey = "HKLM\\SOFTWARE\\tme\\touchdown" ;
-						}
+					else {
+						// try 64bit OS?
+						exec("reg ADD HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown /v $key /d \"$value\" /f");
 					}
-					
-					vfile_exec( "reg ADD $stroage_regkey /v $key /f /d " . escapeshellarg( $value ));
 					
 				}
 			}
-					
 			$sql="UPDATE tdconfig SET keepGpsLogDataForDays = $esc_req[keepGpsLogDataForDays], keepVideoDataForDays = $esc_req[keepVideoDataForDays] ;" ;
 			if( $conn->query($sql) ) {
 				$resp['res']=1 ;	// success

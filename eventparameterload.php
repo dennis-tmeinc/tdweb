@@ -11,12 +11,12 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		$sql="SELECT * FROM report_parameter ;" ;
 		$result=$conn->query($sql);
 		if( !empty($result)) {
 			$resp = $result->fetch_assoc() ;
-			$resp['startTime']=(new DateTime)->format("Y-m-d 0:00:00");
-			$resp['endTime']=(new DateTime)->format("Y-m-d H:i:s");
+			$resp['startTime']=(new DateTime)->format("Y-m-d");
 		}
 	}
 	echo json_encode( $resp );

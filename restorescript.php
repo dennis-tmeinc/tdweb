@@ -1,56 +1,44 @@
 <?php
 // restorescript.php - restore database from .sql file
-// Parameter:
-//      argv[1] : archive file path
-//      argv[2] : database server
-//      argv[3] : database user
-//      argv[4] : database password
-//      argv[5] : database name
-//      argv[6] : progress file
-
+// Requests:
+//      none
 // Return:
 //      JSON object
-// By Dennis Chen @ TME	 - 2014-04-23
+// By Dennis Chen @ TME	 - 2013-06-20
 // Copyright 2013 Toronto MicroElectronics Inc.
 
     require 'config.php' ;
 
-	$fpercent = false ;
-	if( !empty($argv[6]) ) {		// progress file
-		$fpercent = fopen($argv[6], 'w');
-	}
-	
-	if( $fpercent ) {
-		fwrite($fpercent, "0");
-		fflush( $fpercent );
-	}
-	
 	if( empty($argv[1]) ) {
 		$backupname="archive";
 	}
 	else {
 		$backupname=$argv[1];
 	}
+	
+	if( empty( $backup_path ) ) {
+		$backup_path=sys_get_temp_dir();
+	}
+	
+	$fpercent = fopen($backup_path.'/bkpercent', 'w');
+	fwrite($fpercent, "0");
+	fflush( $fpercent );
 
 	$ext=".sql.bz2";
 	$compress_rate = 10.6 ;		// assume bz2 get 10 times compressed
-	@$fin = fopen("compress.bzip2://$backupname$ext", "r");
+	@$fin = fopen("compress.bzip2://$backup_path/$backupname$ext", "r");
 	if( empty($fin) ) {
 		$ext=".sql.gz";
 		$compress_rate = 6.6 ;	
-		@$fin = fopen("compress.zlib://$backupname$ext", "r");
+		@$fin = fopen("compress.zlib://$backup_path/$backupname$ext", "r");
 		if( empty($fin) ) {
 			$ext=".sql";
 			$compress_rate = 1 ;	
-			@$fin = fopen("$backupname$ext", "r");
+			@$fin = fopen("$backup_path/$backupname$ext", "r");
 		}
 	}
 
 	if( empty($fin) ) {
-		if( $fpercent ) {
-			fwrite($fpercent, "-1");
-			fclose( $fpercent );
-		}
 		die;
 	}
 	
@@ -71,7 +59,7 @@
 		return filesize($path);
 	}
 	
-	$fsize = largefilesize("$backupname$ext") ;
+	$fsize = largefilesize("$backup_path/$backupname$ext") ;
 	$fsize *= $compress_rate ;
 
 	$pgtotal = 0 ;
@@ -80,7 +68,7 @@
 	$percent_s = 0 ;
 	
 	// MySQL connection
-	$conn=new mysqli($argv[2], $argv[3], $argv[4], $argv[5] );
+	$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 	
 	$statement = '';
     while (($buffer = fgets($fin, 128*1024)) !== false) {
@@ -113,9 +101,7 @@
 			if($percent>99)$percent=99 ;
 			if( $percent > $percent_s ) {
 				$percent_s = $percent ;
-				if( $fpercent ) {
-					fseek( $fpercent, 0 ); fwrite($fpercent, "".$percent_s); fflush($fpercent);
-				}
+				fseek( $fpercent, 0 ); fwrite($fpercent, "".$percent_s); fflush($fpercent);
 			}
 		}
 		else { 
@@ -124,11 +110,10 @@
     }
 	
 	fclose($fin);
-	
-	if( $fpercent ) {
-		fseek( $fpercent, 0 ); 
-		fwrite($fpercent, "100"); 
-		fclose($fpercent);	
-	}
 
+	fseek( $fpercent, 0 ); 
+	fwrite($fpercent, "100"); 
+	fclose($fpercent);	
+	
+	$conn->close();
 ?>

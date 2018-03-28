@@ -14,6 +14,8 @@
 	
 		// get total records
 		$filter = empty($_SESSION['mapfilter']['filter'])?"FALSE":$_SESSION['mapfilter']['filter'] ;
+	
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 
 		$vlgridtableexist = false ;
 		if(!empty($map_events_cache)) {		// experiment cache table mode
@@ -25,7 +27,7 @@
 				}
 			}
 		
-			if( empty($max_map_events) || $max_map_events<100000 || $max_map_events>2000000 ) {
+			if( $max_map_events<100000 || $max_map_events>2000000 ) {
 				$max_map_events=500000 ;
 			}
 			
@@ -142,7 +144,7 @@
 				$grid['rows'][] = array(
 						"id" => $row[0],
 						"cell" => array( 
-							$row[1], $row[9], vl_icon( $row ), $row[2], "$h:$m:$s", (string)round($row[7]/ 1.609334 , 1), $row[5].",".$row[6] ,""
+							$row[1], $row[9], vl_icon( $row ), $row[2], "$h:$m:$s", (string)round($row[7]/ 1.609334 , 1), $row[5].",".$row[6] 
 						) );
 			}
 			$result->free();
@@ -154,6 +156,7 @@
 			$conn->query($sql);
 		}
 		
+		$conn->close();
 		echo json_encode( $grid );
 	}
 	else {

@@ -11,6 +11,8 @@
 	require 'session.php' ;
 	header("Content-Type: application/json");
 	
+	$resp=array();
+	$resp['res']=0;
 	if( $logon ){
 		// time range
 		if( $_REQUEST['timeType'] == 0 ) {								// Exact Time, 5 min before to 5 min after
@@ -38,17 +40,13 @@
 		$startTime=$startTime->format("Y-m-d H:i:s");	    		// MYSQL format
 		$endTime=$endTime->format("Y-m-d H:i:s");	    			// MYSQL format
 
-		// escaped sql values
-		$esc_req=array();		
-		foreach( $_REQUEST as $key => $value ){
-			$esc_req[$key]=$conn->escape_string($value);
-		}
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 
 		// for group
 		$vehiclelist='';
 		if( $_REQUEST['vehicleType'] != 0 ) {	// group
 			// to read group 
-			$sql="SELECT `vehiclelist` FROM `vgroup` WHERE `name` = '$esc_req[vehicleGroupName]';" ;
+			$sql="SELECT `vehiclelist` FROM `vgroup` WHERE `name` = '$_REQUEST[vehicleGroupName]';" ;
 			if( $result=$conn->query($sql) ) {
 				if( $row = $result->fetch_array( MYSQLI_NUM ) ) {
 					$row=explode(",",$row[0]);
@@ -65,45 +63,40 @@
 		}
 		
 
-		$mapfilter=array();
+		$_SESSION['mapfilter']=array();
 
 		// convert to kmh (from mph)
-		$mapfilter['speedLimit'] = $speedLimit = $_REQUEST['speedLimit']*1.609344 ;		
+		$_SESSION['mapfilter']['speedLimit'] = $speedLimit = $_REQUEST['speedLimit']*1.609344 ;		
 		
-		$mapfilter['bSpeeding'] = 	!empty($_REQUEST['bSpeeding']) ;
+		$_SESSION['mapfilter']['bSpeeding'] = 	!empty($_REQUEST['bSpeeding']) ;
 		
 		// correct g-force to absolute value
-		$mapfilter['gRacingStart'] = round ( abs($_REQUEST['gRacingStart']), 8 );
-		$mapfilter['gRearImpact'] = round( abs($_REQUEST['gRearImpact']), 8);
-		$mapfilter['gHardBrake'] = round( abs($_REQUEST['gHardBrake']), 8);
-		$mapfilter['gFrontImpact'] = round( abs($_REQUEST['gFrontImpact']), 8);
-		$mapfilter['gHardTurn'] = round( abs($_REQUEST['gHardTurn']), 8);
-		$mapfilter['gSideImpact'] = round( abs($_REQUEST['gSideImpact']), 8);
-		$mapfilter['gBumpyRide'] = round( abs($_REQUEST['gBumpyRide']), 8);
+		$_SESSION['mapfilter']['gRacingStart'] = round ( abs($_REQUEST['gRacingStart']), 8 );
+		$_SESSION['mapfilter']['gRearImpact'] = round( abs($_REQUEST['gRearImpact']), 8);
+		$_SESSION['mapfilter']['gHardBrake'] = round( abs($_REQUEST['gHardBrake']), 8);
+		$_SESSION['mapfilter']['gFrontImpact'] = round( abs($_REQUEST['gFrontImpact']), 8);
+		$_SESSION['mapfilter']['gHardTurn'] = round( abs($_REQUEST['gHardTurn']), 8);
+		$_SESSION['mapfilter']['gSideImpact'] = round( abs($_REQUEST['gSideImpact']), 8);
+		$_SESSION['mapfilter']['gBumpyRide'] = round( abs($_REQUEST['gBumpyRide']), 8);
 
-		$mapfilter['bRacingStart'] = !empty($_REQUEST['bRacingStart']) ;
-		$mapfilter['bRearImpact'] = !empty($_REQUEST['bRearImpact']) ;
-		$mapfilter['bHardBrake'] = !empty($_REQUEST['bHardBrake']) ;
-		$mapfilter['bFrontImpact'] = !empty($_REQUEST['bFrontImpact']) ;
-		$mapfilter['bHardTurn'] = !empty($_REQUEST['bHardTurn']) ;
-		$mapfilter['bSideImpact'] = !empty($_REQUEST['bSideImpact']) ;
-		$mapfilter['bBumpyRide'] = !empty($_REQUEST['bBumpyRide']) ;
+		$_SESSION['mapfilter']['bRacingStart'] = !empty($_REQUEST['bRacingStart']) ;
+		$_SESSION['mapfilter']['bRearImpact'] = !empty($_REQUEST['bRearImpact']) ;
+		$_SESSION['mapfilter']['bHardBrake'] = !empty($_REQUEST['bHardBrake']) ;
+		$_SESSION['mapfilter']['bFrontImpact'] = !empty($_REQUEST['bFrontImpact']) ;
+		$_SESSION['mapfilter']['bHardTurn'] = !empty($_REQUEST['bHardTurn']) ;
+		$_SESSION['mapfilter']['bSideImpact'] = !empty($_REQUEST['bSideImpact']) ;
+		$_SESSION['mapfilter']['bBumpyRide'] = !empty($_REQUEST['bBumpyRide']) ;
 
 		// save parameter for video clips/hours statistics
-		$mapfilter['vehiclelist'] = $vehiclelist ;
-		$mapfilter['endTime'] = $endTime ;
-		$mapfilter['startTime'] = $startTime ;
+		$_SESSION['mapfilter']['vehiclelist'] = $vehiclelist ;
+		$_SESSION['mapfilter']['endTime'] = $endTime ;
+		$_SESSION['mapfilter']['startTime'] = $startTime ;
 
 		// zone
 		$north=100 ;	// invalid value for no zone
 
-		if( !empty($_REQUEST['zoneName']) && 
-			strcasecmp ( $_REQUEST['zoneName'] , 'No Restriction') && 
-			strcasecmp ( $_REQUEST['zoneName'] , 'Default Area') && 
-			strcasecmp ( $_REQUEST['zoneName'] , 'Current Map') && 
-			strcasecmp ( $_REQUEST['zoneName'] , 'User Define') ) 
-		{
-			$sql = "SELECT * FROM zone WHERE `name` = '$esc_req[zoneName]' AND (`type` = 1 OR `user` = '$_SESSION[user]') ";
+		if( !empty($_REQUEST['zoneName']) && strcasecmp ( $_REQUEST['zoneName'] , 'No Restriction') && strcasecmp ( $_REQUEST['zoneName'] , 'User Define') ) {
+			$sql = "SELECT * FROM zone WHERE `name` = '$_REQUEST[zoneName]' ;";
 			if( $result = $conn->query($sql) ) {
 				if( $row=$result->fetch_assoc() ) {
 					$north=$row['top'];
@@ -112,30 +105,6 @@
 					$east=$row['right'];
 				}
 				$result->free();
-			}
-		}
-		
-		if( !empty($_REQUEST['zoneName']) && 
-			strcasecmp ( $_REQUEST['zoneName'] , 'Default Area') == 0 ) 
-		{
-			if( empty( $map_area ) ) {
-				$query = "United States" ;
-			}
-			else {
-				$query = $map_area ;
-			}
-			
-			$url =  "https://dev.virtualearth.net/REST/v1/Locations?q=".rawurlencode($query)."&o=json&maxResults=1&key=".$map_credentials ;
-			@$maparea = file_get_contents( $url );
-			if( !empty($maparea) ) {
-				$maparea = json_decode($maparea, true) ;
-			}
-			$resp['map'] = array();
-			if( !empty( $maparea['resourceSets'][0]['resources'][0]['bbox'] )) {
-				$south=$maparea['resourceSets'][0]['resources'][0]['bbox'][0] ;
-				$west=$maparea['resourceSets'][0]['resources'][0]['bbox'][1] ;
-				$north=$maparea['resourceSets'][0]['resources'][0]['bbox'][2];
-				$east=$maparea['resourceSets'][0]['resources'][0]['bbox'][3];				
 			}
 		}
 		
@@ -201,68 +170,17 @@
 			$filter_event .= "( vl_incident = 23 )" ;
 		}
 	
-		// Drive By Event
-		if( !empty($_REQUEST['bDriveBy']) ) {
-			if( strlen( $filter_event )>0 ) {
-				$filter_event .= " OR " ;
-			}
-			$filter_event .= "( vl_incident = 40 )" ;
-		}
-	
-		// TVS events
-		if( !empty($_REQUEST['bDoorOpen']) && $_REQUEST['bDoorOpen']!="0" ) {
-			if( strlen( $filter_event )>0 ) {
-				$filter_event .= " OR " ;
-			}
-			$filter_event .= "( vl_incident = 10 )" ;
-		}
-		
-		if( !empty($_REQUEST['bDoorClose']) && $_REQUEST['bDoorClose']!="0" ) {
-			if( strlen( $filter_event )>0 ) {
-				$filter_event .= " OR " ;
-			}
-			$filter_event .= "( vl_incident = 11 )" ;
-		}
-		
-		if( !empty($_REQUEST['bIgnitionOn']) && $_REQUEST['bIgnitionOn']!="0" ) {
-			if( strlen( $filter_event )>0 ) {
-				$filter_event .= " OR " ;
-			}
-			$filter_event .= "( vl_incident = 12 )" ;
-		}
-		
-		if( !empty($_REQUEST['bIgnitionOff']) && $_REQUEST['bIgnitionOff']!="0" ) {
-			if( strlen( $filter_event )>0 ) {
-				$filter_event .= " OR " ;
-			}
-			$filter_event .= "( vl_incident = 13 )" ;
-		}
-		
-		if( !empty($_REQUEST['bMeterOn']) && $_REQUEST['bMeterOn']!="0" ) {
-			if( strlen( $filter_event )>0 ) {
-				$filter_event .= " OR " ;
-			}
-			$filter_event .= "( vl_incident = 41 )" ;
-		}
-		
-		if( !empty($_REQUEST['bMeterOff']) && $_REQUEST['bMeterOff']!="0" ) {
-			if( strlen( $filter_event )>0 ) {
-				$filter_event .= " OR " ;
-			}
-			$filter_event .= "( vl_incident = 42 )" ;
-		}
-		
 		// g-force filter
 		$filter_gforce = '';
 		
 		// all g-force value are absolute;
-		$gRacingStart = $mapfilter['gRacingStart'];
-		$gRearImpact = $mapfilter['gRearImpact'];
-		$gHardBrake = $mapfilter['gHardBrake'];
-		$gFrontImpact = $mapfilter['gFrontImpact'];
-		$gHardTurn = $mapfilter['gHardTurn'];
-		$gSideImpact = $mapfilter['gSideImpact'];
-		$gBumpyRide = $mapfilter['gBumpyRide'];
+		$gRacingStart = $_SESSION['mapfilter']['gRacingStart'];
+		$gRearImpact = $_SESSION['mapfilter']['gRearImpact'];
+		$gHardBrake = $_SESSION['mapfilter']['gHardBrake'];
+		$gFrontImpact = $_SESSION['mapfilter']['gFrontImpact'];
+		$gHardTurn = $_SESSION['mapfilter']['gHardTurn'];
+		$gSideImpact = $_SESSION['mapfilter']['gSideImpact'];
+		$gBumpyRide = $_SESSION['mapfilter']['gBumpyRide'];
 		
 		// Racing start & Rear impact
 		$g = !empty($_REQUEST['bRacingStart']) ; 
@@ -357,15 +275,18 @@
 		else {
 			$filter = "FALSE" ;
 		}
+		$conn->close();
 
-		$mapfilter['evcounts'] = $resp['count'] ;
-		$mapfilter['filter'] = $filter ;
-		// save mapfilter to session data
-		session_save( 'mapfilter', $mapfilter );
+		$_SESSION['mapfilter']['evcounts'] = $resp['count'] ;
+		$_SESSION['mapfilter']['filter'] = $filter ;
+		// save session data
+		session_write();
 
 		$resp['res']=1;
 
 	}
-
+	else {
+		$resp['errormsg']="Session Error!";
+	}
 	echo json_encode( $resp );
 ?>

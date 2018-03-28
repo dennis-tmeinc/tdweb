@@ -13,13 +13,13 @@
 	
 	if( $logon ) {
 		
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+		
 		if( !empty($_REQUEST['vehicle_id']) ) {
-			$vehicle_id = $conn->escape_string( $_REQUEST['vehicle_id'] ) ;
-			$sql="SELECT * FROM vehicle WHERE vehicle_id = $vehicle_id " ;
+			$sql="SELECT * FROM vehicle WHERE vehicle_id = ".$_REQUEST['vehicle_id'].";";
 		}
 		else if( !empty($_REQUEST['vehicle_name']) ) {
-			$vehicle_name = $conn->escape_string( $_REQUEST['vehicle_name'] ) ;
-			$sql="SELECT * FROM vehicle WHERE vehicle_name = '$vehicle_name';";
+			$sql="SELECT * FROM vehicle WHERE vehicle_name = '$_REQUEST[vehicle_name]';";
 		}
 		else if( !empty($_REQUEST['nameonly']) && $_REQUEST['nameonly'] == "y" ) {
 			$sql="SELECT vehicle_name FROM vehicle ORDER BY vehicle_name ;" ;
@@ -36,6 +36,7 @@
 			$resp['res'] = 1 ;
 			$result->free();
 		}
+		$conn->close();
 	}
 	echo json_encode($resp);
 ?>

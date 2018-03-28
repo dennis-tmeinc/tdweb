@@ -11,6 +11,7 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
+		$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		$allow=false ;
 		if(  $_SESSION['user_type'] != "admin" ) {	// admin 
 			// to verify if the request is come from the vmq owner

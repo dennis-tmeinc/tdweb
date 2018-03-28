@@ -7,20 +7,27 @@
 // By Dennis Chen @ TME	 - 2013-07-03
 // Copyright 2013 Toronto MicroElectronics Inc.
 
-    require_once 'session.php' ;
-	require_once 'vfile.php' ;
+    require 'session.php' ;
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
 
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+		$sql = "select now();" ;
 		$reqdate = new DateTime() ;
+		// use mysql time instead if possible
+		if($result=$conn->query($sql)) {
+			if( $row=$result->fetch_array() ) {
+				$reqdate = new DateTime( $row[0] );
+			}
+			$result->free();
+		}
 		if( strstr($_SESSION['dashboardpage'], 'dashboardmorning') ) {		// dashboard morning?
 			$reqdate->sub(new DateInterval('P1D'));
 		}
 
-		// load dashboard options
-		$dashboard_option = parse_ini_string( vfile_get_contents( $dashboard_conf ) ) ;
-				
+		// dashboard options
+		@$dashboard_option = parse_ini_file($dashboard_conf) ;
 		// default value
 		if( empty( $dashboard_option ) ) $dashboard_option =  array(
 			'tmStartOfDay' => '3:00'
@@ -65,20 +72,15 @@
 		$__result_ok=FALSE ;
 		if( $result ){
 			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
-				if( $row[0] ) {
-					$Distance_Travelled_day = $row[0] ;
-					$__result_ok=TRUE ;
-				}
-				if( $row[1] ) {
-					$Operating_time_day =$row[1] ;
-					$__result_ok=TRUE ;
-				}
+				$Distance_Travelled_day = $row[0] ;
+				$Operating_time_day =$row[1] ;
+				$__result_ok=TRUE ;
 			}
 			$result->free();
 		}
 
 		if( !empty($_REQUEST['calc']) && $_REQUEST['calc'] == 'y' ) {
-			$__result_ok=FALSE ;
+		$__result_ok=FALSE ;
 		}
 
 		if(!$__result_ok) {	// not hit by vehicle_daily, to calculate from table vl
@@ -98,8 +100,6 @@
 			$sql = "SELECT vl_vehicle_name, vl_datetime, vl_lat, vl_lon FROM `vl` WHERE vl_datetime BETWEEN '$date_begin' AND '$date_end' ORDER BY vl_vehicle_name, vl_datetime;";
 			$result=$conn->query($sql,MYSQLI_USE_RESULT);	// set MYSQLI_USE_RESULT for huge data
 			if( $result ){
-			
-						
 				$pvehicle = "";
 				$ptime=0;
 				$plat = 0;
@@ -203,126 +203,130 @@
 		$resp['report']['Total_Video_Clips_day'] = round ( $Total_Video_Clips_day, 2 );
 		$resp['report']['Total_Video_Clips_avg'] = round ( $Total_Video_Clips_avg, 2 );
 
-		// alerts (incident from table vl:
-		// 		vl_incident, 1=stop, 2=route, 4=idling, 16= g-force event, 17=desstop, 18=parking, 23=marked event
-		$vl_codes = array(
-			array( 
-				"code" => 4, 
-				"varname" => "Idling_Alerts"
-			),
-			array( 
-				"code" => 16, 
-				"varname" => "GForce_Alerts"
-			)
-		);
-		
-		foreach ( $vl_codes as $alert ) {
-			$alert_code = $alert['code'] ;
-			$sql = "SELECT count(*) FROM `vl` WHERE vl_incident = $alert_code AND vl_datetime BETWEEN '$date_begin' AND '$date_end' ;";
-			$result=$conn->query($sql);
-			if( $result ){
-				if( $row = $result->fetch_array(MYSQLI_NUM) ) {
-					$resp['report'][$alert['varname'].'_day']=$row[0] ;
-				}
-				$result->free();
-			}
-
-			$sql = "SELECT count(*) FROM `vl` WHERE vl_incident = $alert_code AND vl_datetime BETWEEN '$date_avg' AND '$date_end' ;";
-			$result=$conn->query($sql);
-			if( $result ){
-				if( $row = $result->fetch_array(MYSQLI_NUM) ) {
-					$resp['report'][$alert['varname'].'_avg']=round( ($row[0])/($dashboard_option['nAverageDuration']), 2) ;
-				}
-				$result->free();
-			}
-		}
-		
 		// Alerts come from table td_alert
 		//    alert_codes,  1= upload, 2=temperature(fan filter), 3=failed login (connectin), 4= video lost (camera), 5= recording alert
-		// td_alert codes
-		/*
-			1: video_uploaded, 
-			2: high temperature, 
-			3: fail_login, connection 
-			4: video_lost, 
-			5: storage fail, recording
-			6: rtc error, rtc
-			7: partial storage fail,
-			8: system reset, 
-			9: ignition on 
-			10: ignition off
-			11: panic alert
-		*/
-		
-		$system_alerts=0;
-		
-		$alert_codes = array(
-			array( 
-				"code" => 11, 
-				"varname" => "Panic_Alerts",
-				"system" => false 
-			),
-			array( 
-				"code" => 3, 
-				"varname" => "Connection_Alerts",
-				"system" => true 
-			),
-			array(
-				"code" => 4, 
-				"varname" => "Camera_Alerts",
-				"system" => true 
-			),
-			array(
-				"code" => 5, 
-				"varname" => "Recording_Alerts",
-				"system" => true 
-			),
-			array(
-				"code" => 8, 
-				"varname" => "System_Reset_Alerts",
-				"system" => true 
-			),		
-			array(
-				"code" => 2, 		// High temperature alerts
-				"varname" => "Fan_Filter_Alerts",
-				"system" => true 
-			),			
-			array(
-				"code" => 7, 
-				"varname" => "Partial_Storage_Failure",
-				"system" => true 
-			)
-		);
 
-		foreach ( $alert_codes as $alert ) {
-			$alert_code = $alert['code'] ;
-			$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = $alert_code AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
-			$result=$conn->query($sql);
-			if( $result ){
-				if( $row = $result->fetch_array(MYSQLI_NUM) ) {
-					$resp['report'][ $alert["varname"] . '_day']=$row[0] ;
-					if( $alert['system'] ) {
-						$system_alerts += $row[0] ;
-					}
-				}
-				$result->free();
+		// Connection Alerts
+		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = 3 AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['Connection_Alerts_day']=$row[0] ;
 			}
-
-			$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = $alert_code AND date_time BETWEEN  '$date_avg' AND '$date_end' ;";
-			$result=$conn->query($sql);
-			if( $result ){
-				if( $row = $result->fetch_array(MYSQLI_NUM) ) {
-					$resp['report'][ $alert["varname"] . '_avg']=round( ($row[0])/($dashboard_option['nAverageDuration']), 2) ;
-				}
-				$result->free();
-			}
+			$result->free();
 		}
-		
-		$resp['report']['system_alerts'] = $system_alerts ;
-		$resp['report']['marked_events'] = $resp['report'][ 'Panic_Alerts_day' ] ;
-	
-		
+
+		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = 3 AND date_time BETWEEN  '$date_avg' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['Connection_Alerts_avg']=round( ($row[0])/($dashboard_option['nAverageDuration']), 2) ;
+			}
+			$result->free();
+		}
+
+		// Camera Alerts
+
+		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = 4 AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['Camera_Alerts_day']=$row[0] ;
+			}
+			$result->free();
+		}
+
+		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = 4 AND date_time BETWEEN  '$date_avg' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['Camera_Alerts_avg']=round( ($row[0])/($dashboard_option['nAverageDuration']), 2) ;
+			}
+			$result->free();
+		}
+
+		// Recording Alerts
+		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = 5 AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['Recording_Alerts_day']=$row[0] ;
+			}
+			$result->free();
+		}
+
+		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = 5 AND date_time BETWEEN  '$date_avg' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['Recording_Alerts_avg']=round( ($row[0])/($dashboard_option['nAverageDuration']), 2) ;
+			}
+			$result->free();
+		}
+
+		// Fan Filter Alerts
+		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = 2 AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['Fan_Filter_Alerts_day']=$row[0] ;
+			}
+			$result->free();
+		}
+
+		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = 2 AND date_time BETWEEN  '$date_avg' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['Fan_Filter_Alerts_avg']=round( ($row[0])/($dashboard_option['nAverageDuration']), 2) ;
+			}
+			$result->free();
+		}
+
+		// alerts (incident from table vl:
+		// 		vl_incident, 1=stop, 2=route, 4=idling, 16= g-force event, 17=desstop, 18=parking, 23=marked event
+
+		// Idling Alerts, from table vl
+		$sql = "SELECT count(*) FROM `vl` WHERE vl_incident = '4' AND vl_datetime BETWEEN '$date_begin' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['Idling_Alerts_day']=$row[0] ;
+			}
+			$result->free();
+		}
+
+		$sql = "SELECT count(*) FROM `vl` WHERE vl_incident = '4' AND vl_datetime BETWEEN '$date_avg' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['Idling_Alerts_avg']=round( ($row[0])/($dashboard_option['nAverageDuration']), 2) ;
+			}
+			$result->free();
+		}
+
+		// G-Force Alerts, from table vl
+		$sql = "SELECT count(*) FROM `vl` WHERE vl_incident = '16' AND vl_datetime BETWEEN '$date_begin' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['GForce_Alerts_day']=$row[0] ;
+			}
+			$result->free();
+		}
+
+		$sql = "SELECT count(*) FROM `vl` WHERE vl_incident = '16' AND vl_datetime BETWEEN '$date_avg' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['GForce_Alerts_avg']=round( ($row[0])/($dashboard_option['nAverageDuration']), 2) ;
+			}
+			$result->free();
+		}
+
 		$resp['res'] = 1 ;
+		
+		$conn->close();
 	}
 	echo json_encode( $resp );
 ?>

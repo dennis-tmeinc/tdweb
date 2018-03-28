@@ -1,13 +1,7 @@
 <?php
 // backupscript.php - Do the real backup job
-// Parameter:
-//      argv[1] : archive file path
-//      argv[2] : database server
-//      argv[3] : database user
-//      argv[4] : database password
-//      argv[5] : database name
-//      argv[6] : progress file
-
+// Requests:
+//      none
 // Return:
 //      JSON object
 // By Dennis Chen @ TME	 - 2013-06-05
@@ -15,22 +9,23 @@
 
     require 'config.php' ;
 
-	$fpercent = false ;
-	
-	echo $argv[1] ;
-	echo "\r\n" ;
-	
-	if( !empty($argv[6]) ) {		// progress file
-		$fpercent = fopen($argv[6], 'w');
+	if( empty($argv[1]) ) {
+		$backupname="archive";
+	}
+	else {
+		$backupname=$argv[1];
 	}
 	
-	if( $fpercent ) {
-		fwrite($fpercent, "0");
-		fflush( $fpercent );
+	if( empty( $backup_path ) ) {
+		$backup_path=sys_get_temp_dir();
 	}
+	
+	$fpercent = fopen($backup_path.'/bkpercent', 'w');
+	fwrite($fpercent, "0");
+	fflush( $fpercent );
 
 	// MySQL connection
-	$conn=new mysqli($argv[2], $argv[3], $argv[4], $argv[5] );
+	$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 
 	// No table options
 	$sql = "set SESSION sql_mode = CONCAT_WS(',','NO_TABLE_OPTIONS', @@sql_mode)" ;
@@ -41,40 +36,28 @@
 	$progresstotal = 1 ;
 	if( $result = $conn->query($sql) ) {
 		while( $row = $result->fetch_array() ) {
-			if( $row['Engine'] == 'MEMORY' ) {	// don't backup memory tables
-				continue ;
-			}
-			if( strncasecmp( $row['Name'], '_tmp_', 5)==0 ) {	// don't backup temporary tables
-				continue ;
-			}
 			$tables[]=$row;
 			$progresstotal += 5 + $row['Rows'] ;
 		}
 		$result->free();
 	}
 
-	$backupname = $argv[1] ;
 	$ext=".sql.bz2";
-	$tmpext=".bz2";
-	@$fout = fopen("compress.bzip2://$backupname$tmpext", "w");
+	@$fout = fopen("compress.bzip2://$backup_path/.$backupname$ext", "w");
 	if( empty($fout) ) {
 		$ext=".sql.gz";
-		$tmpext=".gz";
-		@$fout = fopen("compress.zlib://$backupname$tmpext", "w");
+		@$fout = fopen("compress.zlib://$backup_path/.$backupname$ext", "w");
 		if( empty($fout) ) {
 			$ext=".sql";
-			$tmpext=".tmp";
-			@$fout = fopen("$backupname$tmpext", "w");
+			@$fout = fopen("$backup_path/.$backupname$ext", "w");
 		}
 	}
 
 	if( empty($fout) ) {
 //		echo "Can't open archive file.";
-		if( $fpercent ) {
-			fseek( $fpercent, 0 );
-			fwrite($fpercent, "-1");
-			fclose($fpercent);
-		}
+		fseek( $fpercent, 0 );
+		fwrite($fpercent, "-1");
+		fclose($fpercent);
 		die;
 	}
 	
@@ -83,7 +66,16 @@
 	fputs( $fout, "--  @PGT:$progresstotal \n");
 	fputs( $fout, "--  \n");
 	
+	$sql = "select now();" ;
 	$now = new DateTime() ;
+	// use mysql time instead if possible
+	if($result=$conn->query($sql)) {
+		if( $row=$result->fetch_array() ) {
+			$now = new DateTime( $row[0] );
+		}
+		$result->free();
+	}
+	
 	fputs( $fout, "-- @TME ".$now->format("Y-m-d H:i:s")."\n\n");
 
 	$progress = 0 ;
@@ -167,9 +159,7 @@
 					if($percent>99)$percent=99 ;
 					if( $percent > $percent_s ) {
 						$percent_s = $percent ;
-						if( $fpercent ) {
-							fseek( $fpercent, 0 ); fwrite($fpercent, ''.$percent_s); fflush($fpercent);
-						}
+						fseek( $fpercent, 0 ); fwrite($fpercent, ''.$percent_s); fflush($fpercent);
 					}
 				}
 				if( $length > 0 ) {
@@ -185,21 +175,19 @@
 		if($percent>99)$percent=99 ;
 		if( $percent > $percent_s ) {
 			$percent_s = $percent ;
-			if( $fpercent ) {
-				fseek( $fpercent, 0 ); fwrite($fpercent, ''.$percent_s); fflush($fpercent);
-			}
+			fseek( $fpercent, 0 ); fwrite($fpercent, ''.$percent_s); fflush($fpercent);
 		}		
 	}
 	
 	fclose( $fout );
 
 	// rename to final file name
-	rename("$backupname$tmpext", "$backupname$ext");
+	rename("$backup_path/.$backupname$ext", "$backup_path/$backupname$ext");
 	
-	if( $fpercent ) {
-		fseek( $fpercent, 0 ); 
-		fwrite($fpercent, "100"); 
-		fclose($fpercent);
-	}
+	fseek( $fpercent, 0 ); 
+	fwrite($fpercent, "100"); 
+	fclose($fpercent);
+	
+	$conn->close();
 	
 ?>

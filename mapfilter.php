@@ -3,22 +3,19 @@
 // By Dennis Chen @ TME	 - 2013-05-15
 // Copyright 2013 Toronto MicroElectronics Inc.
 // MySQL connection
-?>
 
-<div class="ui-widget ui-widget-content ui-corner-all" id="rpanel">
-<table style="width:100%;"><tr>
-<td><button id="generate" style="font-size:1.3em;">Generate</button></td>
-<td id="gen_count"></td>
-</tr></table>
-<p/>
+if( $logon && empty($conn) ) {
+	@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+}
+?>
+<div class="ui-widget ui-widget-content ui-corner-all" id="rpanel"><button id="generate" style="font-size:1.3em;">Generate</button>
 
 <form action="#" id="filterform">
 <fieldset><legend>Quick Filter</legend> <input id="quickfilter" name="name" maxlength="45" type="text" style="background: white url(res/triangle_s.png) right no-repeat; padding-right: 12px; 
-" /><p />
+" /><br />
 <button id="savequickfilter">Save</button><button id="deletequickfilter">Delete</button></fieldset>
 
-<fieldset><legend>Select Time</legend> <input name="timeType" type="radio" value="0" />Exact Time<input checked="checked" name="timeType" type="radio" value="1" />Full Day<input name="timeType" type="radio" value="2" />Time Range
-<table id="timeinput" border="0" cellpadding="0" cellspacing="0">
+<fieldset><legend>Select Time</legend> <input name="timeType" type="radio" value="0" />Exact Time<input checked="checked" name="timeType" type="radio" value="1" />Full Day<input name="timeType" type="radio" value="2" />Time Range<table border="0" cellpadding="0" cellspacing="0">
 	<tbody>
 		<tr>
 			<td id="starttime">Date:</td>
@@ -33,152 +30,97 @@
 	</tbody>
 </table>
 </fieldset>
-<p/>
 
-<p><input checked="checked" name="vehicleType" type="radio" value="0" />Vehicle<input name="vehicleType" type="radio" value="1" />Group <select name="vehicleGroupName" style="width:150px" ></select></p>
-<p><input checked="checked" name="zoneType" type="radio" value="0" />Inside<input name="zoneType" type="radio" value="1" />Outside <select name="zoneName" style="width:150px">
-<option>No Restriction</option>
-<?php
-	if( basename($_SERVER["SCRIPT_NAME"]) == "mapview.php" ) {
-		if( !empty($map_area) ) {
-			echo "<option>Default Area</option>" ;
-		}
-		echo "<option>Current Map</option>" ;
-	}
+<div><input checked="checked" name="vehicleType" type="radio" value="0" />Vehicle<input name="vehicleType" type="radio" value="1" />Group<select name="vehicleGroupName" style="width:150px" ></select></div>
+
+<div><input checked="checked" name="zoneType" type="radio" value="0" />Inside<input name="zoneType" type="radio" value="1" />Outside<select name="zoneName" style="width:150px"> <?php
 	$sql="SELECT `name` FROM zone WHERE `type` = 1 OR `user` = '$_SESSION[user]';" ;
 	if( $result=$conn->query($sql) ){
 		while( $row = $result->fetch_array(MYSQLI_NUM) ) {
-			if( $row[0] != "No Restriction" && $row[0] != "User Define" ) {
-				echo "<option>$row[0]</option>";
-			}
+			echo "<option>$row[0]</option>";
 		}
 		$result->free();
 	}
-?></select></p>
+?> </select></div>
 
-<?php if( basename($_SERVER["SCRIPT_NAME"]) == "mapview.php" ) { ?>
+<fieldset><legend>Select checkbox to show</legend>
 
-<div>
-<button id="btaddress">Address</button>
-<input size="24" name="txtaddress" type="text"/>
-</div>
-
-<?php } ?>
-
-<div id="accordion" >
-
-<h3>Select Events</h3>
-<div>
-
-<table border="0" cellpadding="0" cellspacing="1" id="event" width="100%">
+<table border="0" cellpadding="0" cellspacing="0" id="event" width="100%">
 	<tbody>
 		<tr>
-			<td><input checked="checked" name="bStop" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_stop.png" /> Stopping </td>
-			<td><input name="stopDuration" size="6" type="text" /> s </td>
-		</tr>
-		
-<?php if( empty($tvs_filter) ) { ?>
-		<tr>
-			<td><input checked="checked" name="bDesStop" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_desstop.png" /> Bus Stops&nbsp;</td>
-			<td><input name="desStopDuration" size="6" type="text" /> s </td>
-		</tr>
-<?php } ?>
-		
-		<tr>
-			<td><input checked="checked" name="bIdling" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_idle.png" /> Idling </td>
-			<td><input name="idleDuration" size="6" type="text" /> s </td>
-		</tr>
-
-<?php if( empty($tvs_filter) ) { ?>
-		<tr>
-			<td><input checked="checked" name="bParking" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_park.png" /> Parking </td>
-			<td><input name="parkDuration" size="6" type="text" /> s </td>
-		</tr>
-<?php } ?>
-
-		<tr>
-			<td colspan="2"><input checked="checked" name="bSpeeding" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_speed.png" /> Speeding Limit: <input maxlength="10" name="speedLimit" size="2" type="text" value="0" /> mph</td>
+			<td><input checked="checked" name="bStop" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_stop.png" /> Stopping</td>
+			<td><input name="stopDuration" size="6" type="text" />s</td>
 		</tr>
 		<tr>
-			<td colspan="2"><input checked="checked" name="bRoute" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_route.png" /> Route </td>
+			<td><input checked="checked" name="bDesStop" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_desstop.png" /> Bus Stops</td>
+			<td><input name="desStopDuration" size="6" type="text" />s</td>
 		</tr>
 		<tr>
-			<td colspan="2"><input checked="checked" name="bEvent" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_mevent.png" /> M.Events </td>
+			<td><input checked="checked" name="bIdling" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_idle.png" /> Idling</td>
+			<td><input name="idleDuration" size="6" type="text" />s</td>
 		</tr>
-		
-<?php if( empty($tvs_filter) ) { ?>
 		<tr>
-			<td colspan="2"><input checked="checked" name="bDriveBy" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_driveby.png" /> Drive By </td>
+			<td><input checked="checked" name="bParking" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_park.png" /> Parking</td>
+			<td><input name="parkDuration" size="6" type="text" />s</td>
 		</tr>
-<?php } ?>
-		
-<?php if( !empty($tvs_filter) ) { ?>
 		<tr>
-			<td><input name="bDoorOpen" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_dooropen.png" />Door Open</td>
-			<td><input name="bDoorClose" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_doorclose.png" />Door Close</td>
+			<td><input checked="checked" name="bSpeeding" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_speed.png" /> Speeding</td>
+			<td>Limit: <input maxlength="10" name="speedLimit" size="10" type="text" value="0" /></td>
 		</tr>
-
 		<tr>
-			<td><input name="bIgnitionOn" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_ignitionon.png" />Ignition On</td>
-			<td><input name="bIgnitionOff" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_ignitionoff.png" />Ignition Off</td>
+			<td><input checked="checked" name="bRoute" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_route.png" /> Route</td>
+			<td><input checked="checked" name="bEvent" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_mevent.png" /> M.Events</td>
 		</tr>
-		
-		<tr>
-			<td><input name="bMeterOn" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_meteron.png" />Meter On</td>
-			<td><input name="bMeterOff" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_meteroff.png" />Meter Off</td>
-		</tr>
-<?php } ?>
-		
 	</tbody>
 </table>
+</fieldset>
 
-</div>
+<div>&nbsp;</div>
 
-<h3>G-Force Parameters</h3>
+<fieldset><legend>G-Force Data/Parameters</legend>
+
 <div>
 <table border="0" cellpadding="0" cellspacing="1" id="gforceparameters" style="width: 100%;">
 	<tbody>
 		<tr>
 			<td><input checked="checked" name="bRacingStart" type="checkbox" />
 			<img alt="" class="evicon" src="res/map_icons_rs.png" /></td><td>Racing Start</td>
-			<td><input name="gRacingStart" size="5" type="text" value="0.0" /> g </td>
+			<td><input name="gRacingStart" size="5" type="text" value="0.0" />g</td>
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bHardBrake" type="checkbox" />
 			<img alt="" class="evicon" src="res/map_icons_hb.png" /></td><td>Hard Brake</td>
-			<td><input name="gHardBrake" size="5" type="text" value="0.0" /> g </td>
+			<td><input name="gHardBrake" size="5" type="text" value="0.0" />g</td>
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bHardTurn" type="checkbox" />
 			<img alt="" class="evicon" src="res/map_icons_ht.png" /></td><td>Hard Turn</td>
-			<td><input name="gHardTurn" size="5" type="text" value="0.0" /> g </td>
+			<td><input name="gHardTurn" size="5" type="text" value="0.0" />g</td>
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bRearImpact" type="checkbox" />
 			<img alt="" class="evicon" src="res/map_icons_ri.png" /></td><td>Rear Impact</td>
-			<td><input name="gRearImpact" size="5" type="text" value="0.0" /> g </td>
+			<td><input name="gRearImpact" size="5" type="text" value="0.0" />g</td>
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bFrontImpact" type="checkbox" />
 			<img alt="" class="evicon" src="res/map_icons_fi.png" /></td><td>Front Impact</td>
-			<td><input name="gFrontImpact" size="5" type="text" value="0.0" /> g </td>
+			<td><input name="gFrontImpact" size="5" type="text" value="0.0" />g</td>
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bSideImpact" type="checkbox" />
 			<img alt="" class="evicon" src="res/map_icons_si.png" /></td><td>Side Impact</td>
-			<td><input name="gSideImpact" size="5" type="text" value="0.0" /> g </td>
+			<td><input name="gSideImpact" size="5" type="text" value="0.0" />g</td>
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bBumpyRide" type="checkbox" />
 			<img alt="" class="evicon" src="res/map_icons_br.png" /></td><td>Bumpy Ride</td>
-			<td><input name="gBumpyRide" size="5" type="text" value="0.0" /> g </td>
+			<td><input name="gBumpyRide" size="5" type="text" value="0.0" />g</td>
 		</tr>
 	</tbody>
 </table>
 </div>
-
-</div>
-
+</fieldset>
 </form>
 
 <p style="text-align: center;"><button id="reset">Reset</button></p>
@@ -186,15 +128,6 @@
 <script>
 // init mapfilter sections
 $(function(){
-
-$( "#accordion" ).accordion({
-    collapsible: true,
-	heightStyle: "content"
-});
-
-$("table#timeinput td").css("height", "32px");
-$("table#gforceparameters td").css("height", "32px");
-$("table#event td").css("height", "32px");
 
 var vehiclelist=<?php
 	$sql="SELECT vehicle_name FROM vehicle ORDER BY vehicle_name;" ;
@@ -275,7 +208,6 @@ function quickfilter_load()
 							$("form#filterform")[0].reset();
 							// fill form fields
 							filterform_load(qf[0]);
-							$("#filterform select[name='zoneName']").change();
 						}
 					}
 				});
@@ -295,12 +227,7 @@ function filterform_data()
 		formd[$(this).attr("name")]=0;
 	});
 	for( var i=0; i<fdata.length; i++ ) {
-		if(fdata[i].value == 'on') {
-			formd[ fdata[i].name ] = 1 ;
-		}
-		else {
-			formd[ fdata[i].name ] = fdata[i].value ;
-		}
+		formd[ fdata[i].name ] = fdata[i].value ;
 	}
 	formd.ts=new Date().getTime();    // time stamp
 	return formd ;
@@ -325,7 +252,7 @@ $("button#savequickfilter").click(function(e){
 		//	alert( resp.errormsg );
 		// }
 		else {
-			alert( "Can't save this quick filter!");
+			alert( "Saving quick filter failed!");
 		}
 	});
 });
@@ -440,18 +367,11 @@ function wait( w )
 // generate button
 $("button#generate").click(function(e){
 	e.preventDefault();
-	map_clear();
 	wait(true);
 	var fdata = filterform_data();
 	$.getJSON("mapgenerate.php", fdata, function(resp){
 		wait(false);
 		if( (resp instanceof Array) || resp.res == 1 ) {
-			if( resp.count && resp.count>0 ) {
-				$("td#gen_count").html(resp.count);
-			}
-			else {
-				$("td#gen_count").html('');
-			}
 			map_generate(resp, fdata);
 		}
 		else if( resp.errormsg ) {
@@ -461,11 +381,11 @@ $("button#generate").click(function(e){
 		console.log( "error" ); 
 		wait(false);
 	});
+	map_clear();
 });	
 
 // reset button
 $("button#reset").click(function(){
-	$("td#gen_count").html('');
 	$.getJSON("eventparameterload.php",function(eventparameter){
 		$("form#filterform")[0].reset();
 		if( eventparameter.index ) {
@@ -484,7 +404,6 @@ $("button#reset").click(function(){
 			param.gSideImpact  = eventparameter.side_impact ;
 			param.gBumpyRide  = eventparameter.bumpy_ride ;
 			param.startTime = eventparameter.startTime ;
-			param.endTime = eventparameter.endTime ;
 			filterform_load( param );
 		}
 	});
@@ -523,3 +442,8 @@ if(!filter)
 
 });
 </script>
+
+<?php
+// close database connection
+$conn->close();
+?>

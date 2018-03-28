@@ -1,33 +1,28 @@
 <?php
 	// SQL server
-	// $smart_host="50.242.127.167" ;
-	// $smart_host="207.112.107.196" ;
-	
-	$smart_host="99.35.219.116" ;
+	$smart_host="localhost" ;
 	$smart_user="server" ;
 	$smart_password="password" ;
-	$smart_database="SrusLab" ;
+	$smart_database="smart" ;
 	$database_persistent=true ;
-	
-	$product_name = "TD FLEET MONITOR" ;
 
 	// List of timezone: http://php.net/manual/en/timezones.php
-	$timezone = "America/New_York" ;
+	$timezone = "US/Eastern" ;
 	
 	// number of icons on map , acture number of icons may get doubled
 	$map_icons=100;
 	
 	// MSS configure file
-	$mss_conf="C:\\SmartSvrApps\\mss.conf";
+	$mss_conf="/TouchDownCenter/external/mss.conf";
 	
 	// Dashboard Option file
-	$dashboard_conf="C:\\SmartSvrApps\\dashboardoption.config" ;
+	$dashboard_conf="/TouchDownCenter/external/dashboardoption.config" ;
 	
-	// Touchdown server configure file (include email server configure)
-	$td_conf="D:\\tdconfig.conf";
+	// Not used anymore
+	// $mysql_util="\\TouchDownCenter\\mysql\\bin" ;
 	
 	// backup file location, 
-	$backup_path="\\TouchDownCenter\\www\\tdc\\smartbackup" ;
+	$backup_path="\\TouchDownCenter\\mysql\\backup" ;
 	
 	// set to 1 to include auto_increment fields in backup.
 	$backup_auto_increment = 0 ;
@@ -39,67 +34,41 @@
 	$grid_scroll=false;
 	
 	// exact time range (seconds)
-	$exact_time_range=60;
+	$exact_time_range=600;
 
 	// minimum travelling interval time.
 	// $min_traveltime = 30 ;
-
+	
 	// zone moving mode, "cross" or "center"
 	// $zone_mode = "cross" ;
-
+	
 	// bing map
-	$map_credentials="AnC6aHa2J8jWAluq14HQu6HDH1cDshGtPEPrYiotanIf-q6ZdoSiVGd96wzuDutw" ;
-
+	$map_credentials="AnC6aHa2J8jWAluq14HQu6HDH1cDshGtPEPrYiotanIf-q6ZdoSiVGd96wzuDutw";
 	// Default map location, comment it to auto detect
-	$map_area="Toronto" ;
-	$mapmode="limit" ;
+	// $map_area="Toronto, Canada" ;
 	
 	// session timeout (max half hour)
-	$session_timeout=900 ;
-	
-	$session_path= "R:\\td\\SESSION";
+	$session_timeout=900 ;	
+	$session_path= __DIR__ . "/session";
 	$session_idname = "touchdownid";
-	$remote_fileserver = "http://${smart_host}/tdc/fileservice.php" ;	
 	
-	$cache_dir="R:\\td\\cache" ;
+	// user
+	$user_path = $session_path ;
 
 	// avaialbe ui: ui-lightness ui-darkness smoothness start redmond sunny 
 	//              overcast le-frog flick pepper-grinder eggplant dark-hive
 	//              cupertino south-street blitzer humanity hot-sneaks excite-bike 
 	//              vader dot-luv mint-choc black-tie trontastic swanky-purse
-	$default_ui_theme = "smoothness" ;
+	$default_ui_theme = "start" ;
 	
-	// Maximum videos cache size in Mega Bytes
-	$webplay_cache_size = 10000 ;
-
-	// new td live support
-	$liveplay_protocol = "relay" ;
-	$liveplay_host = "209.167.16.254" ;			// this is td live relay server's public ip address
-					
-	// live track server (AVL Service)
-	$avlservice = "http://$smart_host:40520/avlservice" ;
-
-	// multi company support
-	$support_multicompany = 1 ;
-	// script/excutable to create/remove com
-	$td_new    = "C:\\SmartSvrApps\\tdnew.exe create " ;
-	$td_clean  = "C:\\SmartSvrApps\\tdnew.exe remove " ;
-	
-	$enable_videos = true ;
-	// drive by demo
-	$support_driveby = 1 ;
-	$driveby_eventdir = "\\TouchDownCenter\\drivebydemo1" ;
-
-	$webplay_support = 1 ;						// enable web video playback
-	$enable_livetrack = 1 ;						// enable or disable live track
-	$support_viewtrack_logo = false ;
-	$support_fleetmonitor_logo = true ;
-	$support_livepreview = true ;
-	$support_liveaudio = true ;
-	$show_vehicles_uploaded = true ;
-	$use_conv266 = true ;
-	$disable_mss = true ;
-	$support_videoviacellular = true ;
+	// setup time zone
+	date_default_timezone_set($timezone) ;	
+	if(	$database_persistent ) {
+		$smart_server = "p:".$smart_host ;
+	}
+	else {
+		$smart_server = $smart_host ;
+	}
 	
 	return ;
-?>
+?>	

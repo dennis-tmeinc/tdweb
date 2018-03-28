@@ -1,17 +1,23 @@
 <!DOCTYPE html>
 <html>
-<head><?php
+<head><?php 
+require 'config.php' ; 
 require 'session.php'; 
 
 // remember settings sub page
-session_save('settingpage', $_SERVER['REQUEST_URI'] );
+$_SESSION['settingpage']=$_SERVER['REQUEST_URI'] ;
+session_write();
+
+// MySQL connection
+if( $logon ) {
+	$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+}
 ?>
 	<title>Touch Down Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">
 	<meta name="author" content="Dennis Chen @ TME, 2013-05-24">		
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
-	<script src="md5min.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.9.1.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script><script src="md5min.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	
 	.useritem {
@@ -19,7 +25,7 @@ session_save('settingpage', $_SERVER['REQUEST_URI'] );
 	}
 	
 	</style>
-	<script src="td_alert.js"></script><script>
+	<script>
 function genrandom(len)
 {
   var ranch = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ " ;
@@ -33,6 +39,28 @@ function genrandom(len)
 // start up 
 $(document).ready(function(){
             			
+// update TouchDown alert
+function touchdownalert()
+{
+	$.getJSON("td_alert.php", function(resp){
+		if( resp.res == 1 ) { 
+			$("#rt_msg").empty();
+			var td_alert = resp.td_alert ;
+			if( td_alert.length>0 ) {
+				var txt="";
+				for(var i=0;i<2&&i<td_alert.length;i++) {
+					if( i>0 ) txt+="\n" ;
+					txt+=td_alert[i].dvr_name + " : "+td_alert[i].description ;
+				}
+				$("#rt_msg").text(txt);
+			}
+			$("#servertime").text(resp.time);
+			setTimeout(touchdownalert,60000);
+		}
+	});
+}
+touchdownalert();
+
 $("button").button();	
 $(".xbutton").button();	
 $(".btset").buttonset();
@@ -303,27 +331,16 @@ $('#rcontainer').show(200);
 	</script>
 </head>
 <body><div id="container">
-<?php include 'header.php'; ?>
-<div id="lpanel"><?php if( !empty($support_viewtrack_logo) ){ ?>
-	<img alt="index.php" src="res/side-VT-logo-clear.png" />
-<?php } else if( !empty($support_fleetmonitor_logo) ){ ?>
-	<img alt="index.php" src="res/side-FM-logo-clear.png" />
-<?php } else { ?> 
-	<img alt="index.php" src="res/side-TD-logo-clear.png" />
-<?php } ?>
+<div id="header" style="text-align: right;"><span style="color:#006400;"><span style="font-size: 14px;"><span>Welcome </span></span></span><span style="color:#2F4F4F;"><span style="font-size: 14px;margin-right:24px;"><?php echo $_SESSION['welcome_name'] ;?></span></span><span><a href="logout.php" style="background-color:#98bf21;text-decoration:none;text-align:center;"> Logout </a></span><span  id="servertime" style="color:#800080;font-size: 11px; margin-left:30px;margin-right:30px;"></span><span style="color:#B22222;"><span style="font-size: 12px;"><span>TOUCH DOWN CENTER <?php echo $_SESSION['release']; ?></span></span></span></div>
+
+<div id="lpanel"><img alt="index.php" src="res/side-TD-logo-clear.png" />
 	<p style="text-align: center;"><span style="font-size:11px;"><a href="http://www.247securityinc.com/" style="text-decoration:none;">247 Security Inc.</a></span></p>
 <ul style="list-style-type:none;margin:0;padding:0;">
 	<li><a class="lmenu" href="dashboard.php"><img onmouseout="this.src='res/side-dashboard-logo-clear.png'" onmouseover="this.src='res/side-dashboard-logo-fade.png'" src="res/side-dashboard-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="mapview.php"><img onmouseout="this.src='res/side-mapview-logo-clear.png'" onmouseover="this.src='res/side-mapview-logo-fade.png'" src="res/side-mapview-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="reportview.php"><img onmouseout="this.src='res/side-reportview-logo-clear.png'" onmouseover="this.src='res/side-reportview-logo-fade.png'" src="res/side-reportview-logo-clear.png" /> </a></li>
-	<?php if( !empty($enable_videos) ){ ?><li><a class="lmenu" href="videos.php"><img onmouseout="this.src='res/side-videos-logo-clear.png'" onmouseover="this.src='res/side-videos-logo-fade.png'" src="res/side-videos-logo-clear.png" /> </a></li><?php } ?>
-	<?php if( !empty($enable_livetrack) ){ ?><li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li><?php } ?>
-	<?php if( !empty($support_driveby) && ( $_SESSION['user_type'] == "operator" || $_SESSION['user'] == "admin" ) ) { ?>
-	<li><a class="lmenu" href="driveby.php"><img onmouseout="this.src='res/side-driveby-logo-clear.png'" onmouseover="this.src='res/side-driveby-logo-fade.png'" src="res/side-driveby-logo-clear.png" /> </a></li>
-	<?php } ?>	
-		<?php if( !empty($support_emg) ) { ?>
-	<li><a class="lmenu" href="emg.php"><img onmouseout="this.src='res/side-emg-logo-clear.png'" onmouseover="this.src='res/side-emg-logo-fade.png'" src="res/side-emg-logo-clear.png" /> </a></li>
-	<?php } ?>
+	<li><a class="lmenu" href="videos.php"><img onmouseout="this.src='res/side-videos-logo-clear.png'" onmouseover="this.src='res/side-videos-logo-fade.png'" src="res/side-videos-logo-clear.png" /> </a></li>
+	<!--	<li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li> -->
 	<li><img src="res/side-settings-logo-green.png" /></li>
 </ul>
 </div>
@@ -345,7 +362,6 @@ $('#rcontainer').show(200);
 <input name="btset" href="settingsfleet.php" id="btfleet" type="radio" /><label for="btfleet">Fleet Setup</label>
 <input name="btset" checked="checked" href="settingsuser.php" id="btuser" type="radio" /><label for="btuser">User Accounts</label> 
 <input name="btset" href="settingssystem.php" id="btsys" type="radio" /><label for="btsys">System Configuration</label>
-<input name="btset" href="settingsemail.php" id="btemail" type="radio" /><label for="btemail">Email Configuration</label> 
 </p>
 
 <h4><strong>User Accounts</strong></h4>
@@ -375,13 +391,7 @@ $('#rcontainer').show(200);
 		</tr>
 		<tr>
 			<td style="text-align: right;">User Level:</td>
-			<td colspan="3">
-				<input checked="checked" name="user_type" type="radio" value="user" />User
-				<input id="usertypeadmin" name="user_type" type="radio" value="admin" />Power User
-				<?php if( !empty($support_driveby) && ( $_SESSION['user_type'] == "operator" || $_SESSION['user'] == "admin" ) ){ ?>
-				<input id="usertypeopeator" name="user_type" type="radio" value="operator" />Driveby Operator
-				<?php } ?>
-			</td>
+			<td colspan="3"><input checked="checked" name="user_type" type="radio" value="user" />User<input id="usertypeadmin" name="user_type" type="radio" value="admin" />Power User</td>
 		</tr>
 		<tr>
 			<td style="text-align: right;">Password:</td>
@@ -445,7 +455,7 @@ if( $_SESSION['user'] == "admin" ) {
 <input name="importfile" type="file" required />
 </form>
 
-<form id="formuserrexport" enctype="application/x-www-form-urlencoded" method="get" action="userexport.php" target="_blank" >
+<form id="formuserrexport" enctype="application/x-www-form-urlencoded" method="get" action="userexport.php" >
 <input class="xbutton" value="Export" type="submit" />
 </form>
 
@@ -460,7 +470,9 @@ if( $_SESSION['user'] == "admin" ) {
 <div id="footer">
 <hr />
 <div id="footerline" style="padding-left:24px;padding-right:24px">
-<div style="float:left"></div>
+<div style="float:left"><span  id="servertime" style="color:#800080;font-size: 11px;"><?php
+echo date("Y-m-d H:i") ;
+?> </span></div>
 
 <p style="text-align: right;"><span style="font-size:11px;"><a href="http://www.247securityinc.com/" style="text-decoration:none;">247 Security Inc.</a></span></p>
 </div>

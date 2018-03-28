@@ -7,8 +7,6 @@
 // By Dennis Chen @ TME	 - 2013-05-15
 // Copyright 2013 Toronto MicroElectronics Inc.
 
-require_once 'vfile.php' ;
-
 if( !$logon || empty($conn) || empty($_SESSION) ) die ;	// has to be included
 
 if( !empty($_REQUEST['reqdate'])) {
@@ -22,10 +20,18 @@ $dashboard_option = array(
 );
 
 // dashboard options
-$dashboard_option = parse_ini_string( vfile_get_contents( $dashboard_conf  ) );
+@$dashboardoptfile=fopen( $dashboard_conf, "r" );
+if( $dashboardoptfile ) {
+	while( $line=fgets($dashboardoptfile) ) {
+		$ar=explode ( "=", $line, 2 );
+		if( count($ar)==2 ) {
+			$dashboard_option[trim($ar[0])]=trim($ar[1]);
+		}
+	}
+	fclose($dashboardoptfile);
+}
 		
-if( empty($dashboard_option['nAverageDuration']) || $dashboard_option['nAverageDuration']<2) 
-	$dashboard_option['nAverageDuration']=60 ;
+if($dashboard_option['nAverageDuration']<2) $dashboard_option['nAverageDuration']=60 ;
 
 // time ranges
 @$date_begin = new DateTime( $dashboard_option['tmStartOfDay'] );
@@ -291,7 +297,7 @@ if( $result ){
 	}
 }
 
-// High Temperature Alerts
+// Fan Filter Alerts
 $Fan_Filter_Alerts_day = 0 ;
 $Fan_Filter_Alerts_avg = 0 ;
 

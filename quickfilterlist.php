@@ -11,6 +11,7 @@
 	header("Content-Type: application/json");
 
 	if( $logon ) {
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		if( empty($_REQUEST['name']) ) {
 			$sql="SELECT name FROM quickfilter; " ;
 		}
@@ -28,6 +29,7 @@
 		else {
 			$resp['errormsg']="SQL error: ".$conn->error ;
 		}
+		$conn->close();
 	}
 	echo json_encode( $resp );
 

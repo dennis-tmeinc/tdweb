@@ -11,6 +11,8 @@
 	
 	if( $logon ) {
 		if( $_SESSION['user'] == 'admin' ) {
+			// MySQL connection
+			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );			
 
 			// uploaded file
 			$input = fopen( $_FILES['importfile']['tmp_name'] , "r" );

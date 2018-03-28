@@ -14,6 +14,8 @@
 			header( "Content-Type: application/octet-stream" );
 			header( "Content-Disposition: attachment; filename=vehicle.csv" );   	
 			
+			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+			
 			$output = fopen('php://output', 'w');
 			
 			$sql="SELECT * FROM `vehicle`;";

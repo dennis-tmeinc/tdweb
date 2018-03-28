@@ -15,6 +15,7 @@
 		if( $_SESSION['user_type'] == "admin" ) {	// admin 
 			// MySQL connection
 			$name = $_REQUEST['name'] ;
+			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			$sql="DELETE FROM vgroup WHERE name='".$name."';" ;
 			if( $conn->query($sql) ) {
 				$resp['res']=1 ;	// success

@@ -14,17 +14,19 @@
 	
 		// get total records
 		$filter = empty($_SESSION['mapfilter']['filter'])?"WHERE FALSE":" WHERE ".$_SESSION['mapfilter']['filter'] ;
+	
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		
 		if( $_REQUEST['page'] == 1 ) {
-			// create temporary table
-			$sql = "CREATE TABLE `tmp_vlid` IF NOT EXISTS ( `id` int NOT NULL AUTO_INCREMENT, `vl_id` int, KEY `id` (`id`) USING BTREE );";
+		// create temporary table
+		$sql = "CREATE TABLE `tmp_vlid` IF NOT EXISTS ( `id` int NOT NULL AUTO_INCREMENT, `vl_id` int, KEY `id` (`id`) USING BTREE );";
 
-			$sql = "TRUNCATE TABLE `tmp_vlid`;";
-			$conn->query($sql);
-			
-			$conn->query($sql);
-			$sql = "INSERT INTO `tmp_vlid` (`vl_id`) SELECT `vl_id` FROM `vl` $filter ORDER BY $_REQUEST[sidx] $_REQUEST[sord] ;" ;
-			$conn->query($sql);
+		$sql = "TRUNCATE TABLE `tmp_vlid`;";
+		$conn->query($sql);
+		
+		$conn->query($sql);
+		$sql = "INSERT INTO `tmp_vlid` (`vl_id`) SELECT `vl_id` FROM `vl` $filter ORDER BY $_REQUEST[sidx] $_REQUEST[sord] ;" ;
+		$conn->query($sql);
 		}
 		
 		$records = 0 ;
@@ -63,6 +65,7 @@
 			}
 			$result->free();
 		}
+		$conn->close();
 		echo json_encode( $grid );
 	}
 	else {

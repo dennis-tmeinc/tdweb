@@ -5,18 +5,25 @@
 //      none
 // Return:
 //      JSON object
-// By Dennis Chen @ TME	 - 2014-02-19
+// By Dennis Chen @ TME	 - 2013-06-15
 // Copyright 2013 Toronto MicroElectronics Inc.
 
     require 'session.php' ;
-	require_once 'vfile.php' ;
 	header("Content-Type: application/json");
-
+	
 	if( $logon ) {
-		if( $conf = vfile_get_contents( $mss_conf ) ) {
-			$resp['mss'] = parse_ini_string( $conf );
-			$resp['res'] = 1 ;			
+		$localmss=array();
+		$localmssfile=@fopen( $mss_conf, "r" );
+		if( $localmssfile ) {
+			while( $line=fgets($localmssfile) ) {
+				$ar=explode ( "=", $line, 2 );
+				if( count($ar)==2 ) {
+					$localmss[trim($ar[0])]=trim($ar[1]);
+				}
+			}
+			fclose($localmssfile);
 		}
+		$resp = $localmss ;
 	}
 	echo json_encode($resp);
 

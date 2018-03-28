@@ -2,31 +2,54 @@
 <html>
 <head><?php 
 require 'session.php'; 
-session_save('lastpage', $_SERVER['REQUEST_URI'] );
 
 // clear map filter
-session_save('mapfilter', array() );
+unset($_SESSION['mapfilter']);
+session_write();
 
 ?>
 	<title>Touch Down Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta content="Touch Down Center by TME" name="description" />
 	<meta content="Dennis Chen @ TME, 2013-05-15" name="author" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type="text/javascript" src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.9.1.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
+	<script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script>
+	<script src="picker.js"></script>
 	<link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	.summarytable {
 		min-width:760px;
 	}
 	</style>
-	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
-<script src="td_alert.js"></script><script>
+	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script><script>
 // start up 
 
 var eventmap = null ;
 
 $(document).ready(function(){
-	
+					
+// update TouchDown alert
+function touchdownalert()
+{
+	$.getJSON("td_alert.php", function(resp){
+		if( resp.res == 1 ) { 
+			$("#rt_msg").empty();
+			var td_alert = resp.td_alert ;
+			if( td_alert.length>0 ) {
+				var txt="";
+				for(var i=0;i<2&&i<td_alert.length;i++) {
+					if( i>0 ) txt+="\n" ;
+					txt+=td_alert[i].dvr_name + " : "+td_alert[i].description ;
+				}
+				$("#rt_msg").text(txt);
+			}
+			$("#servertime").text(resp.time);
+			setTimeout(touchdownalert,60000);
+		}
+	});
+}
+touchdownalert();
+
 $("button").button();
 $(".btset").buttonset();
 
@@ -52,7 +75,7 @@ $("#vllist").jqGrid({
 	datatype: "json",
 	height: 380,
 	width: 768,
-    colNames:['Vehicle','Driver', 'Activity','Date-Time','Duration', 'Speed', 'Coordinates', 'Address'],
+    colNames:['Vehcile','Driver', 'Activity','Date-Time','Duration', 'Speed', 'Coordinates'],
     colModel :[ 
       {name:'vl_vehicle_name', index:'vl_vehicle_name', sortable: true, width:120}, 
       {name:'vl_driver_name', index:'vl_driver_name', width:100, sortable: true}, 
@@ -60,8 +83,7 @@ $("#vllist").jqGrid({
       {name:'vl_datetime', index:'vl_datetime', width:230, sortable: true }, 
       {name:'vl_time_len', index:'vl_time_len', width:80, sortable: true, align:'right' }, 
       {name:'vl_speed', index:'vl_speed', width:80, sortable: true, align:'right' }, 
-      {name:'vl_coordinate', index:'vl_lat', width:250, sortable: true, hidden: true },
-      {name:'vl_address', index:'vl_addr', width:250, sortable: false },
+      {name:'vl_coordinate', index:'vl_lat', width:250, sortable: true }
     ],
    	rowNum:100,
 	rowList: [20, 50, 100, 200],
@@ -79,20 +101,13 @@ $("#vllist").jqGrid({
 		var i ;
 		var pinicons = {
 			1:"res/map_icons_stop.png",
-			2:"route_icon.php?",
+			2:"route_icon.php",
 			4:"res/map_icons_idle.png",
-			10:"res/map_icons_dooropen.png",
-			11:"res/map_icons_doorclose.png",
-			12:"res/map_icons_ignitionon.png",
-			13:"res/map_icons_ignitionoff.png",
 			16:"res/map_icons_g.svg",
 			17:"res/map_icons_desstop.png",
 			18:"res/map_icons_park.png",
 			23:"res/map_icons_mevent.png" ,
-			40:"res/map_icons_driveby.png" ,
-			41:"res/map_icons_meteron.png" ,
-			42:"res/map_icons_meteroff.png" ,
-			100:"speed_icon.php?",
+			100:"speed_icon.php",
 			101:"res/map_icons_fi.png" ,
 			102:"res/map_icons_ri.png" ,
 			103:"res/map_icons_si.png" ,
@@ -100,8 +115,7 @@ $("#vllist").jqGrid({
 			105:"res/map_icons_rs.png" ,
 			106:"res/map_icons_ht.png" ,
 			107:"res/map_icons_br.png" 
-		};
-	
+		};		
 		for( i=0; i<len; i++ ) {
 			var icon = null ;
 			var nicon = data.rows[i].cell[2] ;
@@ -125,38 +139,6 @@ $("#vllist").jqGrid({
 			}
 		}
     },
-	loadComplete: function(data){
-		if( data && data.rows ) {
-			function loadAddress( id, coor ) {
-				$.ajax({
-					url: "https://dev.virtualearth.net/REST/v1/Locations/" + coor,
-					data: {
-						includeEntityTypes: "Address",
-						maxResults : 1,
-						key : "<?php echo $map_credentials ; ?>",
-					},
-					dataType: "jsonp" ,
-					jsonp: "jsonp",
-					success: function( location ) {
-						var addr ;
-						try{
-							addr = location.resourceSets[0].resources[0].address.formattedAddress ;
-						}
-						catch( err ) {
-							addr = "(Address not available)" ;
-						}
-						finally {
-							$("#vllist").jqGrid('setCell', id, 8, addr );
-						}
-					}
-				});
-			}
-			var i ;
-			for( i in data.rows ) {
-				loadAddress( data.rows[i].id, data.rows[i].cell[6] ) ;
-			}
-		}
-	},
 	onSelectRow: function(rowid,status,e){
 		if(	$( "#eventmapdialog" ).dialog( "isOpen" ) ) {
 			update_eventmap(rowid);
@@ -184,18 +166,6 @@ $( "#eventmapdialog" ).dialog({
 	height:450
 });
  
-$("button#reportexport").click(function(){
-	var xtd = $("table#reportsummary td");
-	var q = {} ;
-	for( var i=0; i<xtd.length; i+=2 ) {
-		var t = $( xtd[i] ).text();
-		if( t.length>2 ) {
-			q[t] = $( xtd[i+1] ).text() ;
-		}
-	}
-	window.open( "reportexport.php?" + $.param( q ) );
-});
-
 $(window).unload(function() {
 	// just send it out
 	$.getJSON("vlgridclean.php");
@@ -296,8 +266,7 @@ function map_generate_x(mapevent, formdata)
 	 16:'res/map_icons_g.svg',
 	 17:'res/map_icons_desstop.png',
 	 18:'res/map_icons_park.png',
-	 23:'res/map_icons_mevent.png',
-	 40:'res/map_icons_driveby.png'
+	 23:'res/map_icons_mevent.png'
 	} ;
 
 	var html="";
@@ -423,27 +392,16 @@ function map_generate_x(mapevent, formdata)
 </script>
 </head>
 <body><div id="container">
-<?php include 'header.php'; ?>
-<div id="lpanel"><?php if( !empty($support_viewtrack_logo) ){ ?>
-	<img alt="index.php" src="res/side-VT-logo-clear.png" />
-<?php } else if( !empty($support_fleetmonitor_logo) ){ ?>
-	<img alt="index.php" src="res/side-FM-logo-clear.png" />
-<?php } else { ?> 
-	<img alt="index.php" src="res/side-TD-logo-clear.png" />
-<?php } ?>
+<div id="header" style="text-align: right;"><span style="color:#006400;"><span style="font-size: 14px;"><span>Welcome </span></span></span><span style="color:#2F4F4F;"><span style="font-size: 14px;margin-right:24px;"><?php echo $_SESSION['welcome_name'] ;?></span></span><span><a href="logout.php" style="background-color:#98bf21;text-decoration:none;text-align:center;"> Logout </a></span><span  id="servertime" style="color:#800080;font-size: 11px; margin-left:30px;margin-right:30px;"></span><span style="color:#B22222;"><span style="font-size: 12px;"><span>TOUCH DOWN CENTER <?php echo $_SESSION['release']; ?></span></span></span></div>
+
+<div id="lpanel"><img alt="index.php" src="res/side-TD-logo-clear.png" />
 	<p style="text-align: center;"><span style="font-size:11px;"><a href="http://www.247securityinc.com/" style="text-decoration:none;">247 Security Inc.</a></span></p>
 <ul style="list-style-type:none;margin:0;padding:0;">
 	<li><a class="lmenu" href="dashboard.php"><img onmouseout="this.src='res/side-dashboard-logo-clear.png'" onmouseover="this.src='res/side-dashboard-logo-fade.png'" src="res/side-dashboard-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="mapview.php"><img onmouseout="this.src='res/side-mapview-logo-clear.png'" onmouseover="this.src='res/side-mapview-logo-fade.png'" src="res/side-mapview-logo-clear.png" /> </a></li>
 	<li><img src="res/side-reportview-logo-green.png" /></li>
-	<?php if( !empty($enable_videos) ){ ?><li><a class="lmenu" href="videos.php"><img onmouseout="this.src='res/side-videos-logo-clear.png'" onmouseover="this.src='res/side-videos-logo-fade.png'" src="res/side-videos-logo-clear.png" /> </a></li><?php } ?>
-	<?php if( !empty($enable_livetrack) ){ ?><li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li><?php } ?>
-	<?php if( !empty($support_driveby) && ( $_SESSION['user_type'] == "operator" || $_SESSION['user'] == "admin" ) ){ ?>
-	<li><a class="lmenu" href="driveby.php"><img onmouseout="this.src='res/side-driveby-logo-clear.png'" onmouseover="this.src='res/side-driveby-logo-fade.png'" src="res/side-driveby-logo-clear.png" /> </a></li>
-	<?php } ?>	
-	<?php if( !empty($support_emg) ) { ?>
-	<li><a class="lmenu" href="emg.php"><img onmouseout="this.src='res/side-emg-logo-clear.png'" onmouseover="this.src='res/side-emg-logo-fade.png'" src="res/side-emg-logo-clear.png" /> </a></li>
-	<?php } ?>
+	<li><a class="lmenu" href="videos.php"><img onmouseout="this.src='res/side-videos-logo-clear.png'" onmouseover="this.src='res/side-videos-logo-fade.png'" src="res/side-videos-logo-clear.png" /> </a></li>
+	<!--	<li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li> -->
 	<li><a class="lmenu" href="settings.php"><img onmouseout="this.src='res/side-settings-logo-clear.png'" onmouseover="this.src='res/side-settings-logo-fade.png'" src="res/side-settings-logo-clear.png" /> </a></li>
 </ul>
 </div>
@@ -461,7 +419,7 @@ function map_generate_x(mapevent, formdata)
 <div id="workarea" style="width:auto;">
 <h4>Events Summary</h4>
 
-<table id="reportsummary" cellpadding="1" cellspacing="0" class="summarytable" >
+<table cellpadding="1" cellspacing="0" class="summarytable" >
 	<colgroup>
 		<col style="white-space: nowrap; text-align: right;" />
 		<col class="altcol" style="min-width:100px" />
@@ -474,7 +432,7 @@ function map_generate_x(mapevent, formdata)
 	</colgroup>
 	<tbody>
 		<tr>
-			<td style="text-align: right;">Start Date-Time:</td>
+			<td style="text-align: right;">Start Date-Time</td>
 			<td id="starttime">&nbsp;</td>
 			<td style="text-align: right;">Stopping Total:</td>
 			<td id="stoptotal">&nbsp;</td>
@@ -496,7 +454,7 @@ function map_generate_x(mapevent, formdata)
 		<tr>
 			<td style="text-align: right;">Travel Time:</td>
 			<td id="traveltime">&nbsp;</td>
-			<td style="text-align: right;">Parking Total:</td>
+			<td style="text-align: right;">Parking Total</td>
 			<td id="parkingtotal">&nbsp;</td>
 			<td style="text-align: right;">Hard Turns:</td>
 			<td id="hardturn">&nbsp;</td>
@@ -506,7 +464,7 @@ function map_generate_x(mapevent, formdata)
 		<tr>
 			<td style="text-align: right;">Travel Distance:</td>
 			<td id="traveldistance">&nbsp;</td>
-			<td style="text-align: right;">Bus Stops:</td>
+			<td style="text-align: right;">Designated Stops:</td>
 			<td id="desstoptotal">&nbsp;</td>
 			<td style="text-align: right;">Bumpy rides:</td>
 			<td id="bumpyrides">&nbsp;</td>
@@ -514,8 +472,8 @@ function map_generate_x(mapevent, formdata)
 			<td id="hoursofvideo">&nbsp;</td>
 		</tr>
 		<tr>
-			<td style="text-align: right;">Drive By Total:</td>
-			<td id="drivebytotal">&nbsp;</td>
+			<td style="text-align: right;">&nbsp;</td>
+			<td>&nbsp;</td>
 			<td style="text-align: right;">Speeding Total:</td>
 			<td id="speedings">&nbsp;</td>
 			<td style="text-align: right;">Marked Events:</td>
@@ -538,11 +496,6 @@ function map_generate_x(mapevent, formdata)
 </div>
 
 </div>
-
-<form id="reportexport" enctype="application/x-www-form-urlencoded" method="get" action="reportexport.php"  >
-</form>
-<button id="reportexport">Export</button>
-
 </div>
 <!-- workarea --></div>
 <!-- mcontainer --></div>
@@ -551,7 +504,9 @@ function map_generate_x(mapevent, formdata)
 <div id="footer">
 <hr />
 <div id="footerline" style="padding-left:24px;padding-right:24px">
-<div style="float:left"></div>
+<div style="float:left"><span  id="servertime" style="color:#800080;font-size: 11px;"><?php
+echo date("Y-m-d H:i") ;
+?> </span></div>
 
 <p style="text-align: right;"><span style="font-size:11px;"><a href="http://www.247securityinc.com/" style="text-decoration:none;">247 Security Inc.</a></span></p>
 </div>

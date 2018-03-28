@@ -12,6 +12,8 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
+
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		
 		// get total records
 		if( empty($_SESSION['mapfilter']['filter']) ) {
@@ -32,6 +34,8 @@
 		$height = $_REQUEST['height'] ;
 		$dist_x = abs( $_REQUEST['east'] - $_REQUEST['west'] );
 		$dist_y = abs( $_REQUEST['north'] - $_REQUEST['south'] );
+		$grid_x = $dist_x*18/$width ;
+		$grid_y = $dist_y*18/$height ;
 		$west = floor($_REQUEST['west']/$dist_x)*$dist_x ;
 		$south = floor($_REQUEST['south']/$dist_y)*$dist_y ;
 					
@@ -81,24 +85,17 @@
 			return $icon;
 		}
 
-		if( ( $dist_x/$width < 5.0E-5 && $resp['record'] < 300 ) || $resp['record'] < $map_icons ) {
+		if( ( $dist_x/$width < 5.0E-5 && $resp['record'] < 300 ) || $resp['record'] < 2*$map_icons ) {
 			// full records
 			$sql="SELECT * FROM vl WHERE $filter AND $maparea ;";
 		}
 		else if ( $mapmode == 'limit' ) {		// limiting mode
 			$divisor = (int)($resp['record'] / $map_icons) ;
-			if( $divisor < 2 ) {
-				$sql="SELECT * FROM vl WHERE $filter AND $maparea ;";
-			}
-			else {
-				$sql="SELECT * FROM vl WHERE $filter AND $maparea GROUP BY ROUND(vl_id/$divisor) ;";
-			}
+			$sql="SELECT * FROM vl WHERE $filter AND $maparea AND (vl_id % $divisor = 0) ;";
 		}		
 		else if ($mapmode == 'grid' ) {			// gird mode
 			// route icons
-			$grid_x = $dist_x*20/$width ;
-			$grid_y = $dist_y*20/$height ;			
-			$sql="SELECT * FROM vl WHERE $filter AND $maparea GROUP BY ROUND(vl_lon/$grid_x), ROUND(vl_lat/$grid_y), vl_incident;";
+			$sql="SELECT * FROM vl WHERE $filter AND $maparea GROUP BY (vl_incident != '2'), ROUND((vl_lon-$west)/$grid_x), ROUND((vl_lat-$south )/$grid_y); ";
 		}
 		else {		// top 500
 			$sql="SELECT * FROM vl WHERE $filter AND $maparea LIMIT 0, 500 ;";
@@ -112,6 +109,7 @@
 
 		$resp['serial']=$_REQUEST['serial'];
 		$resp['res']=1 ;
+		$conn->close();
 	}
 	echo json_encode( $resp );
 ?>

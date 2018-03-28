@@ -1,17 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head><?php 
+require 'config.php' ; 
 require 'session.php'; 
 	
-// remember recent page
-session_save('settingpage', $_SERVER['REQUEST_URI'] );
-
+// remember settings sub page
+$_SESSION['settingpage']=$_SERVER['REQUEST_URI'] ;
+session_write();
+	
+// MySQL connection
+if( $logon ) {
+	$conn = new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+}
 ?>
 	<title>Touch Down Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta content="Touch Down Center by TME" name="description" />
 	<meta content="Dennis Chen @ TME, 2013-05-15" name="author" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.9.1.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 
 	option.dirty {
@@ -19,11 +25,33 @@ session_save('settingpage', $_SERVER['REQUEST_URI'] );
 		background-color:#fee;
 	}
 	</style>
-	<script src="td_alert.js"></script><script>
-    // start up 
+	<script>
+        // start up 
         
 $(document).ready(function(){
 				
+// update TouchDown alert
+function touchdownalert()
+{
+	$.getJSON("td_alert.php", function(resp){
+		if( resp.res == 1 ) { 
+			$("#rt_msg").empty();
+			var td_alert = resp.td_alert ;
+			if( td_alert.length>0 ) {
+				var txt="";
+				for(var i=0;i<2&&i<td_alert.length;i++) {
+					if( i>0 ) txt+="\n" ;
+					txt+=td_alert[i].dvr_name + " : "+td_alert[i].description ;
+				}
+				$("#rt_msg").text(txt);
+			}
+			$("#servertime").text(resp.time);
+			setTimeout(touchdownalert,60000);
+		}
+	});
+}
+touchdownalert();
+
 $("button").button();	
 $(".btset").buttonset();
 
@@ -223,7 +251,6 @@ $.getJSON("vehiclefields.php",function(resp){
 		}
 	}
 });
-
 
 $( "#dialog_delete" ).dialog({
 	autoOpen: false,
@@ -676,13 +703,9 @@ buttons: {
 	"Yes": function() {
 		if( groupopts.selectedIndex>=0) {
 			var newname = $(".tdcdialog#dialog_renamegroup input#newgroupname").val();
-			if( newname == "" ) {
-				message_box("Please enter new group name." );
-				return ;
-			}
 			for( var j=0; j<groupopts.length; j++) {
 				if( newname == groupopts[j].text ) {
-					message_box("Group name '"+newname+"' is in use, please enter another group name.");
+					alert("Group name '"+newname+"' is in use, please enter another group name.");
 					return ;
 				}
 			}
@@ -707,7 +730,13 @@ $("button#renamegroup").click(function(){
 
 // Zone Tab
 
-var zonemap ;
+var zonemap = new Microsoft.Maps.Map(document.getElementById("zonemap"), 
+{ credentials: <?php echo '"'. $map_credentials . '"'; ?> ,
+  enableSearchLogo: false,
+  enableClickableLogo: false,
+  center: new Microsoft.Maps.Location(35, -100),
+  zoom: 4
+});
 
 function showzone(zone)
 {
@@ -722,8 +751,19 @@ function showzone(zone)
 		left=-150;
 		right=-50;
 	}
-	
+	var locs=[
+	new Microsoft.Maps.Location( top, left ),
+	new Microsoft.Maps.Location( top, right ),
+	new Microsoft.Maps.Location( bottom, right ),
+	new Microsoft.Maps.Location( bottom, left )
+	] ;
+	var locrect=Microsoft.Maps.LocationRect.fromLocations( locs );
+	var loccenter = locrect.center ;
+	zonemap.setView({ bounds: locrect});
 	zonemap.entities.clear(); 		
+	var polyline = new Microsoft.Maps.Polyline(
+		[locs[0], locs[1], locs[2], locs[3], locs[0]],
+		null); 
 
 	var pushpinOptions = {
 		icon:'res/pin_24.png', 
@@ -734,25 +774,13 @@ function showzone(zone)
 	}; 
 
 	var pins=[
-		new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location( top, left ), pushpinOptions),
-		new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location( top, right ), pushpinOptions),
-		new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location( bottom, right ), pushpinOptions),
-		new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location( bottom, left ), pushpinOptions),
-		new Microsoft.Maps.Pushpin(new Microsoft.Maps.Location( (top+bottom)/2, (right+left)/2 ), pushpinOptions)
+		new Microsoft.Maps.Pushpin(locs[0], pushpinOptions),
+		new Microsoft.Maps.Pushpin(locs[1], pushpinOptions),
+		new Microsoft.Maps.Pushpin(locs[2], pushpinOptions),
+		new Microsoft.Maps.Pushpin(locs[3], pushpinOptions),
+		new Microsoft.Maps.Pushpin(loccenter, pushpinOptions)
 		];
 
-	var locs = [pins[0].getLocation(),
-			pins[1].getLocation(),
-			pins[2].getLocation(),
-			pins[3].getLocation(),
-			pins[0].getLocation()] ;
-	
-	var polyline = new Microsoft.Maps.Polyline(locs, null); 
-
-	var locrect=Microsoft.Maps.LocationRect.fromLocations( locs );
-	locrect.width *= 1.05 ;
-	zonemap.setView({ bounds: locrect});
-		
 	zonemap.entities.push(polyline);
 	zonemap.entities.push(pins[0]);
 	zonemap.entities.push(pins[1]);
@@ -760,10 +788,11 @@ function showzone(zone)
 	zonemap.entities.push(pins[3]);
 	zonemap.entities.push(pins[4]);
 
-	function ondragcorner(e){
+	var ondragcorner = function(e){
+		var thispin=e.entity ;
 		var ipin ;
 		for( ipin=0; ipin<4; ipin++) {
-			if( pins[ipin] == e.target ) {
+			if( pins[ipin] == e.entity ) {
 				break;
 			}
 		}
@@ -775,7 +804,7 @@ function showzone(zone)
 		pins[(ipin+1)%4].setLocation( new Microsoft.Maps.Location( loc0.latitude, loc2.longitude ) );
 		pins[(ipin+3)%4].setLocation( new Microsoft.Maps.Location( loc2.latitude, loc0.longitude ) );
 		var locrect = Microsoft.Maps.LocationRect.fromLocations( loc0, loc2 );
-		var loccenter = locrect.center ;
+		loccenter = locrect.center ;
 		pins[4].setLocation( loccenter );
 <?php } else { ?>				
 		var loc = pins[ipin].getLocation();
@@ -796,15 +825,17 @@ function showzone(zone)
 		$("button#savezone").show();
 	};
 
-	function ondragmove(e) {
-		var cloc = pins[4].getLocation();
-		var crect = Microsoft.Maps.LocationRect.fromLocations( [pins[0].getLocation(), pins[2].getLocation()] );
-		var h2 = crect.height/2 ;
-		var w2 = crect.width/2 ;
-		pins[0].setLocation(new Microsoft.Maps.Location( cloc.latitude + h2,  cloc.longitude + w2 ));
-		pins[1].setLocation(new Microsoft.Maps.Location( cloc.latitude + h2,  cloc.longitude - w2 ));
-		pins[2].setLocation(new Microsoft.Maps.Location( cloc.latitude - h2,  cloc.longitude - w2 ));
-		pins[3].setLocation(new Microsoft.Maps.Location( cloc.latitude - h2,  cloc.longitude + w2 ));
+	var ondragmove = function(e){
+		var nloc = e.entity.getLocation();
+		var mvlat = nloc.latitude - loccenter.latitude ;
+		var mvlon = nloc.longitude - loccenter.longitude;
+		loccenter=nloc ;
+		for(var i=0;i<4;i++) {
+			nloc=pins[i].getLocation();
+			nloc.latitude+=mvlat ;
+			nloc.longitude+=mvlon ;
+			pins[i].setLocation( nloc );
+		}
 		polyline.setLocations([
 			pins[0].getLocation(),
 			pins[1].getLocation(),
@@ -814,7 +845,6 @@ function showzone(zone)
 			]);
 		$("button#savezone").show();
 	};
-	
 	$("button#savezone").hide();
 	
 	Microsoft.Maps.Events.addHandler(pins[0], 'drag', ondragcorner);  
@@ -830,34 +860,24 @@ $('#zonelist').change(function() {
 		showzone({top:0,bottom:0,left:0,right:0});
 		return ;
 	}
-	else if($('#zonelist').val()=="Default Area") {
-		$.getJSON("mapquery.php", function(resp){
-			if( resp.res && resp.map.bbox.length>=4) {
-				showzone({bottom:resp.map.bbox[0], left:resp.map.bbox[1], top:resp.map.bbox[2], right:resp.map.bbox[3]});
-			}
-		});	
-	}
-	else 
-		$.getJSON("zonelist.php?name="+zone, function(resp){
-			if( resp.res && resp.zonelist.length>0) {
-				showzone(resp.zonelist[0]);
-			}
-		});	
+	$.getJSON("zonelist.php?name="+zone, function(zonelist){
+		if( zonelist.length>0) {
+			showzone(zonelist[0]);
+		}
+	});	
 });	
 
 function updzonelist()
 {
-	$.getJSON("zonelist.php", function(resp){
-		if( resp.res && resp.zonelist ) {
-			var htmlstr = "<option>Default Area</option>" ;
-			for( var i=0; i<resp.zonelist.length; i++ ) {
-				htmlstr += '<option>' + resp.zonelist[i].name + '</option>' ;
-			}
-			$('#zonelist').html(htmlstr);
-			$('#zonelist').change();	// apply default zone;
+	$.getJSON("zonelist.php", function(zonelist){
+		$('#zonelist').empty();
+		for( var i=0; i<zonelist.length; i++ ) {
+			var htmlstr = '<option>' + zonelist[i].name + '</option>' ;
+			$('#zonelist').append(htmlstr);
 		}
+		$('#zonelist').change();	// apply default zone;
 	});		
-}
+}	
 
 // ztype:  1: public, 2: private
 function newzone(zname,ztype)
@@ -867,13 +887,6 @@ function newzone(zname,ztype)
 	form.zonetype = ztype ;
 	$.getJSON("zonenew.php", form, function(resp){
 		if( resp.res > 0 ) {	// success
-		
-			// use current map area
-			var b = zonemap.getBounds();
-			b.width /= 1.6 ;
-			b.height /= 1.6 ;
-			showzone({top:b.getNorth(), bottom:b.getSouth(),left:b.getWest(),right:b.getEast()});
-		
 			var htmlstr = '<option>'+zname+'</option>' ;
 			$('#zonelist').append(htmlstr);
 			$('#zonelist').val(zname);
@@ -988,52 +1001,6 @@ buttons: {
 }
 });
 
-$( ".tdcdialog#dialog_mapsearch" ).dialog({
-autoOpen: false,
-show: {
- effect: "blind",
- duration: 300
-},
-width:"auto",
-modal: true,
-buttons: {
-	"Search": function() {
-		var query=$(".tdcdialog#dialog_mapsearch input#mapquery").val();
-		$.getJSON("mapquery.php?q="+query, function(resp){
-			if( resp.res && resp.map.bbox.length>=4) {
-				showzone({bottom:resp.map.bbox[0], left:resp.map.bbox[1], top:resp.map.bbox[2], right:resp.map.bbox[3]});
-				$("button#savezone").show();
-			}
-		});	
-		$( this ).dialog( "close" );
-	},
-	Cancel: function() {
-		$( this ).dialog( "close" );
-	}
-}
-});
-
-$( ".tdcdialog#dialog_message" ).dialog({
-	autoOpen: false,
-	width:"auto",
-	modal: true,
-	buttons: {
-		"Ok": function() {
-			$( this ).dialog( "close" );
-		}
-	}
-});
-
-function message_box( msg )
-{
-	$("p#alert_message").text( msg );
-	$( ".tdcdialog#dialog_message" ).dialog("open");
-}
-
-$("button#mapsearch").click(function(){
-	$( ".tdcdialog#dialog_mapsearch" ).dialog("open");
-});
-
 $("button#renamezone").click(function(){
 	var selected = $('#zonelist')[0].selectedIndex ;
 	var zonename = $($("#zonelist option")[selected]).text() ;
@@ -1088,17 +1055,6 @@ function sizezonemap(){
 function tab_zone()
 {
 	sizezonemap();
-
-	if( !zonemap ) {
-		zonemap = new Microsoft.Maps.Map(document.getElementById("zonemap"), 
-		{ credentials: <?php echo '"'. $map_credentials . '"'; ?> ,
-		  enableSearchLogo: false,
-		  mapTypeId : Microsoft.Maps.MapTypeId.road,
-		  enableClickableLogo: false
-		});
-	}
-
-
 	if( zonemap.entities.getLength() <= 0 ) {
 		setTimeout(updzonelist,1000);
 	}
@@ -1132,27 +1088,16 @@ text-align: center;
 	</style>
 </head>
 <body><div id="container">
-<?php include 'header.php'; ?>
-<div id="lpanel"><?php if( !empty($support_viewtrack_logo) ){ ?>
-	<img alt="index.php" src="res/side-VT-logo-clear.png" />
-<?php } else if( !empty($support_fleetmonitor_logo) ){ ?>
-	<img alt="index.php" src="res/side-FM-logo-clear.png" />
-<?php } else { ?> 
-	<img alt="index.php" src="res/side-TD-logo-clear.png" />
-<?php } ?>
+<div id="header" style="text-align: right;"><span style="color:#006400;"><span style="font-size: 14px;"><span>Welcome </span></span></span><span style="color:#2F4F4F;"><span style="font-size: 14px;margin-right:24px;"><?php echo $_SESSION['welcome_name'] ;?></span></span><span><a href="logout.php" style="background-color:#98bf21;text-decoration:none;text-align:center;"> Logout </a></span><span  id="servertime" style="color:#800080;font-size: 11px; margin-left:30px;margin-right:30px;"></span><span style="color:#B22222;"><span style="font-size: 12px;"><span>TOUCH DOWN CENTER <?php echo $_SESSION['release']; ?></span></span></span></div>
+
+<div id="lpanel"><img alt="index.php" src="res/side-TD-logo-clear.png" />
 	<p style="text-align: center;"><span style="font-size:11px;"><a href="http://www.247securityinc.com/" style="text-decoration:none;">247 Security Inc.</a></span></p>
 <ul style="margin: 0px; padding: 0px; list-style-type: none;">
 	<li><a class="lmenu" href="dashboard.php"><img onmouseout="this.src='res/side-dashboard-logo-clear.png'" onmouseover="this.src='res/side-dashboard-logo-fade.png'" src="res/side-dashboard-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="mapview.php"><img onmouseout="this.src='res/side-mapview-logo-clear.png'" onmouseover="this.src='res/side-mapview-logo-fade.png'" src="res/side-mapview-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="reportview.php"><img onmouseout="this.src='res/side-reportview-logo-clear.png'" onmouseover="this.src='res/side-reportview-logo-fade.png'" src="res/side-reportview-logo-clear.png" /> </a></li>
-	<?php if( !empty($enable_videos) ){ ?><li><a class="lmenu" href="videos.php"><img onmouseout="this.src='res/side-videos-logo-clear.png'" onmouseover="this.src='res/side-videos-logo-fade.png'" src="res/side-videos-logo-clear.png" /> </a></li><?php } ?>
-<?php if( !empty($enable_livetrack) ){ ?><?php if( !empty($enable_livetrack) ){ ?><li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li><?php } ?><?php } ?>
-	<?php if( !empty($support_driveby) && ( $_SESSION['user_type'] == "operator" || $_SESSION['user'] == "admin" ) ){ ?>
-	<li><a class="lmenu" href="driveby.php"><img onmouseout="this.src='res/side-driveby-logo-clear.png'" onmouseover="this.src='res/side-driveby-logo-fade.png'" src="res/side-driveby-logo-clear.png" /> </a></li>
-	<?php } ?>	
-	<?php if( !empty($support_emg) ) { ?>
-	<li><a class="lmenu" href="emg.php"><img onmouseout="this.src='res/side-emg-logo-clear.png'" onmouseover="this.src='res/side-emg-logo-fade.png'" src="res/side-emg-logo-clear.png" /> </a></li>
-	<?php } ?>
+	<li><a class="lmenu" href="videos.php"><img onmouseout="this.src='res/side-videos-logo-clear.png'" onmouseover="this.src='res/side-videos-logo-fade.png'" src="res/side-videos-logo-clear.png" /> </a></li>
+	<!--	<li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li> -->
 	<li><img src="res/side-settings-logo-green.png" /></li>
 </ul>
 </div>
@@ -1174,7 +1119,6 @@ text-align: center;
 <input name="btset" checked="checked" href="settingsfleet.php" id="btfleet" type="radio" /><label for="btfleet">Fleet Setup</label>
 <input name="btset" href="settingsuser.php" id="btuser" type="radio" /><label for="btuser">User Accounts</label> 
 <input name="btset" href="settingssystem.php" id="btsys" type="radio" /><label for="btsys">System Configuration</label>
-<input name="btset" href="settingsemail.php" id="btemail" type="radio" /><label for="btemail">Email Configuration</label> 
 </p>
 
 <h4><strong>Fleet Setup</strong></h4>
@@ -1221,12 +1165,6 @@ text-align: center;
 			<td><input name="vehicle_notes" size="30" type="text" /></td>
 			<td style="text-align: right;">Max Upload Time</td>
 			<td><input name="vehicle_max_upload_time" type="text" value="60" /></td>
-		</tr>
-		<tr>
-			<td style="text-align: right;">Phone:</td>
-			<td><input name="vehicle_phone" size="30" type="text" /></td>
-			<td style="text-align: right;"></td>
-			<td></td>
 		</tr>
 	</tbody>
 </table>
@@ -1314,7 +1252,7 @@ if( $_SESSION['user'] == 'admin' ) {
 <input name="importfile" type="file" required />
 </form>
 
-<form id="formvehicleexport" enctype="application/x-www-form-urlencoded" method="get" action="vehicleexport.php" target="_blank" >
+<form id="formvehicleexport" enctype="application/x-www-form-urlencoded" method="get" action="vehicleexport.php" >
 <input class="xbutton" value="Export" type="submit" />
 </form>
 
@@ -1413,7 +1351,7 @@ if( $_SESSION['user'] == 'admin' ) {
 <input name="importfile" type="file" required />
 </form>
 
-<form id="formdriverexport" enctype="application/x-www-form-urlencoded" method="get" action="driverexport.php" target="_blank" >
+<form id="formdriverexport" enctype="application/x-www-form-urlencoded" method="get" action="driverexport.php" >
 <input class="xbutton" value="Export" type="submit" />
 </form>
 
@@ -1425,8 +1363,8 @@ if( $_SESSION['user'] == 'admin' ) {
 
 <div id="settingtabs-groups">
 <h4>Vehicle Group Management</h4>
-
 <!-- rename group dialog -->
+
 <div class="tdcdialog" id="dialog_renamegroup" title="Rename Group">
 <p>Rename Group [<span id="oldgroupname">group</span>] To:</p>
 <input id="newgroupname" type="text" maxlength="45" /></div>
@@ -1472,19 +1410,18 @@ if( $_SESSION['user'] == 'admin' ) {
 
 <p>Select a Zone:
 <select id="zonelist" name="zonelist" style="min-width: 12em;">
-</select> &nbsp; &nbsp;<button id="newzone"><img src="res/button_add.png" style="width: 20px; height: 20px;" />New Zone</button><button id="newmyzone"><img src="res/button_add.png" style="width: 20px; height: 20px;" />New My Zone</button><button id="deletezone"><img src="res/button_delete.png" style="width: 20px; height: 20px;" />Delete Zone</button><button id="renamezone">Rename</button><button id="mapsearch">Search</button><button id="savezone">Save</button></p>
+</select> &nbsp; &nbsp;<button id="newzone"><img src="res/button_add.png" style="width: 20px; height: 20px;" />New Zone</button><button id="newmyzone"><img src="res/button_add.png" style="width: 20px; height: 20px;" />New My Zone</button><button id="deletezone"><img src="res/button_delete.png" style="width: 20px; height: 20px;" />Delete Zone</button><button id="renamezone">Rename</button><button id="savezone">Save</button></p>
 
-<div id="zonemaparea" style="width: auto; position: relative; min-height: 300px">
-<div id="zonemap" style="height:100%;width:100%;">Zone Map</div>
+<div id="zonemaparea" style="width: auto; position: relative; min-height: 300px;">
+<div id="zonemap">Zone Map</div>
 </div>
 
 <div class="tdcdialog" id="dialog_renamezone" title="Rename Zone">
 <p>Rename Zone (<span id="oldzonename">zoneup</span>) To:</p>
-<input id="newzonename" type="text" maxlength="45" />
-</div>
+<input id="newzonename" type="text" maxlength="45" /></div>
 <!-- rename group dialog --></div>
-
 <!-- Generic Delete Dialog -->
+
 <div class="tdcdialog" id="dialog_delete">
 <p id="deletemsg">delete:</p>
 
@@ -1492,19 +1429,6 @@ if( $_SESSION['user'] == 'admin' ) {
 
 <p>&nbsp;</p>
 </div>
-
-<!-- Map Search Dialog -->
-<div class="tdcdialog" id="dialog_mapsearch" title="Search" >
-<p id="deletemsg">Enter address , city name or coordinates:</p>
-<input id="mapquery" type="text" size="50" />
-</div>
-
-<!-- message dialog -->
-<div class="tdcdialog" id="dialog_message" title="Message">
-<p id="alert_message"> Warning </p>
-<!-- message dialog -->
-</div>
-
 </div>
 </div>
 <!-- workarea --></div>
@@ -1514,7 +1438,9 @@ if( $_SESSION['user'] == 'admin' ) {
 <div id="footer">
 <hr />
 <div id="footerline" style="padding-left:24px;padding-right:24px">
-<div style="float:left"></div>
+<div style="float:left"><span  id="servertime" style="color:#800080;font-size: 11px;"><?php
+echo date("Y-m-d H:i") ;
+?> </span></div>
 
 <p style="text-align: right;"><span style="font-size: 11px;"><a href="http://www.247securityinc.com/" style="text-decoration: none;">247 Security Inc.</a></span></p>
 </div>

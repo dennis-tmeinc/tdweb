@@ -11,6 +11,8 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
+		// MySQL connection
+		$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 
 		// secaped sql values
 		$esc_req=array();		
@@ -19,11 +21,7 @@
 		}
 		
 		$query="DELETE FROM zone WHERE `name` = '$esc_req[name]' AND (`type` = 1 OR `user` = '$_SESSION[user]');" ;
-		if( $esc_req['name'] == "Default Area" ) {
-			$resp['res']=0;
-			$resp['errormsg']="Not allowed!" ;
-		}
-		else if( $conn->query($query) ) {
+		if( $conn->query($query) ) {
 			$resp['res']=1 ;	// success
 		}
 		else {

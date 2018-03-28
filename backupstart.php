@@ -10,8 +10,6 @@
     require 'session.php' ;
 	header("Content-Type: application/json");
 	
-	$dobackup = false ;
-	
 	if( $logon ) {
 		if( $_SESSION['user_type'] != 'admin' ) {
 			$resp['errormsg']="Not allowed!" ;
@@ -21,41 +19,36 @@
 		}
 		else {
 
-			if( empty( $backup_path ) ) {
-				$backup_path=sys_get_temp_dir();
+			if( empty($php_bin) ) {
+				if( strtoupper( substr(PHP_OS,0,3) ) == 'WIN' ) {
+					// my installed php path
+					$php_bin = dirname( php_ini_loaded_file() )."\\php-win.exe";
+				}
+				else {
+					$php_bin = "php" ;
+				}
+			}
+
+			// windows system
+			if( strtoupper( substr(PHP_OS,0,3) ) == 'WIN' ) {
+				$php_cmd = 'start /B '.$php_bin;
 			}
 			else {
-				// try make dir
-				@mkdir( $backup_path );
+				$php_cmd = $php_bin ;
 			}
-
-			$backupname = $backup_path."/bk".urlencode( $_REQUEST['backupname'] );
-			$resp['backupname'] = $backupname ;
-			$progressfile = tempnam ( $backup_path, "per" ) ;
-			$fpercent = fopen($progressfile, 'w');
-			fwrite($fpercent, "-1");
-			$resp['progressfile'] = $progressfile ;			
-			$resp['res']=1;
 			
-			// flush out contents
-			ob_clean();
-
-			ob_start();
-			echo json_encode($resp);
-			header( "Content-Length: ". ob_get_length() );
-			header( "Connection: close" );
-			ob_end_flush();
+			if( !empty($php_cmd) ) {
+				if( empty( $backup_path ) ) {
+					$backup_path=sys_get_temp_dir();
+				}
+				$fpercent = fopen($backup_path.'/bkpercent', 'w');
+				fwrite($fpercent, "-1");
+				fclose($fpercent);
 			
-			ob_flush();
-			flush();
-			ignore_user_abort( true );
-	
-			// now let's do the real backup work
-			require 'backupfunction.php' ;
-			dbbackup( $backupname, $conn, $fpercent ) ;
-			
-			fclose($fpercent);
-			return ;
+				$cmdline = $php_cmd . ' backupscript.php bk'. urlencode( $_REQUEST['backupname'] ) ;
+				pclose(popen( $cmdline, "r"));
+				$resp['res']=1;
+			}
 		}
 	}
 	echo json_encode( $resp );

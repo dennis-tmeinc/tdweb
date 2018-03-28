@@ -13,7 +13,8 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
-
+		
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		if( !empty($_REQUEST['index']) ) {
 			$sql="SELECT * FROM zone WHERE `index` = $_REQUEST[index] AND (`type` = 1 OR `user` = '$_SESSION[user]') ;" ;
 		}
@@ -26,20 +27,20 @@
 			else 
 				$sql="SELECT `name` FROM `zone` WHERE `type` = 1 OR `user` = '$_SESSION[user]' ;" ;
 		}
-		if( !empty($sql) ) {
-			if($result=$conn->query($sql)) {
-				$zonelist = array();
-				while( $row=$result->fetch_array(MYSQLI_ASSOC) ) {
-					if( $row['name']=='No Restriction' || $row['name']=='User Define' ) continue ;
-					$zonelist[]=$row;
-				}
-				$result->free();
-				$resp['zonelist'] = $zonelist ;
-				$resp['res'] = 1 ;
+		if($result=$conn->query($sql)) {
+			$zonelist = array();
+			while( $row=$result->fetch_array(MYSQLI_ASSOC) ) {
+				if( $row['name']=='No Restriction' || $row['name']=='User Define' ) continue ;
+				$zonelist[]=$row;
 			}
+			echo json_encode($zonelist);
+			$result->free();
+		}
+		else {
+			echo "[]" ;
 		}
 	}
-
-done:	
-	echo json_encode( $resp );
+	else {
+		echo "[]";
+	}
 ?>

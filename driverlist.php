@@ -11,7 +11,8 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ){
-
+		
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		if( !empty($_REQUEST['driver_id']) ) {
 			$sql="SELECT * FROM driver WHERE driver_id = $_REQUEST[driver_id];";
 		}

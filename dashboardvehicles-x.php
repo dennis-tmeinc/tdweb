@@ -7,13 +7,21 @@
 // By Dennis Chen @ TME	 - 2013-07-03
 // Copyright 2013 Toronto MicroElectronics Inc.
 
-    require_once 'session.php' ;
-	require_once 'vfile.php' ;
+    require 'session.php' ;
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
 
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+		$sql = "select now();" ;
 		$reqdate = new DateTime() ;
+		// use mysql time instead if possible
+		if($result=$conn->query($sql)) {
+			if( $row=$result->fetch_array() ) {
+				$reqdate = new DateTime( $row[0] );
+			}
+			$result->free();
+		}
 		if( strstr($_SESSION['dashboardpage'], 'dashboardmorning') ) {		// dashboard morning?
 			$reqdate->sub(new DateInterval('P1D'));
 		}
@@ -25,9 +33,19 @@
 		);
 
 		// dashboard options
-		$dashboard_option = parse_ini_string( vfile_get_contents( $dashboard_conf ) ) ;
+		@$dashboardoptfile=fopen( $dashboard_conf, "r" );
+		if( $dashboardoptfile ) {
+			while( $line=fgets($dashboardoptfile) ) {
+				$ar=explode ( "=", $line, 2 );
+				if( count($ar)==2 ) {
+					$dashboard_option[trim($ar[0])]=trim($ar[1]);
+				}
+			}
+			fclose($dashboardoptfile);
+		}
 				
 		if($dashboard_option['nAverageDuration']<2) $dashboard_option['nAverageDuration']=60 ;
+		
 				
 		// time ranges
 		@$date_begin = new DateTime( $dashboard_option['tmStartOfDay'] );
@@ -170,7 +188,7 @@
 				}
 				$result->free();
 			}
-			if( $alerts>0 ) $alert_types[]="High Temperature" ;
+			if( $alerts>0 ) $alert_types[]="Fan Filter" ;
 			
 			$vehicle[5] = implode('/', $alert_types);
 
@@ -182,6 +200,7 @@
 
 		$resp['res'] = 1 ;
 		
+		$conn->close();
 	}
 	echo json_encode( $resp );
 ?>

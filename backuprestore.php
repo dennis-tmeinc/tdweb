@@ -4,7 +4,7 @@
 //      backupname: Backup name given by user
 // Return:
 //      JSON object
-// By Dennis Chen @ TME	 - 2014-05-05
+// By Dennis Chen @ TME	 - 2013-06-19
 // Copyright 2013 Toronto MicroElectronics Inc.
 
 
@@ -19,33 +19,37 @@
 			$resp['errormsg']="No backup name specified!" ;
 		}
 		else {
-			if( empty( $backup_path ) ) {
-				$backup_path=sys_get_temp_dir();
+
+			if( empty($php_bin) ) {
+				if( strtoupper( substr(PHP_OS,0,3) ) == 'WIN' ) {
+					// my installed php path
+					$php_bin = dirname( php_ini_loaded_file() )."\\php-win.exe";
+				}
+				else {
+					$php_bin = "php" ;
+				}
 			}
-			$progressfile = tempnam ( $backup_path, "per" ) ;
-			$fpercent = fopen($progressfile, 'w');
-			fwrite($fpercent, "-1");
-			$resp['progressfile'] = $progressfile ;			
-			$resp['res']=1;
 
-			// flush out contents
-			ob_clean();
-
-			ob_start();
-			echo json_encode($resp);
-			header( "Content-Length: ". ob_get_length() );
-			header( "Connection: close" );
-			ob_end_flush();
+			// windows system
+			if( strtoupper( substr(PHP_OS,0,3) ) == 'WIN' ) {
+				$php_cmd = 'start /B '.$php_bin;
+			}
+			else {
+				$php_cmd = $php_bin ;
+			}
 			
-			ob_flush();
-			flush();
-			ignore_user_abort( true );		
+			if( !empty($php_cmd) ) {
+				if( empty( $backup_path ) ) {
+					$backup_path=sys_get_temp_dir();
+				}
+				$fpercent = fopen($backup_path.'/bkpercent', 'w');
+				fwrite($fpercent, "-1");
+				fclose($fpercent);
 			
-			require 'backuprestorefunction.php' ;
-			$backupname = $backup_path."/bk".urlencode( $_REQUEST['backupname'] );
-			dbrestore( $backupname, $conn, $fpercent ) ;
-			fclose( $fpercent );
-			return ;
+				$cmdline = $php_cmd . ' restorescript.php bk'. urlencode( $_REQUEST['backupname'] ) ;
+				pclose(popen( $cmdline, "r"));
+				$resp['res']=1;
+			}
 		}
 	}
 	echo json_encode( $resp );

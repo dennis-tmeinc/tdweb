@@ -12,6 +12,8 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+				
 		$mapfilter = $_SESSION['mapfilter']['filter'] ;
 		$param =  $_SESSION['mapfilter'];
 		$resp['summary']=array();
@@ -61,18 +63,10 @@
 			$result->free();
 		}	
 		
-		// Drive By Events
-		$sql="SELECT count(*) FROM vl WHERE $mapfilter AND vl_incident = 40 ;" ;
-		$result=$conn->query($sql);
-		if( !empty($result)) {
-			$row = $result->fetch_array( MYSQLI_NUM ) ;
-			$resp['summary']['drivebytotal']=$row[0] ;
-			$result->free();
-		}
-		
 		$resp['serial'] = $_REQUEST['serial'] ;
 		$resp['res'] = 1 ;
-
+		
+		$conn->close();
 	}
 	echo json_encode( $resp );
 ?>

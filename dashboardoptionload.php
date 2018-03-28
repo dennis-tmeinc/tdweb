@@ -4,22 +4,19 @@
 //      none
 // Return:
 //      JSON object
-// By Dennis Chen @ TME	 - 2014-02-19
+// By Dennis Chen @ TME	 - 2013-06-18
 // Copyright 2013 Toronto MicroElectronics Inc.
 // V2.5
 //   load from dashboard option file
 
-	require_once 'session.php' ;
-	require_once 'vfile.php' ;
-	
+	require 'session.php' ;
 	header("Content-Type: application/json");
 	
 	$resp=array();
 	if($logon){
 
 		// dashboard options
-		$dashboard_option = parse_ini_string( vfile_get_contents( $dashboard_conf ) ) ;
-
+		@$dashboard_option = parse_ini_file($dashboard_conf) ;
 		// default value
 		if( empty( $dashboard_option ) ) $dashboard_option =  array();
 		

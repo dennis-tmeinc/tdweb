@@ -12,7 +12,8 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
-
+	
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		if( !empty($_REQUEST['name']) ) {
 			$sql="SELECT * FROM vgroup WHERE `name` = $_REQUEST[name];";
 		}
