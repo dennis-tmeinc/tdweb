@@ -21,7 +21,7 @@ unset($_SESSION['clientid']);
 
 if( !empty($_REQUEST['c']) ) {
 	$_SESSION['clientid'] = $_REQUEST['c'];
-	$clientcfg = 'client/'.$_SESSION['clientid'].'/config.php' ;
+	$clientcfg = "$client_dir/$_SESSION[clientid]/config.php" ;
 	if( file_exists ( $clientcfg ) ) {
 		include $clientcfg ;
 	}
@@ -46,7 +46,7 @@ if( !empty($support_multicompany) && empty($_REQUEST['c']) && strcasecmp($_REQUE
 		$nonce[$i] = $hexchar[mt_rand(0,35)] ;
 	}
 	$_SESSION['nonce'] = $nonce ;
-	$user_password = file_get_contents( "client/sapass", "r" );
+	$user_password = file_get_contents( "$client_dir/sapass", "r" );
 	if( strlen( $user_password ) > 25 && $user_password[0] == '$' ) {
 		$keys=explode('$', $user_password );
 		$_SESSION['keytype'] = $keys[1] ;

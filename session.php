@@ -5,6 +5,7 @@
 
 include_once 'config.php' ;
 
+// all default global path/dir
 if( empty($session_path) ) {
 	$session_path= "session";
 }
@@ -14,6 +15,10 @@ if( empty($session_idname) ) {
 if( empty($cache_dir) || !is_dir($cache_dir) ) {
 	$cache_dir = "videocache" ;
 }
+if( empty($client_dir) || !is_dir($client_dir) ) {
+	$client_dir = "client" ;
+}
+
 session_save_path( $session_path );
 session_name( $session_idname );
 
@@ -32,9 +37,9 @@ session_start();
 
 // load client config
 if( !empty( $_SESSION['clientid'] )) {
-	$clientcfg = 'client/'.$_SESSION['clientid'].'/config.php' ;
+	$clientcfg = "$client_dir/$_SESSION[clientid]/config.php" ;
 	if( file_exists ( $clientcfg ) ) {
-		require $clientcfg ;
+		include $clientcfg ;
 		// fixed directories for multi companies
 		if( !empty($company_root) ) {
 			// MSS configure file

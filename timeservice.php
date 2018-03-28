@@ -11,28 +11,32 @@
 // Copyright 2016 Toronto MicroElectronics Inc.
 //
 
+include "config.php" ;
+
 $result = array(
 	'status' => "ERROR",
 );
 
-$timeformat='Y-m-d H:i:s' ;
 
-if( !empty( $_REQUEST['tz'] ) ) {
-	$timezone = $_REQUEST['tz'];
+if( empty($client_dir) || !is_dir($client_dir) ) {
+	$client_dir = "client" ;
 }
-else if( !empty( $_REQUEST['clientid'] )) {
-	$clientcfg = 'client/'. $_REQUEST['clientid'].'/config.php' ;
+if( !empty( $_REQUEST['clientid'] )) {
+	$clientcfg = "$client_dir/$_REQUEST[clientid]/config.php" ;
 	if( file_exists ( $clientcfg ) ) {
 		include $clientcfg ;
 	}
 }
-else {
-	include "config.php" ;
+
+if( !empty( $_REQUEST['tz'] ) ) {
+	$timezone = $_REQUEST['tz'];
 }
 
 if(!empty($timezone) ) {
 	date_default_timezone_set($timezone) ;	
 }
+
+$timeformat='Y-m-d H:i:s' ;
 		
 if( !empty($_REQUEST['time']) ) {
 	$ti = new DateTime( $_REQUEST['time'] ) ;

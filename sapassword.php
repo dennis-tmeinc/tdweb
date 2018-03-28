@@ -15,8 +15,9 @@
 	if( $_SESSION['superadmin'] && $_SESSION['superadmin'] == "--SuperAdmin--" ) {
 	
 		$keycheck = false ;
+		$sapass = "$client_dir/sapass"  ;
 	
-		$p = file_get_contents( "client/sapass" );
+		$p = file_get_contents( $sapass );
 		$user_password = trim($p);
 		if( strlen( $user_password ) > 25 && $user_password[0] == '$' ) {
 			$keys=explode('$', $user_password );
@@ -33,7 +34,7 @@
 		if( $keycheck ) {
 			// old key matched
 			$user_password = "$1$".$_REQUEST['key']."$".$_REQUEST['salt'] ;
-			file_put_contents( "client/sapass",  $user_password);
+			file_put_contents( $sapass,  $user_password);
 			$resp['res'] = 1 ;
 		}
 		else {

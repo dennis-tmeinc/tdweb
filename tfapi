@@ -12,7 +12,7 @@ include "session.php" ;
 include_once 'vfile.php' ;
 
 if( empty($conn) ) {
-@$conn = new mysqli("p:".$smart_host, $smart_user, $smart_password, $smart_database );
+	@$conn = new mysqli("p:".$smart_host, $smart_user, $smart_password, $smart_database );
 }
 
 //	always create a new session,
@@ -73,87 +73,80 @@ function destroysession()
 //	 signature : hash_hmac signature , 
 //			$key = vender key (transfinder vender key)
 //			$data = "vender:<venderId>;time:<unixTimestamp>;touchdownid:<sessionId>[;nonce:<clientnonce>]"
+// Notes:
+//	  For transfinder to access this company data, a user name with given vendor id should be created with user title as base64 encoded vendor key
+//    For example, venderid = 'transfinder', key='key', the a user name 'transfinder' with titile 'a2V5' should be created on app_user table
 function authenticate()
 {
+	global $conn ;
 	$res = array(
 		'status' => "ERROR"
 	);
 	if( empty($_SESSION['transfinderTag']) || $_SESSION['transfinderTag'] != 'transfinder' ) {
 		$res['errormsg'] = "Invalid touchdownid, please call <createsession> again!" ;
 	}
+	else if( empty($_REQUEST["vendor"]) || empty( $_REQUEST["time"] ) ) {
+		$res['errormsg'] = "Invalid parameter, please specify <vendor> and <time>!" ;	
+	}	
 	else {
-		$usernumber = 0 ;
-		global $smart_host, $smart_user, $smart_password, $smart_database ;
-		@$conn = new mysqli("p:".$smart_host, $smart_user, $smart_password, $smart_database );
-		$sql="SELECT count(*) FROM app_user" ;
+		$res['errormsg'] = "Invalid vendor id!" ;		
+		
+		// global $smart_host, $smart_user, $smart_password, $smart_database ;
+		// @$conn = new mysqli("p:".$smart_host, $smart_user, $smart_password, $smart_database );
+	
+		// escaped vendor id
+		$vid = $conn->escape_string($_REQUEST["vendor"]);
+
+		$sql="SELECT * FROM app_user WHERE user_name = '$vid' " ;
 		if( $result = $conn->query($sql) ) {
 			if( $row = $result->fetch_array() ) {
-				$usernumber = $row[0];
-			}
-		}
-		if( $usernumber>0 ) {
-			if( empty($_REQUEST["vendor"]) || empty( $_REQUEST["time"] ) ) {
-				$res['errormsg'] = "Invalid parameter, please specify <vendor> and <time>!" ;	
-				return $res ;
-			}
-			
-			$touchdownid = session_id();
-			$data = "vendor:$_REQUEST[vendor];time:$_REQUEST[time];touchdownid:$touchdownid" ;
-			if( !empty( $_REQUEST['nonce'] ) ) {
-				$data.=";nonce:$_REQUEST[nonce]" ;
-			}
+				$userid = $row['user_name'] ;
+				$usertype = $row['user_type'] ;
+				$key = base64_decode($row['title']);
 
-			$transfinder_keyfile = 'client/'.$_SESSION['clientid'].'/transfinder_key' ;
-			if( file_exists( $transfinder_keyfile ) ) {
-				@$key = file_get_contents($transfinder_keyfile);
-			}
+				$touchdownid = session_id();
+				$data = "vendor:$_REQUEST[vendor];time:$_REQUEST[time];touchdownid:$touchdownid" ;
+				if( !empty( $_REQUEST['nonce'] ) ) {
+					$data.=";nonce:$_REQUEST[nonce]" ;
+				}
 
-			if(!empty($key) ) {
-				// vendor key originally base64 encoded
-				$key = base64_decode($key);
-			}
-			else {
-				// demo key
-				$key = "key" ;
-			}
+				$algo = "sha1" ;
+				if( !empty( $_REQUEST['algo']) ) {
+					$algo = $_REQUEST['algo'] ;
+				}
 
-			$algo = "sha1" ;
-			if( !empty( $_REQUEST['algo']) ) {
-				$algo = $_REQUEST['algo'] ;
-			}
-
-			if( !empty( $_REQUEST['encode'] ) && $_REQUEST['encode'] == "raw" ) {
-				$signature = hash_hmac( $algo, $data, $key, true ) ;
-			}
-			else if( !empty( $_REQUEST['encode'] ) && $_REQUEST['encode'] == "base64" ) {
-				$signature = hash_hmac( $algo, $data, $key, true ) ;
-				$signature = base64_encode($signature);
-			}
-			else {
-				// hex by default
-				$signature = hash_hmac( $algo, $data, $key );
-			}
-			
-			// verify
-			if( $signature == $_REQUEST['signature'] ) {
+				if( !empty( $_REQUEST['encode'] ) && $_REQUEST['encode'] == "raw" ) {
+					$signature = hash_hmac( $algo, $data, $key, true ) ;
+				}
+				else if( !empty( $_REQUEST['encode'] ) && $_REQUEST['encode'] == "base64" ) {
+					$signature = hash_hmac( $algo, $data, $key, true ) ;
+					$signature = base64_encode($signature);
+				}
+				else {
+					// hex by default
+					$signature = hash_hmac( $algo, $data, $key );
+				}
 				
-				$_SESSION['xtime']= time() ;	
-				$_SESSION['release']= file_get_contents("release") ;
-				$_SESSION['remote']=$_SERVER['REMOTE_ADDR'] ;
-				$_SESSION['user']="user_transfinder";
-				$_SESSION['user_type']="user";
-				$_SESSION['welcome_name'] = "user_transfinder" ;
+				// verify
+				if( $signature == $_REQUEST['signature'] ) {
+					
+					$_SESSION['xtime']= time() ;	
+					$_SESSION['release']= file_get_contents("release") ;
+					$_SESSION['remote']=$_SERVER['REMOTE_ADDR'] ;
+					$_SESSION['user']= $userid;
+					$_SESSION['welcome_name'] = $userid ;
+					$_SESSION['user_type']= $usertype;
+					
+					session_write();
 				
-				session_write();
-			
-				$res['status'] = "OK" ;
+					// success 
+					unset( $res['errormsg'] );
+					$res['status'] = "OK" ;
+				}
+				else {
+					$res['errormsg'] = "Signature error!" ;			
+				}
 			}
-			else {
-				$res['errormsg'] = "Signature error!" ;			
-			}
-		}
-		else {
-			$res['errormsg'] = "Invalid client id!" ;			
 		}
 	}
 	return $res ;

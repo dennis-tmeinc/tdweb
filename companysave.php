@@ -5,7 +5,7 @@
 //      form data
 // Return:
 //      JSON array
-// By Dennis Chen @ TME	 - 2014-04-17
+// By Dennis Chen @ TME	 - 2017-05-03
 // Copyright 2014 Toronto MicroElectronics Inc.
 	
     include_once 'session.php' ;
@@ -23,7 +23,7 @@
 				$k = trim( $x[0] ) ;
 				if( $k == $key ) {
 					fclose( $f );
-					return stripcslashes( trim(trim(rtrim( trim( $x[1] ), ";" )),"\"") );
+					return stripslashes( trim(trim(rtrim( trim( $x[1] ), ";" )),"\"") );
 				}
 			}
 		}
@@ -36,32 +36,41 @@
 	{
 		$f = fopen($cfg,"r+");
 		if( $f ) {
+			if( is_string( $value ) ) {
+				$xline = $key."=\"".addslashes($value)."\" ;" ;
+			}
+			else {
+				$xline = "$key=$value ;" ;
+			}
+				
 			$lines = array();
 			while( ($line=fgets($f)) ) {
-				$lines[] = $line ;
-			}
-			
-			$xlines = array();
-			foreach( $lines as $line ) {
-				$x = explode( '=', $line ) ;
-				$xset = false ;
-				if( count($x) > 1 ) {
-					$k = trim( $x[0] ) ;
-					if( $k == $key ) {
-						$xset = true ;
-						$xlines[] = $key."=\"".addslashes($value)."\";\n" ;
-					}
-				}	
-				if( !$xset ) {
-					$xlines[] = $line ;
+				$line = trim( $line );
+				if( substr( $line, 0, 1 )=='$' ) {
+					$x = explode( '=', $line ) ;
+					if( count($x) > 1 ) {
+						$k = trim( $x[0] ) ;
+						if( $k == $key ) {
+							$lines[] = $xline ;
+							$xline = '' ;
+						}
+						else {
+							$lines[] = $line ;
+						}
+					}	
 				}
+			}
+			if( !empty($xline) ) {
+				$lines[] = $xline ;
 			}
 
 			fseek( $f, 0, SEEK_SET );
 			ftruncate( $f, 0 ) ;
-			foreach( $xlines as $line ) {
-				fputs( $f, $line );
+			fputs( $f, "<?php\n" );
+			foreach( $lines as $line ) {
+				fputs( $f, $line."\n" );
 			}
+			fputs( $f, "?>" );
 			fclose( $f );
 		}
 		return true ;
@@ -72,11 +81,6 @@
 		goto done ;
 	}
 	else 
-
-	if( empty($_REQUEST['RootFolder']) ) {
-		$resp['errormsg'] = "Root folder can not be empty!" ;
-		goto done ;
-	}
 
 	if( empty($_REQUEST['Database']) ) {
 		$resp['errormsg'] = "Database name can not be empty!" ;
@@ -89,30 +93,31 @@
 	}
 	
 	if( $_SESSION['superadmin'] && $_SESSION['superadmin'] == "--SuperAdmin--" && !empty($_REQUEST['CompanyId']) ) {
-	
-		$cfgfile = "client/".$_REQUEST['CompanyId']."/config.php" ;
-		$company_root = get_var( $cfgfile, "\$company_root" ) ;
-					
-		// mkdir company root folder
-		if( !empty($_REQUEST['NewCompany']) ) {		
-			if( !empty( $company_root ) ) {
+		$cfgfile = "$client_dir/".$_REQUEST['CompanyId']."/config.php" ;
+		if( file_exists($cfgfile) ) {
+			include $cfgfile ;
+		}
+		if( !empty($_REQUEST['NewCompany']) ) {
+			if( file_exists($cfgfile) ) {
 				$resp['errormsg'] = "Company ID already exists" ;
 				goto done ;
 			}
 
+			// to create a new company
+			$company_root = $_REQUEST['CompanyRootDir'] ;
+
 			// create client directory
-			@mkdir(  "client/".$_REQUEST['CompanyId']  );
+			@mkdir(  "$client_dir/".$_REQUEST['CompanyId']  );
 			
 			// create default config.php
 			$cfile = fopen( $cfgfile, "w" );
-			$defconf = file_get_contents( "companydef.conf" );
-			fwrite( $cfile, $defconf );
 			fclose( $cfile );
 
-			$company_root = $_REQUEST['RootFolder']  ;
-			
 			set_var( $cfgfile, "\$company_root", $company_root );
 			set_var( $cfgfile, "\$smart_database", $_REQUEST['Database'] );		
+
+			// create root folder
+			vfile_mkdir( $company_root );
 
 		}
 
@@ -120,12 +125,17 @@
 			set_var( $cfgfile, "\$timezone", $_REQUEST['TimeZone'] );
 		if( !empty($_REQUEST['MapArea']) )
 			set_var( $cfgfile, "\$map_area", $_REQUEST['MapArea'] );
+		$SessionTimeout = (int)$session_timeout ;
 		if( !empty($_REQUEST['SessionTimeout']) ) {
 			$SessionTimeout = (int)$_REQUEST['SessionTimeout'] ;
-			if( $SessionTimeout>=300 && $SessionTimeout<=86400 ) {
-				set_var( $cfgfile, "\$session_timeout", $_REQUEST['SessionTimeout'] );
+			if( $SessionTimeout<300 || $SessionTimeout>86400 ) {
+				$SessionTimeout = (int)$session_timeout ;
 			}
 		}
+		set_var( $cfgfile, "\$session_timeout", (int)$SessionTimeout );
+		set_var( $cfgfile, "\$enable_videos", (int)!empty($_REQUEST['EnableVideos']) );
+		set_var( $cfgfile, "\$enable_livetrack", (int)!empty($_REQUEST['EnableLiveTrack']) );
+		set_var( $cfgfile, "\$support_driveby", (int)!empty($_REQUEST['EnableDriveBy']) );
 		
 		$companyinfo = new SimpleXMLElement( "<companyinfo></companyinfo>" );
 
@@ -152,7 +162,6 @@
 			}
 		}
 		else {
-			vfile_mkdir( $company_root );
 			if( vfile_put_contents( $company_root."/companyinfo.xml", $companyinfo->asXML() ) ) {
 				// may need to do more cleaning on company root directory and database
 
@@ -167,7 +176,6 @@
 					vfile_exec($cmd, $output, $ret) ;
 				}
 				
-				$resp['tdnewoutput']=$output ;
 				if( $ret != 0 ) {
 					$resp['errormsg']='Creating database failed' ;
 					$resp['res'] = 0 ;

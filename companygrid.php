@@ -34,7 +34,7 @@
 		$resp['records'] = 0 ;
 		$resp['rows'] = array();
 		$count=0;
-		foreach (glob("client/*") as $dirname) {
+		foreach (glob("$client_dir/*") as $dirname) {
 			if( is_dir( $dirname ) ) {
 				$row = array();
 				$row['id'] = basename($dirname) ;

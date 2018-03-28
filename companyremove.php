@@ -31,6 +31,23 @@
 		return false ;
 	}
 	
+	function rm_emptydir( $dir ) {
+	  $empty=true;
+	  foreach( vfile_glob( "$dir\\*" ) as $subdir ) {
+		 if (vfile_isdir( $subdir ) ){
+			 if( !rm_emptydir( $subdir ) ) {
+				 $empty = false ;
+			 }
+		 }
+		 else {
+			$empty=false;
+		 }
+	  }
+	  if( $empty ) 
+		  vfile_rmdir( $path ) ;
+	  return $empty;
+	}		
+	
 	if( $_SESSION['superadmin'] && $_SESSION['sa_verified'] == 1 && !empty($_REQUEST['id']) ) {
 		
 		unset($_SESSION["sa_verified"]);
@@ -39,7 +56,7 @@
 		$output = array();
 		$ret = 1;
 
-		$cfgfile = "client/".$_REQUEST['id']."/config.php" ;
+		$cfgfile = "$client_dir/$_REQUEST[id]/config.php" ;
 
 		$company_root = get_var( $cfgfile, "\$company_root" ) ;
 		$database = get_var( $cfgfile, "\$smart_database" ) ;
@@ -48,11 +65,19 @@
 			$cmd = $td_clean." \"$_REQUEST[id]\" \"$company_root\" \"$database\"" ;
 			@vfile_exec($cmd, $output, $ret) ;
 			
-			@vfile_unlink( $company_root."/companyinfo.xml" ) ;
-			@vfile_rmdir( $company_root ) ;
+			@vfile_unlink( "$company_root/companyinfo.xml" ) ;
+			foreach( vfile_glob( "$company_root/*" ) as $file ) {
+				if( vfile_isdir( $file ) ) {
+					vfile_rmdir( $file );
+				}
+				else {
+					vfile_unlink( $file );
+				}
+			}
+			@vfile_rmdir( $company_root );
 
 			@unlink( $cfgfile ) ;
-			@rmdir( "client/".$_REQUEST['id'] );
+			@rmdir( "$client_dir/".$_REQUEST['id'] );
 		}
 
 		// may need to do more cleaning on company root directory and database

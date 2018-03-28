@@ -48,9 +48,8 @@
 		{
 			$escape_req[$key]=$conn->escape_string($value);
 		}
-	
-		$filter = " WHERE alert_code = $escape_req[alertcode] AND date_time BETWEEN '$date_begin' AND '$date_end' ";
-
+		$filter = " WHERE alert_code IN ($escape_req[alertcode]) AND date_time BETWEEN '$date_begin' AND '$date_end' ";
+		
 		// get total records	
 		$sql="SELECT count(*) FROM td_alert $filter ;" ;
 		$records = 0 ;
@@ -67,8 +66,6 @@
 			"page" => $_REQUEST['page'] ,
 			"rows" => array()  );
 		
-		$grid['filter'] = $sql ;
-			
 		if( $grid['page'] > $grid['total'] ) {
 			$grid['page']=$grid['total'] ;
 		}
@@ -91,8 +88,6 @@
 		);
 
 		$sql="SELECT `index`, `dvr_name`, `description`, `alert_code`, `date_time` FROM td_alert $filter ORDER BY $escape_req[sidx] $escape_req[sord] LIMIT $start, $escape_req[rows] ;";
-		
-		$grid['query'] = $sql ;
 		
 		if( $result=$conn->query($sql) ) {
 			while( $row=$result->fetch_array() ) {

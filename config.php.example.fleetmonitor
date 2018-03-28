@@ -75,7 +75,7 @@
 	$avlcbserver = "http://localhost:80" ;
 	$avlcbapp = "vltevent.php" ;
 	
-	$product_name = "TouchDown™ FleetMonitor" ;
+	$product_name = "TD FLEET MONITOR" ;
 	$enable_videos = false ;
 	$support_fleetmonitor_logo = true ;
 

@@ -97,7 +97,14 @@ if( $logon ) {
 						
 						// convert
 						set_time_limit(200) ;
-						$cmdline = "bin\\ffmpeg.exe -i ".$row['path']." -y -codec:v copy ".$preview_tmpfile ;
+						$ifile = $row['path'] ;
+						$conv266="bin\\conv266\\conv266.exe" ;
+						if( file_exists( $conv266 ) ) {
+							$cmdline = "$conv266 -f \"$preview_tmpfile\" -i \"$ifile\"" ;
+						}
+						else {
+							$cmdline = "bin\\ffmpeg.exe -i \"$ifile\" -y -codec:v copy \"$preview_tmpfile\" " ;
+						}
 					
 						vfile_exec( $cmdline );
 						vfile_rename( $preview_tmpfile, $preview_file );

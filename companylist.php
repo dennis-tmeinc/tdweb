@@ -11,29 +11,10 @@
 	include_once 'vfile.php' ;
 	
 	header("Content-Type: application/json");
-	
-	function get_var( $cfg, $key )
-	{
-		$f = fopen($cfg,"r");
-		if( $f ) {
-		while( ($line=fgets($f)) ) {
-			$x = explode( '=', $line ) ;
-			if( count($x) > 1 ) {
-				$k = trim( $x[0] ) ;
-				if( $k == $key ) {
-					fclose( $f );
-					return stripcslashes( trim(trim(rtrim( trim( $x[1] ), ";" )),"\"") );
-				}
-			}
-		}
-		fclose($f);
-		}
-		return false ;
-	}
-	
+ 
 	if( $_SESSION['superadmin'] && $_SESSION['superadmin'] == "--SuperAdmin--" && !empty($_REQUEST['id']) ) {
-		$cfgfile = "client/".$_REQUEST['id']."/config.php" ;
-		$company_root = get_var( $cfgfile, "\$company_root" ) ;
+		$cfgfile = "$client_dir/$_REQUEST[id]/config.php" ;
+		include $cfgfile ;
 		if( $company_root ) {
 			$resp['webset'] = array();
 
@@ -48,11 +29,15 @@
 			}
 			
 			$resp['webset']['CompanyId'] = $_REQUEST['id'] ;
-			$resp['webset']['RootFolder'] = $company_root ;
-			$resp['webset']['Database'] =  get_var( $cfgfile, "\$smart_database" );
-			$resp['webset']['TimeZone'] =  get_var( $cfgfile, "\$timezone" );
-			$resp['webset']['MapArea'] =  get_var( $cfgfile, "\$map_area" );
-			$resp['webset']['SessionTimeout'] =  get_var( $cfgfile, "\$session_timeout" );
+			$resp['webset']['CompanyRoot'] = $company_root ; 
+			$resp['webset']['Database'] =  $smart_database ;
+			$resp['webset']['TimeZone'] =  $timezone ;
+			$resp['webset']['MapArea'] =  $map_area ;
+			$resp['webset']['SessionTimeout'] =  $session_timeout ;
+			$resp['webset']['EnableVideos'] =  $enable_videos ;
+			$resp['webset']['EnableLiveTrack'] = $enable_livetrack ;
+			$resp['webset']['EnableDriveBy'] =  $support_driveby ;
+				
 			$resp['errormsg']='success' ;					
 			$resp['res'] = 1 ;
 		}		

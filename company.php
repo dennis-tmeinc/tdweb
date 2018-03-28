@@ -1,5 +1,4 @@
 <!DOCTYPE html><?php
-$noredir = true ;
 require "session.php" ; 
 if( empty($_SESSION['superadmin']) || $_SESSION['superadmin'] != "--SuperAdmin--" ) {
 	header("Location: logon.php" );
@@ -72,21 +71,6 @@ $( "#dialog_company" ).dialog({
 	}
 });
 
-$("button").button();
-$("button#btnew").click(function(e){
-	e.preventDefault();
-	$("form#companyform")[0].reset();
-	
-	$('form#companyform input[name="NewCompany"]').val( 1 ) ;
-	$('form#companyform input[name="CompanyId"]').prop("readonly",false);
-	$('form#companyform input[name="RootFolder"]').prop("readonly",false);
-	$('form#companyform input[name="Database"]').prop("readonly",false);
-		
-	$("form#companyform").data("edit",false);
-	$( "#dialog_company" ).dialog("option", "title", "Create A New Company Information");
-	$( "#dialog_company" ).dialog("open");
-});
-
 function set_companyform( fdata )
 {
 	// set fields
@@ -94,18 +78,40 @@ function set_companyform( fdata )
 	for (field in fdata) {
 		var elm=$("form#companyform [name='"+field+"']");
 		if( elm.length>0 ) {
-			if( elm.attr("type")=="checkbox" ) {
-				elm.prop("checked", (fdata[field]=='on' || fdata[field]=='y' || fdata[field]=='1' ));
-			}
-			else if( elm.attr("type")=="radio" ) {
-				elm.filter('[value="'+fdata[field]+'"]').prop("checked",true);
+			if( elm[0].tagName == 'P' ) {
+				elm.text(fdata[field]);
 			}
 			else {
-				elm.val(fdata[field]);
+				if( elm.attr("type")=="checkbox" ) {
+					elm.prop("checked", (fdata[field]=='on' || fdata[field]=='y' || fdata[field]=='1' ));
+				}
+				else if( elm.attr("type")=="radio" ) {
+					elm.filter('[value="'+fdata[field]+'"]').prop("checked",true);
+				}
+				else {
+					elm.val(fdata[field]);
+				}
 			}
 		}
 	}
 }
+
+$("button").button();
+$("button#btnew").click(function(e){
+	e.preventDefault();
+	$("form#companyform")[0].reset();
+	
+	$('form#companyform input[name="NewCompany"]').val( 1 ) ;
+	$('form#companyform input[name="CompanyId"]').prop("readonly",false);
+	$('tr#VideoStorageLine').show();
+
+	$('form#companyform input[name="Storage"]').prop("readonly",false);
+	$('form#companyform input[name="Database"]').prop("readonly",false);
+		
+	$("form#companyform").data("edit",false);
+	$( "#dialog_company" ).dialog("option", "title", "Create A New Company Information");
+	$( "#dialog_company" ).dialog("open");
+});
 
 $("button#btedit").click(function(e){
 	e.preventDefault();
@@ -126,13 +132,41 @@ $("button#btedit").click(function(e){
 
 			$('form#companyform input[name="NewCompany"]').val( '' ) ;
 			$('form#companyform input[name="CompanyId"]').prop("readonly",true);
-			$('form#companyform input[name="RootFolder"]').prop("readonly",true);
+			$('tr#VideoStorageLine').hide();
+			$('form#companyform input[name="Storage"]').prop("readonly",true);
 			$('form#companyform input[name="Database"]').prop("readonly",true);
 	
 			$( "#dialog_company" ).dialog("option", "title", "Edit Company Information");
 			$( "#dialog_company" ).dialog("open");
 		}
 	});
+});
+
+$('form#companyform input[name="CompanyId"]').change(function(){
+	var disk = $('form#companyform select[name="Storage"]').val();
+	var companyid = $('form#companyform input[name="CompanyId"]').val();
+	var companyrootdir = disk+":\\TDVideo\\"+companyid ;
+	$('input[name="CompanyRootDir"]').val( companyrootdir );
+	$('p[name="CompanyRoot"]').text( companyrootdir );	
+	
+	var databasename = $('form#companyform input[name="Database"]');
+	if( databasename.val().length == 0 ) {
+		databasename.val(companyid);
+	}
+
+	var companyname = $('form#companyform input[name="CompanyName"]');
+	if( companyname.val().length == 0 ) {
+		companyname.val(companyid);
+	}
+	
+});
+
+$('form#companyform select[name="Storage"]').change(function(){
+	var disk = $('form#companyform select[name="Storage"]').val();
+	var companyid = $('form#companyform input[name="CompanyId"]').val();
+	var companyrootdir = disk+":\\TDVideo\\"+companyid ;
+	$('input[name="CompanyRootDir"]').val( companyrootdir );
+	$('p[name="CompanyRoot"]').text( companyrootdir );	
 });
 
 $("button#btremove").click(function(e){
@@ -143,6 +177,10 @@ $("button#btremove").click(function(e){
 		return ;
 	}
 	if( confirm("Confirm to remove all data related to company : " + id ) ) {
+		$('form#passwordverifyform').submit(function (evt) {
+			evt.preventDefault();
+		});
+		
 		$( "#dialog_removeverify" ).data("company_id", id);
 		$( "#dialog_removeverify" ).dialog("open");
 	}
@@ -327,10 +365,28 @@ $("button#emailsettings").click(function(e){
 			<td>*</td>
 			<td>&nbsp;</td>
 		</tr>
-		<tr>
-			<td style="text-align:right">Company Root Folder:</td>
-			<td><input name="RootFolder" size="40" type="text" /></td>
+		<tr id="VideoStorageLine">
+			<td style="text-align:right">Video Storage:</td>
+			<td>
+			<select name="Storage" style="width:20%;" >
+<?php
+for( $d = ord('C'); $d<=ord('Z'); $d++ ) {
+	$drive = chr($d);
+	@$space = disk_free_space( $drive.':' );
+	if( $space && $space > 1000000000 ) {
+		echo "<option value=\"$drive\"> $drive: </option>" ;
+	}
+}
+?>			
+			</select>
+			</td>
 			<td>*</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align:right">Video Root Folder:</td>
+			<td><input type="hidden" name="CompanyRootDir" /><p name="CompanyRoot"/></td>
+			<td></td>
 			<td>&nbsp;</td>
 		</tr>
 		<tr>
@@ -369,6 +425,24 @@ foreach( $timezonelist as $tz ) {
 		<tr>
 			<td style="text-align:right">Session Timeout Value:</td>
 			<td><input name="SessionTimeout" type="number" value="900" min="300" max="86400" /></td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align:right">Enable Videos Page:</td>
+			<td><input name="EnableVideos" type="checkbox" /></td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align:right">Enable LiveTrack Page:</td>
+			<td><input name="EnableLiveTrack" type="checkbox" /></td>
+			<td>&nbsp;</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align:right">Enable DriveBy Page:</td>
+			<td><input name="EnableDriveBy" type="checkbox"/></td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 		</tr>
@@ -511,7 +585,7 @@ foreach( $timezonelist as $tz ) {
 
 <!-- Dialog Verify Password for removing company -->
 <div id="dialog_removeverify" title="Verify Super Admin Password" >
-<form id="passwordverifyform">
+<form id="passwordverifyform" >
 	<p>Verify Password:</p>
 	<input name="input_passwordverify" type="password" />
 </form>

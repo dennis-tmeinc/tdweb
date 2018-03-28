@@ -23,7 +23,7 @@ $(".btset input").change(function(){
    location=$(this).attr("href");
 });
 
-$( ".xsel" ).selectmenu();
+//$( ".xsel" ).selectmenu();
 
 var selectedtag = "" ;
 var tagchannels = {};

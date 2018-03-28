@@ -16,13 +16,19 @@
 
 		$resp['report']=array();
 		
+		$escape_req=array();
+		foreach( $_REQUEST as $key => $value )
+		{
+			$escape_req[$key]=$conn->escape_string($value);
+		}
+		
 		$filter = "" ;
 		if( !empty( $_REQUEST["vehicle"] ) ) {
-			$filter = " WHERE dvr_name = '$_REQUEST[vehicle]' " ;
+			$filter = " WHERE dvr_name = '$escape_req[vehicle]' " ;
 		}
 		
 		if( !empty( $_REQUEST["alert"] ) ) {
-			$filter .= " AND alert_code = '$_REQUEST[alert]' " ;
+			$filter .= " AND alert_code in ($escape_req[alert]) " ;
 		}		
 		
 		// get total records	

@@ -317,6 +317,9 @@
 				$result->free();
 			}
 		}
+		
+		$resp['report']['system_alerts'] = $system_alerts ;
+		$resp['report']['marked_events'] = $resp['report'][ 'Panic_Alerts_day' ] ;
 	
 		
 		$resp['res'] = 1 ;

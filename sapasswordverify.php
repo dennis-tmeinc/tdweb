@@ -30,7 +30,7 @@
 			for( $i=0; $i<64; $i++) {
 				$nonce[$i] = $hexchar[mt_rand(0,35)] ;
 			}
-			@$p = file_get_contents( "client/sapass" );
+			@$p = file_get_contents( "$client_dir/sapass" );
 			$user_password = trim($p);
 			if( strlen( $user_password ) > 25 && $user_password[0] == '$' ) {
 				$keys=explode('$', $user_password );
@@ -77,7 +77,7 @@
 			
 			if( $_REQUEST['k'] == $sakey ) {
 				$user_password = "$1$".$_REQUEST['n']."$".$_REQUEST['s'] ;
-				file_put_contents( "client/sapass",  $user_password);
+				file_put_contents( "$client_dir/sapass",  $user_password);
 				$resp['errormsg']="";
 				$resp['res'] = 1 ;
 			}
