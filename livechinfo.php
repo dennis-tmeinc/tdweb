@@ -9,6 +9,9 @@
 
 $nodb=1;
 require_once 'session.php' ; 
+
+header("x-lchi-1:1");
+
 require_once 'webtunstream.php' ;
 
 // send single data DVR req
@@ -59,7 +62,6 @@ function dvr_ans( $stream, &$data, &$databuf )
 set_time_limit(30) ;
 
 if( $logon && !empty($_REQUEST['phone']) ) {
-	
 	$phone = $_REQUEST['phone'] ;
 	$stream = fopen("webtun://$phone:15114", "c") ;
 	stream_set_timeout($stream, 15);

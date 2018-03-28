@@ -20,8 +20,13 @@
 			$vmq_end_time->add(new DateInterval('PT'.$_REQUEST['vmq_duration'].'M'));
 			$vmq_end_time=$vmq_end_time->format('Y-m-d H:i:s');
 			
-			$sql="INSERT INTO vmq (`vmq_vehicle_name`,`vmq_ins_user_name`,`vmq_start_time`,`vmq_end_time`,`vmq_description`) VALUES (
-			'$_REQUEST[vmq_vehicle_name]','$_SESSION[user]','$_REQUEST[vmq_start_time]','$vmq_end_time','$_REQUEST[vmq_description]');" ;
+			$vmq_ch = 'A' ;
+			if( !empty( $_REQUEST['vmq_camera'] ) ) {
+				$vmq_ch = implode( $_REQUEST['vmq_camera'], ',');
+			}
+
+			$sql="INSERT INTO vmq (`vmq_vehicle_name`,`vmq_ins_user_name`,`vmq_start_time`,`vmq_end_time`, `vmq_channel`, `vmq_description`) VALUES (
+			'$_REQUEST[vmq_vehicle_name]','$_SESSION[user]','$_REQUEST[vmq_start_time]','$vmq_end_time', '$vmq_ch' ,'$_REQUEST[vmq_description]');" ;
 			if( $conn->query($sql) ) {
 				$resp['res']=1 ;	// success
 			}

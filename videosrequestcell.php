@@ -129,6 +129,21 @@ $('form').submit(function() {
 	return false ;
 });
 
+$( "select[name='vcq_vehicle_name']" ).on( "change", function() {
+	var vehicle = $( "select[name='vcq_vehicle_name']" ).val();
+	var param = { 'vehicle': vehicle };
+	$.getJSON("cameralist.php", param, function(resp){
+		var options="" ;
+		if( resp.res == 1 && resp.cameras ) {
+			for( i=0; i<resp.cameras.length; i++ ) {
+				options += "<option selected value=\"" + resp.cameras[i] + "\"> Camera " + resp.cameras[i] + "</option>" ;
+			}
+		}
+		$( "select#vcq_camera" ).html( options );
+		
+	});
+});
+
 $("#rcontainer").show('slow');
 });
 	
@@ -190,6 +205,8 @@ $("#rcontainer").show('slow');
 	echo "</option>" ;
   }
  ?> </select></div>
+ <div>Select Cameras:</div>
+ <select id='vcq_camera' name="vcq_camera[]" multiple size="8" style="min-width:90%;"></select>
 </fieldset>
 
 <fieldset><legend>Time Range</legend>

@@ -20,8 +20,13 @@
 			$vcq_end_time->add(new DateInterval('PT'.$_REQUEST['vcq_duration'].'M'));
 			$vcq_end_time=$vcq_end_time->format('Y-m-d H:i:s');
 			
-			$sql="INSERT INTO vcq (`vcq_vehicle_name`,`vcq_ins_user_name`,`vcq_start_time`,`vcq_end_time`,`vcq_description`) VALUES (
-			'$_REQUEST[vcq_vehicle_name]','$_SESSION[user]','$_REQUEST[vcq_start_time]','$vcq_end_time','$_REQUEST[vcq_description]');" ;
+			$vcq_ch = 'A' ;
+			if( !empty( $_REQUEST['vcq_camera'] ) ) {
+				$vcq_ch = implode( $_REQUEST['vcq_camera'], ',');
+			}
+			
+			$sql="INSERT INTO vcq (`vcq_vehicle_name`,`vcq_ins_user_name`,`vcq_start_time`,`vcq_end_time`, `vcq_channel`, `vcq_description`) VALUES (
+			'$_REQUEST[vcq_vehicle_name]','$_SESSION[user]','$_REQUEST[vcq_start_time]','$vcq_end_time', '$vcq_ch', '$_REQUEST[vcq_description]');" ;
 			if( $conn->query($sql) ) {
 				$resp['res']=1 ;	// success
 			}

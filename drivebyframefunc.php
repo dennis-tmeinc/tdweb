@@ -46,8 +46,12 @@
 					if( vfile_size( $imgfile ) < 10 ) {
 						set_time_limit(60) ;
 					
-						$cachefn = str_replace ( '/' , DIRECTORY_SEPARATOR , $cache_dir."\\".$namehash.'_'.$time.'_%d.jpg' ) ;  
-						$cmdline = "bin\\ffmpeg.exe -i $vid -ss $time -t 1.02 -y $cachefn" ;
+						$cachefn = str_replace ( '/' , DIRECTORY_SEPARATOR , $cache_dir."\\".$namehash.'_'.$time.'_%d.jpg' ) ; 
+						$pvid  = escapeshellarg( $vid );
+						$ptime = escapeshellarg( $time );
+						$pcache = escapeshellarg( $cachefn );
+						
+						$cmdline = "bin\\ffmpeg.exe -i $pvid -ss $ptime -t 1.02 -y $pcache" ;
 						$eoutput = array();
 						$eret = 1 ;
 						$lline = vfile_exec( $cmdline, $eoutput, $eret ) ;
@@ -88,7 +92,10 @@
 					$vid = $x->channel[$ch]->video ;
 					$imgfile = session_save_path()."\\sess_".md5($vid.$pos).".jpg" ;
 					$pos += 0.03 ;
-					$cmdline = "bin\\ffmpeg.exe -ss $pos -i $vid -frames 1 $imgfile" ;
+					
+					$pvid = escapeshellarg( $vid );
+					$pimg = escapeshellarg( $imgfile );
+					$cmdline = "bin\\ffmpeg.exe -ss $pos -i $pvid -frames 1 $pimg" ;
 
 					set_time_limit(100) ;
 					$eoutput = array();
@@ -109,7 +116,9 @@
 		
 		$imgfile = "$cache_dir\\frame".md5($videofile.$pos).".jpg" ;
 		$pos += 0.03 ;
-		$cmdline = "bin\\ffmpeg.exe -ss $pos -i $videofile -frames 1 $imgfile" ;
+		$pvid = escapeshellarg( $videofile );
+		$pimg = escapeshellarg( $imgfile );
+		$cmdline = "bin\\ffmpeg.exe -ss $pos -i $pvid -frames 1 $pimg" ;
 
 		set_time_limit(50) ;
 		$eoutput = array();
@@ -132,8 +141,10 @@
 			$imgfile = "$cache_dir\\frame".md5($videofile.$pos).".jpg" ;
 		}
 		
+		$pvid = escapeshellarg( $videofile );
+		$pimg = escapeshellarg( $imgfile );		
 		$pos += 0.03 ;
-		$cmdline = "bin\\ffmpeg.exe -ss $pos -i $videofile -frames 1 $imgfile" ;
+		$cmdline = "bin\\ffmpeg.exe -ss $pos -i $pvid -frames 1 $pimg" ;
 
 		set_time_limit(50) ;
 		$eoutput = array();

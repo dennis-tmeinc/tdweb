@@ -49,7 +49,6 @@
 					
 					
 					if( vfile_size( $imgfile ) < 10 ) {
-					header("x-img-file: ".$imgfile );
 						$cachefn = "$cache_dir". DIRECTORY_SEPARATOR .$namehash.'_'.$time.'_%d.jpg' ;  
 						$cmdline = "bin\\ffmpeg.exe -i $vid -ss $time -t 1.02 -y $cachefn" ;
 						

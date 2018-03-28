@@ -115,15 +115,21 @@ function mp4cache_load( $index )
 						if( vfile_exists( $ifile ) ){
 							set_time_limit(600) ;
 							$tmp_mp4 = $preview_dir."t".$hash.".mp4" ;
+							
+							$ifile = escapeshellarg( $ifile );
+							$ofile = escapeshellarg( $tmp_mp4 );
+							
 							$conv266="bin\\conv266\\conv266.exe" ;
 							if( !empty( $GLOBALS["use_conv266"] ) && vfile_exists( $conv266 ) ) {
 								if( empty($GLOBALS["conv266_text"]) ) {
-									$conv266 .= ' -a ' ;
+									$cmdline = "$conv266 -a -i $ifile -f $ofile" ;
 								}
-								$cmdline = "$conv266 -i \"$ifile\" -f \"$tmp_mp4\"" ;
+								else {
+									$cmdline = "$conv266 -i $ifile -f $ofile" ;
+								}
 							}
 							else {
-								$cmdline = "bin\\ffmpeg.exe -i \"$ifile\" -y -codec:v copy \"$tmp_mp4\" " ;
+								$cmdline = "bin\\ffmpeg.exe -i $ifile -y -codec:v copy $ofile" ;
 							}
 
 							vfile_exec( $cmdline );

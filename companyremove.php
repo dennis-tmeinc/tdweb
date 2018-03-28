@@ -62,7 +62,11 @@
 		$database = get_var( $cfgfile, "\$smart_database" ) ;
 		if( $company_root && $database && !empty( $td_clean ) ) {
 			// script execution : <script> <company id> <company root directory> <database name>
-			$cmd = $td_clean." \"$_REQUEST[id]\" \"$company_root\" \"$database\"" ;
+			$p1 = escapeshellarg( $_REQUEST['id'] );
+			$p2 = escapeshellarg( $company_root );
+			$p3 = escapeshellarg( $database );
+			
+			$cmd = $td_clean." $p1 $p2 $p3" ;
 			@vfile_exec($cmd, $output, $ret) ;
 			
 			@vfile_unlink( "$company_root/companyinfo.xml" ) ;

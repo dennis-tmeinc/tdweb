@@ -14,32 +14,30 @@ function net_available( $s, $tous = 0 )
 	return false ;
 }
 
+$net_sid = rand();
+
 // send one packet and wait for ack
 function net_sendpack( $s, $data )
 {
-	static $sendtag = 1  ;
+	global $net_sid   ;
 	if( $s ) {
 		$plen = strlen($data) ;
-		$packheader = pack('ii', $plen, $sendtag++ ) ;
+		$packheader = pack('ii', $plen, $net_sid++ ) ;
 		$hlen = strlen( $packheader );
-		fwrite( $s, $packheader );
+		$w = fwrite( $s, $packheader );
+		if( $w != $hlen ) {
+			return false ;
+		}
 		$pos = 0 ;
 		while( $pos < $plen ) {
-			if( $pos == 0 ) {
-				$w = fwrite( $s, $data );
-			}
-			else {
-				$w = fwrite( $s, substr($data,$pos) );
-			}
-			if( $w>0 ) {
-				$pos += $w ;
-			}
-			else {
+			$w = fwrite( $s, substr($data,$pos) );
+			if( $w === false ) {
 				return false ;
 			}
+			$pos += $w ;
 		}
 		 // wait ack
-		return ( fread( $s, $hlen )===$packheader ) ;
+		return ( fread( $s, $hlen ) == $packheader ) ;
 	}
 	return false ;
 }

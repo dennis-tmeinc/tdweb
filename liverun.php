@@ -65,9 +65,11 @@ function dvr_ans( $stream, &$data, &$databuf )
 	$ans = dvr_read( $stream, 12 );
 	if( strlen($ans) != 12 ) return -1 ;
 	$ans = unpack("Vcode/Vdata/Vsize", $ans ) ;
-	
 	$data = $ans['data'] ;
-	$databuf = dvr_read( $stream, $ans['size'] ) ;
+	if( $ans['size'] > 0 ) 
+		$databuf = dvr_read( $stream, $ans['size'] ) ;
+	else
+		$databuf = '' ;
 	return $ans['code'] ;
 }
 
@@ -247,12 +249,12 @@ function on_receive_frame( $frame )
 							}
 							exec( $ffmpeg );
 
-							$mp4box = "bin\\mp4box.exe $vname.mp4 -tmp $cache_dir -dash 50000 -rap -out $vname.mpd" ;
 							live_lock();
+							$mp4box = "bin\\mp4box.exe $vname.mp4 -tmp $cache_dir -dash 50000 -rap -out $vname.mpd" ;
 							exec( $mp4box );
+							@unlink( "$vname.mp4" ) ;
 							live_update( "$vname.mpd" ) ;
 							live_unlock();
-							@unlink( "$vname.mp4" ) ;
 						}
 						if($video_live) {
 							//static $video_serno = 0 ;
@@ -346,6 +348,7 @@ function live_start()
 	$start = false ;
 	$upd = false ;
 	$sn = 0 ;
+	$br = false ;
 	
 	// retry 10 time (seconds)
 	for( $retry=0 ; $retry<20; $retry++ ) {
@@ -431,16 +434,17 @@ function live_stop()
 
 	live_unlock();
 	fclose($video_runfile) ;
+	@unlink("${video_prefix}run");
 }
 
 ignore_user_abort(true);
-
-live_log( "Live Start\n" );
 
 if( !live_start() ){
 	live_log( "already running!\n" );
 	exit ;
 }
+
+live_log( "Live Start\n" );
 
 $live_stream = NULL ;
 

@@ -172,7 +172,10 @@
 				if( !empty( $td_new ) ) {
 					//@chdir( $company_root );
 					// script execution : <script> <company id> <company root directory> <database name>
-					$cmd = $td_new." \"$_REQUEST[CompanyId]\" \"$company_root\" \"$_REQUEST[Database]\"" ;
+					$p1 = escapeshellarg( $_REQUEST['CompanyId'] );
+					$p2 = escapeshellarg( $company_root );
+					$p3 = escapeshellarg( $_REQUEST['Database'] );
+					$cmd = $td_new." $p1 $p2 $p3" ;
 					vfile_exec($cmd, $output, $ret) ;
 				}
 				

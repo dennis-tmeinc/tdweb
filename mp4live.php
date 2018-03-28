@@ -59,8 +59,11 @@ flock( $video_runfile, LOCK_UN );
 
 if( !$active || $xsn == 0 ) {
 	// start live run
-	$reqdir = dirname( $_SERVER["REQUEST_URI"]) ;
-	$go = file_get_contents("http://localhost${reqdir}/liverun.php?phone=${phone}&camera=${camera}", false, NULL, 0, 1) ;
+	$url = 'http://' 
+		. $_SERVER['SERVER_NAME'] 
+		. dirname( $_SERVER['SCRIPT_NAME'] )
+		. "/liverun.php?phone=${phone}&camera=${camera}" ;
+	$go = file_get_contents($url, false, NULL, 0, 1) ;
 }
 
 @ob_end_clean();
