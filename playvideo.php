@@ -48,8 +48,6 @@
 		$info['playmode'] = "playback" ;
 		$info['playtime'] = "2000-01-01 00:00:00" ;
 		
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-		
 		if( !empty($_REQUEST['index']) ) {
 			$sql = "SELECT vehicle_name, time_start, path FROM videoclip WHERE `index` = $_REQUEST[index] ;" ;
 		}
@@ -79,9 +77,7 @@
 			}
 			$result->free();
 		}
-		
-		$conn->close();
-		
+
 		if( !empty($_REQUEST['playtime']) ) {
 			$info['playtime'] = $_REQUEST['playtime'] ;
 		}

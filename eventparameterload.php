@@ -11,7 +11,6 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		$sql="SELECT * FROM report_parameter ;" ;
 		$result=$conn->query($sql);
 		if( !empty($result)) {

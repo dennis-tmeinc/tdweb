@@ -17,17 +17,8 @@ require 'vfile.php' ;
 header("Content-Type: application/json");
 
 if( $logon ) {
-	
-	@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-
+			
 	$servertime = new DateTime() ;
-	$sql = "select now();" ;
-	if($result=$conn->query($sql)) {
-		if( $row=$result->fetch_array() ) {
-			$servertime = new DateTime( $row[0] );
-		}
-		$result->free();
-	}
 	$resp['time']=$servertime->format('Y-m-d H:i') ;
 
 	// dashboard options
@@ -64,7 +55,6 @@ if( $logon ) {
 		$resp['res']=1 ;	// success
 	}
 
-	@$conn->close();
 }
 
 echo json_encode($resp);

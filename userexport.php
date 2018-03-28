@@ -13,9 +13,7 @@
 		if( $_SESSION['user'] == 'admin' ) {
 			header( "Content-Type: application/octet-stream" );
 			header( "Content-Disposition: attachment; filename=users.csv" );   	
-			
-			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-			
+
 			$output = fopen('php://output', 'w');
 			
 			$sql="SELECT * FROM `app_user` WHERE `user_name` != 'admin' ;" ;

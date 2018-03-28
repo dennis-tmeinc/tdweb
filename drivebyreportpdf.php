@@ -21,8 +21,7 @@
 //				return ;
 //			}
 //		}
-		
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+
 		$sql = "SELECT * FROM Drive_By_Event WHERE `idx` = $_REQUEST[tag] " ;
 		if($result=$conn->query($sql)) {
 			if( $row=$result->fetch_array(MYSQLI_ASSOC) ) {

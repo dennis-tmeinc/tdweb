@@ -12,8 +12,6 @@
 	header("Content-Type: application/json");
 
 	if( $logon ) {
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-		
 		// get vlt_config field types, (int) filed should be set as number
 		$sql = "SELECT * FROM vlt_config WHERE `index` = 0" ;  // sql to get fields
 		$fields = array();

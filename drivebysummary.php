@@ -22,9 +22,7 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {	
-				
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-		
+
 		$referer = basename($_SERVER['HTTP_REFERER']);
 		if( strpos( $referer, "processed" ) ) {
 			$filter = " event_status = 'processed' " ;

@@ -12,7 +12,6 @@
 	
 	if( $logon ) {
 		if( $_SESSION['user'] == 'admin' ) {
-			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			
 			$sql = "INSERT IGNORE INTO `vehicle` (`vehicle_name`) SELECT DISTINCT `vl_vehicle_name` from `vl` " ;
 			$conn->query($sql);
@@ -23,7 +22,6 @@
 			$sql = "INSERT IGNORE INTO `vehicle` (`vehicle_name`) SELECT DISTINCT `de_vehicle_name` from `dvr_event` " ;
 			$conn->query($sql);
 			$resp['res']=1 ;	// success
-			$conn->close();
 		}
 		else {
 			$resp['errormsg']="Not allowed!";

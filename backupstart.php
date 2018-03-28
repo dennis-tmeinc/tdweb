@@ -47,7 +47,6 @@
 	
 			// now let's do the real backup work
 			require 'backupfunction.php' ;
-			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database ); 
 			dbbackup( $backupname, $conn, $fpercent ) ;
 			
 			fclose($fpercent);

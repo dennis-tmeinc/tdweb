@@ -80,14 +80,5 @@
 	$td_new    = "C:\\SmartSvrApps\\tdnew.exe create " ;
 	$td_clean  = "C:\\SmartSvrApps\\tdnew.exe remove " ;	
 	
-	// setup time zone
-	date_default_timezone_set($timezone) ;	
-	if(	$database_persistent ) {
-		$smart_server = "p:".$smart_host ;
-	}
-	else {
-		$smart_server = $smart_host ;
-	}
-	
 	return ;
 ?>	

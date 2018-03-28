@@ -37,8 +37,6 @@
 	
 	if( $logon ) {
 		
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-		
 		$filter = '' ;
 		if( $_REQUEST['_search'] == 'true' ) {		// inline search
 			// to add search filters

@@ -16,8 +16,6 @@
 		// only one true admin from now. 2013-06-14
 		if( $_SESSION['user'] == "admin" || $_SESSION['user'] == $_REQUEST['xuser'] ) {		// admin or user self
 		
-			// MySQL connection
-			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			// escaped sql values
 			$esc_req=array();
 			foreach( $_REQUEST as $key => $value )

@@ -54,8 +54,6 @@
 			$filter = " event_status = 'new' " ;
 		}
 		
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-		
 		if( $_REQUEST['_search'] == 'true' ) {		// inline search
 			// to add search filters
 			$fields = array( 'Client_Id','Bus_Id','Date_Time','imgquality','Plateofviolator','notes','email_status', 'email_status','event_processedby','event_processedtime','sentto','State','City' );

@@ -53,9 +53,7 @@
 				$_REQUEST[$key] = 0 ;
 			}
 		}	
-		
-		// MySQL connection
-		$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+
 		// escaped string for SQL
 		$esc_req=array();
 		foreach( $_REQUEST as $key => $value )

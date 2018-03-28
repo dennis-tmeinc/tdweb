@@ -73,15 +73,6 @@
 	$avlservice = "http://localhost:40520/avlservice" ;
 	$avlcbserver = "http://localhost:80" ;		
 	$avlcbapp = "vltevent.php" ;
-
-	// setup time zone
-	date_default_timezone_set($timezone) ;	
-	if(	$database_persistent ) {
-		$smart_server = "p:".$smart_host ;
-	}
-	else {
-		$smart_server = $smart_host ;
-	}
 	
 	return ;
 ?>	

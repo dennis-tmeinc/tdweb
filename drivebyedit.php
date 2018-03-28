@@ -19,7 +19,6 @@
 			
 	if( $logon ) {
 		if( $_REQUEST['oper'] == 'edit' ) {	// editting
-			@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			$sql = "UPDATE Drive_By_Event SET `imgquality` =  '$_REQUEST[imgquality]', `Plateofviolator` =  '$_REQUEST[Plateofviolator]', `notes` = '$_REQUEST[notes]', `State` =  '$_REQUEST[State]', `City` =  '$_REQUEST[City]' WHERE `idx` = $_REQUEST[id] " ;
 			if($result=$conn->query($sql)) {
 				$resp['res'] = 1 ;

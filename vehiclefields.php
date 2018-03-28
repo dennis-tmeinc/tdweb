@@ -10,8 +10,6 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
-		
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 
 		$maxuploadtime=60 ;
 		$sql="SELECT `maxuploadtime` FROM `report_parameter` ;";
@@ -43,7 +41,6 @@
 		else {
 			$resp['errormsg']="SQL ERROR!" ;
 		}
-		$conn->close();
 	}
 	echo json_encode($resp);
 ?>

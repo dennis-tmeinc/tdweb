@@ -13,8 +13,6 @@
 	
 	if( $logon ) {
 
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-				
 		$resp['report']=array();
 		
 		$filter = "" ;
@@ -72,7 +70,6 @@
 			}
 			$result->free();
 		}
-		$conn->close();
 		echo json_encode( $grid );
 	}
 	else {

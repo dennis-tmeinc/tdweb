@@ -11,8 +11,6 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ){
-		// MySQL connection
-		$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		// escaped string for SQL
 		$esc_req=array();
 		foreach( $_REQUEST as $key => $value )

@@ -114,20 +114,20 @@ function vfile_mkdir( $dirname )
 	}
 	else {
 		// local file
-		return mkdir( $filename, 0777, true ) ;
+		return mkdir( $dirname, 0777, true ) ;
 	}
 }
 
-function vfile_rmdir( $filename )
+function vfile_rmdir( $dirname )
 {
 	if( $fileserver = vfile_remote() ) {
-		$j = vfile_readhttp( $fileserver."?c=rmdir&n=".rawurlencode($filename) ) ;
+		$j = vfile_readhttp( $fileserver."?c=rmdir&n=".rawurlencode($dirname) ) ;
 		@$jd = json_decode( $j, true );
 		return !empty( $jd['res'] ) ; 
 	}
 	else {
 		// local file
-		return rmdir( $filename ) ;
+		return rmdir( $dirname ) ;
 	}
 }
 

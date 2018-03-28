@@ -14,8 +14,6 @@
 	
 		// get total records
 		$filter = empty($_SESSION['mapfilter']['filter'])?"WHERE FALSE":" WHERE ".$_SESSION['mapfilter']['filter'] ;
-	
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		
 		$records = 0 ;
 		$sql="SELECT count(*) FROM vl $filter ;" ;
@@ -50,7 +48,6 @@
 			}
 			$result->free();
 		}
-		$conn->close();
 		echo json_encode( $grid );
 	}
 	else {

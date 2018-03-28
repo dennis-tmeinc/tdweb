@@ -14,8 +14,6 @@
 	
 		// get total records
 		$filter = empty($_SESSION['mapfilter']['filter'])?"FALSE":$_SESSION['mapfilter']['filter'] ;
-	
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 
 		$vlgridtableexist = false ;
 		if(!empty($map_events_cache)) {		// experiment cache table mode
@@ -156,7 +154,6 @@
 			$conn->query($sql);
 		}
 		
-		$conn->close();
 		echo json_encode( $grid );
 	}
 	else {

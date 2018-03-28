@@ -11,8 +11,6 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
-		
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 
 		$mapfilter = $_SESSION['mapfilter']['filter'] ;
 		$param =  $_SESSION['mapfilter'];
@@ -107,8 +105,7 @@
 		
 		$resp['serial'] = $_REQUEST['serial'] ;
 		$resp['res'] = 1 ;
-		
-		$conn->close();
+
 	}
 	echo json_encode( $resp );
 ?>

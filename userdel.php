@@ -13,7 +13,6 @@
 	
 	if( $logon ) {
 		if( $_SESSION['user'] == 'admin' && !empty($_REQUEST['alluser']) && $_REQUEST['alluser'] == 'yes' ) {
-			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			$sql="DELETE FROM `app_user` WHERE `user_name` != 'admin' ;" ;
 			if( $conn->query($sql) ) {
 				$resp['res']=1 ;	// success

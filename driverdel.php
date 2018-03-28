@@ -13,7 +13,6 @@
 	
 	if( $logon ) {
 		if( $_SESSION['user'] == 'admin' && !empty($_REQUEST['alldriver']) && $_REQUEST['alldriver'] == 'yes' ) {
-			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			$sql="DELETE FROM `driver` WHERE TRUE ;" ;
 			if( $conn->query($sql) ) {
 				$resp['res']=1 ;	// success
@@ -25,7 +24,6 @@
 		else if( $_SESSION['user_type'] == "admin" ) {	// admin 
 			// MySQL connection
 			$driver_id = $_REQUEST['driver_id'] ;
-			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			$sql="DELETE FROM driver WHERE driver_id='$driver_id';" ;
 			if( $conn->query($sql) ) {
 				$resp['res']=1 ;	// success

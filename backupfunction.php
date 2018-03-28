@@ -65,16 +65,7 @@ function dbbackup( $backupname, $conn, $fpercent )
 	fputs( $fout, "--  @PGT:$progresstotal \n");
 	fputs( $fout, "--  \n");
 	
-	$sql = "select now();" ;
 	$now = new DateTime() ;
-	// use mysql time instead if possible
-	if($result=$conn->query($sql)) {
-		if( $row=$result->fetch_array() ) {
-			$now = new DateTime( $row[0] );
-		}
-		$result->free();
-	}
-	
 	fputs( $fout, "-- @TME ".$now->format("Y-m-d H:i:s")."\n\n");
 
 	$progress = 0 ;

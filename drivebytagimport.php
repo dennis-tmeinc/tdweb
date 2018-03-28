@@ -74,7 +74,6 @@
 	if( $logon ) {
 
 			// to convert data from data base to local file
-			@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			
 			$resp['t']=0 ;
 			$resp['x']=array();
@@ -87,7 +86,6 @@
 					$sql = "UPDATE Drive_By_Event SET `event_status` =  'processed', `report_status` =  'report', `report_file` = '$pdfname', `event_processedby` =  '$_SESSION[user]', `event_processedtime` =  NOW(), Plateofviolator = '$tag[plateofviolator]', `notes` = '$tag[notes]', `email_status` = 'Pending' WHERE `Date_Time` = '$tag[datetime]' AND `Bus_Id` = '$tag[vehicle]' AND Client_Id = '$tag[clientid]' " ;
 
 					$resp['x'][] = $sql ;
-				
 					
 					$conn->query($sql);
 				}

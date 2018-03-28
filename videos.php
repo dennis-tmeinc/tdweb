@@ -3,14 +3,8 @@
 <head><?php 
 require 'session.php'; 
 session_save('lastpage', $_SERVER['REQUEST_URI'] );
-
-// MySQL connection
-if( $logon ) {
-	@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-}
 // clear video filter
 session_save('videofilter','');
-	
 ?>
 	<title>Touch Down Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
@@ -496,4 +490,3 @@ echo date("Y-m-d H:i") ;
 </div>
 </body>
 </html>
-<?php $conn->close(); ?>

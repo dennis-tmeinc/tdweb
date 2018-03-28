@@ -220,8 +220,7 @@
 	function sendmail_secure($to, $sender, $subject, &$message, &$attachments )
 	{
 		// get email settings from tdalert email settings
-		global $smart_server, $smart_user, $smart_password, $smart_database ;
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+		global $conn ;
 		$sql = "SELECT smtpServer,smtpServerPort,security,authenticationUserName,authenticationPassword,senderAddr FROM tdconfig ;" ;
 		if( !empty($conn) && ($result=$conn->query($sql)) ) {
 			$mailer = $result->fetch_assoc() ;

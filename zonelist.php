@@ -13,8 +13,7 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
-		
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+
 		if( !empty($_REQUEST['index']) ) {
 			$sql="SELECT * FROM zone WHERE `index` = $_REQUEST[index] AND (`type` = 1 OR `user` = '$_SESSION[user]') ;" ;
 		}

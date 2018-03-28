@@ -17,8 +17,6 @@
 	header("Content-Type: application/json");
 	
 	if( $logon && !empty($webplay_support) ) {
-		
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 
 		if( empty( $_REQUEST['index'] ) ) {
 			if( empty( $_REQUEST['dir'] ) ) {
@@ -68,7 +66,6 @@
 			}			
 		}
 
-		$conn->close();
 	}
 	echo json_encode($resp);
 ?>

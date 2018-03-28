@@ -85,14 +85,5 @@
 	$support_driveby = 1 ;
 	$driveby_eventdir = "\\TouchDownCenter\\drivebydemo1" ;
 	
-	// setup time zone
-	date_default_timezone_set($timezone) ;	
-	if(	$database_persistent ) {
-		$smart_server = "p:".$smart_host ;
-	}
-	else {
-		$smart_server = $smart_host ;
-	}
-	
 	return ;
 ?>	

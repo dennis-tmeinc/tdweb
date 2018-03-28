@@ -38,7 +38,6 @@
 			
 			require 'backuprestorefunction.php' ;
 			$backupname = $backup_path."/bk".urlencode( $_REQUEST['backupname'] );
-			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database ); 
 			dbrestore( $backupname, $conn, $fpercent ) ;
 			fclose( $fpercent );
 			return ;

@@ -15,8 +15,6 @@
 	if( $logon ) {
 	
 		if( $_SESSION['user_type'] == "admin" ) {	// admin 
-			// MySQL connection
-			@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			@$oname=$_REQUEST['oname'] ;
 			$name=$_REQUEST['name'] ;
 			$vehiclelist=$_REQUEST['vehiclelist'] ;

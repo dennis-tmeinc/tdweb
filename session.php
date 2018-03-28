@@ -3,7 +3,7 @@
 // By Dennis Chen @ TME	 - 2013-06-15
 // Copyright 2013 Toronto MicroElectronics Inc.
 
-require 'config.php' ;
+include 'config.php' ;
 
 if( empty($session_path) ) {
 	$session_path= "session";
@@ -46,17 +46,49 @@ if( !empty( $_SESSION['clientid'] )) {
 
 // setup time zone
 date_default_timezone_set($timezone) ;	
-// persistent database connection
+
 if(	$database_persistent ) {
 	$smart_server = "p:".$smart_host ;
 }
 else {
 	$smart_server = $smart_host ;
 }
-	
+
 /* page ui */
 if( !empty($_COOKIE['ui']))
 	$default_ui_theme = $_COOKIE['ui'] ;	
+
+$resp=array('res' => 0);	
+$xt = time() ;
+if( empty($_SESSION['user']) ||
+	empty($_SESSION['xtime']) || 
+	$xt>$_SESSION['xtime']+$session_timeout )
+{
+	// logout
+	unset($_SESSION['user']) ;
+	unset($_SESSION['user_type']);
+	$resp['errormsg']="Session error!";
+	$resp['session'] = 0 ;
+	$logon=false ;
+	/* AJAX check */
+	if( empty($noredir) && empty($_SERVER['HTTP_X_REQUESTED_WITH']) ) {
+		header( 'Location: logon.php' ) ;
+	}	
+	$resp['session'] = 'e' ;		// session ended
+}
+else {
+	$oldsessiontime = $_SESSION['xtime'] ;
+	if( empty( $noupdatetime ) )
+		$_SESSION['xtime']=$xt ;
+	$logon=true ;
+	$resp['session'] = 'l' ;		// session login
+
+	// move sql connection here, in case for general session's settings (etc. timezone)
+	@$conn = new mysqli("p:".$smart_host, $smart_user, $smart_password, $smart_database );
+	
+}
+
+session_write_close();
 
 // store $_SESSION variable after session_write_close()
 function session_write()
@@ -77,50 +109,16 @@ function session_write()
 // store one variable to session
 function session_save( $vname, $value )
 {
-	$fsess = fopen( session_save_path().'/sess_'.session_id(), 'r+' );
-	if( $fsess ) {
-		flock( $fsess, LOCK_EX ) ;		// exclusive lock
-		
-		$sess_str = fread( $fsess, 20000 );
-		session_decode ( $sess_str ) ;
-		$_SESSION[$vname] = $value ;
-		$sess_str = session_encode() ;
-		rewind( $fsess ) ;
-		fwrite( $fsess, $sess_str );
-		fflush( $fsess ) ;              // flush before releasing the lock
-		ftruncate( $fsess, ftell($fsess));
-
-		flock( $fsess, LOCK_UN ) ;		// unlock ;
-		fclose( $fsess );
+	if( !empty($_SESSION) ) {
+		if( empty($value) ) {
+			unset($_SESSION[$vname]);
+		} 
+		else {
+			$_SESSION[$vname] = $value ;		
+		}
+		session_write();
 	}
 }
-
-$resp=array('res' => 0);	
-$xt = time() ;
-if( empty($_SESSION['user']) ||
-	empty($_SESSION['xtime']) || 
-	$xt>$_SESSION['xtime']+$session_timeout )
-	{
-	// logout
-	unset($_SESSION['user']) ;
-	$resp['errormsg']="Session error!";
-	$resp['session'] = 0 ;
-	$logon=false ;
-	/* AJAX check */
-	if( empty($noredir) && empty($_SERVER['HTTP_X_REQUESTED_WITH']) ) {
-		header( 'Location: logon.php' ) ;
-	}	
-	$resp['session'] = 'e' ;		// session ended
-}
-else {
-	$oldsessiontime = $_SESSION['xtime'] ;
-	if( empty( $noupdatetime ) )
-		$_SESSION['xtime']=$xt ;
-	$logon=true ;
-	$resp['session'] = 'l' ;		// session login
-}
-
-session_write_close();
 
 return ;
 ?>

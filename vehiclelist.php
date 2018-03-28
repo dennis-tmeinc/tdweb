@@ -13,8 +13,6 @@
 	
 	if( $logon ) {
 		
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-		
 		if( !empty($_REQUEST['vehicle_id']) ) {
 			$sql="SELECT * FROM vehicle WHERE vehicle_id = ".$_REQUEST['vehicle_id'].";";
 		}
@@ -36,7 +34,6 @@
 			$resp['res'] = 1 ;
 			$result->free();
 		}
-		$conn->close();
 	}
 	echo json_encode($resp);
 ?>

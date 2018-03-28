@@ -15,7 +15,6 @@
 	header("Content-Type: video/mp4");
 	
 	if( $logon ) {
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		$sql = "SELECT * FROM emg_event WHERE `idx` = $_REQUEST[tag] " ;
 		if($result=$conn->query($sql)) {
 			if( $row=$result->fetch_array(MYSQLI_ASSOC) ) {

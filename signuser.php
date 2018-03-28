@@ -14,18 +14,16 @@ header("Content-Type: application/json");
 $resp=array();
 $resp['res']=0 ;
 
+// reload config file
+include 'config.php' ;
+
+unset($_SESSION['clientid']);
+
 if( !empty($_REQUEST['c']) ) {
 	$_SESSION['clientid'] = $_REQUEST['c'];
-	session_write() ;
 	$clientcfg = 'client/'.$_SESSION['clientid'].'/config.php' ;
 	if( file_exists ( $clientcfg ) ) {
 		include $clientcfg ;
-		if(	$database_persistent ) {
-			$smart_server = "p:".$smart_host ;
-		}
-		else {
-			$smart_server = $smart_host ;
-		}
 	}
 	else {
 		$resp['errormsg'] = "Client ID error!" ;
@@ -33,14 +31,16 @@ if( !empty($_REQUEST['c']) ) {
 	}
 }
 	
-// MySQL connection
-@$conn = new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+// reconnect MySQL
+@$conn = new mysqli("p:".$smart_host, $smart_user, $smart_password, $smart_database );
+
 if( empty($conn) ) {
 	$resp['errormsg'] = "Database error!" ;
 	goto done;
 }
 
 unset($_SESSION['user']) ;
+$_SESSION['xtime']=time() ;
 
 // escaped string for SQL
 $esc_req=array();
@@ -52,7 +52,7 @@ foreach( $_REQUEST as $key => $value )
 if( !empty($support_multicompany) && empty($_REQUEST['c']) && strcasecmp($_REQUEST['user'],"SuperAdmin")==0 ) {
 
 	$_SESSION['xuser'] = "SuperAdmin"  ;
-	$_SESSION['user_type'] = $_SESSION['xuser'] ;
+	$_SESSION['xuser_type'] = $_SESSION['xuser'] ;
 	$_SESSION['welcome_name'] = "SuperAdmin" ;
 	$nonce=' ' ;
 	$hexchar="0123456789abcdefghijklmnopqrstuvwxyz" ;
@@ -81,16 +81,16 @@ if( !empty($support_multicompany) && empty($_REQUEST['c']) && strcasecmp($_REQUE
 	$resp['keytype']=$_SESSION['keytype'] ;
 	$resp['nonce']=$_SESSION['nonce'] ;
 	$resp['res']=1 ;
-	session_write();
 
 }
 else {
 	$sql="SELECT user_name, user_password, user_type, first_name, last_name FROM app_user WHERE user_name = '$esc_req[user]';" ;
 
 	if( $result=$conn->query($sql) ) {
+		
 		if( $row = $result->fetch_array(MYSQLI_ASSOC) ) {
 			$_SESSION['xuser'] = $row['user_name']  ;
-			$_SESSION['user_type'] = $row['user_type'] ;
+			$_SESSION['xuser_type'] = $row['user_type'] ;
 			$_SESSION['welcome_name'] = $row['first_name'].' '.$row['last_name'] ;
 			if($_SESSION['welcome_name']==' ') $_SESSION['welcome_name']=$_SESSION['xuser'] ;
 			
@@ -131,14 +131,13 @@ else {
 			$resp['keytype']=$_SESSION['keytype'] ;
 			$resp['nonce']=$_SESSION['nonce'] ;
 			$resp['res']=1 ;
-			session_write();
 		}
 		$result->free();
 	}
-	$conn->close();
 }
 	
 done:	
+	session_write() ;
 
 	// flush contents before do more cleaning jobs
 	$content = json_encode($resp);

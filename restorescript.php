@@ -130,5 +130,5 @@
 		fwrite($fpercent, "100"); 
 		fclose($fpercent);	
 	}
-	$conn->close();
+
 ?>

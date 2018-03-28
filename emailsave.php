@@ -12,8 +12,6 @@
 	
 	if( $logon ) {
 		if( $_SESSION['user_type'] == "admin" ) {		// admin only
-			// MySQL connection
-			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			
 			if( empty( $_REQUEST['sendSummaryDaily'] ) ) {
 				$_REQUEST['sendSummaryDaily']='0';

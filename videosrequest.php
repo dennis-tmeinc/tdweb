@@ -1,12 +1,9 @@
 <!DOCTYPE html>
-<html>
-<head><?php 
+<?php 
 require 'session.php'; 
-// MySQL connection
-if( $logon ) {
-	@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-}
 ?>
+<html>
+<head>
 	<title>Touch Down Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">

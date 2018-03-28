@@ -5,11 +5,6 @@ require 'session.php';
 
 // remember settings sub page
 session_save('settingpage', $_SERVER['REQUEST_URI'] );
-
-// MySQL connection
-if( $logon ) {
-	$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-}
 ?>
 	<title>Touch Down Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />

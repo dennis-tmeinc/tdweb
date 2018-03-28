@@ -60,8 +60,6 @@
 			}
 		}
 		// to read keepGpsLogDataForDays	keepVideoDataForDays
-		// MySQL connection
-		$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		$sql="SELECT keepGpsLogDataForDays, keepVideoDataForDays FROM tdconfig ;";
 		if( $result = $conn->query($sql) ) {
 			if( $row = $result->fetch_array() ) {

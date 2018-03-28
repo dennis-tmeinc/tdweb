@@ -51,8 +51,6 @@
 	
 	if( $logon ) {
 
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-
 		$sql = "SELECT `path` FROM videoclip WHERE `index` = $_REQUEST[index] ;" ;
 
 		if($result=$conn->query($sql)) {
@@ -192,6 +190,5 @@
 			}
 			$result->free();
 		}
-		$conn->close();
 	}
 ?>

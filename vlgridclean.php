@@ -14,9 +14,6 @@
 	
 		// get total records
 		unset( $_SESSION['mapfilter'] );
-
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-		
 		$vlgrid_table = 'tmp%';
 		$sql = "SHOW TABLES LIKE '$vlgrid_table' ";
 		if( $result = $conn->query($sql) ) {

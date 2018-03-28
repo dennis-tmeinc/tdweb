@@ -113,8 +113,6 @@
 			set_var( $cfgfile, "\$company_root", $company_root );
 			set_var( $cfgfile, "\$smart_database", $_REQUEST['Database'] );		
 
-			// mkdir company root folder
-			@mkdir(  $company_root  );
 		}
 
 		if( !empty($_REQUEST['TimeZone']) )

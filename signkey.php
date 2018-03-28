@@ -24,6 +24,9 @@
 		if( $_REQUEST['result'] == $rescmp ) { // Matched!!!
 			// what should be copied to new session
 			$_SESSION['superadmin']= "--SuperAdmin--" ;
+			$_SESSION['user']=$savesess['xuser'];
+			$_SESSION['user_type']=$savesess['xuser_type'];
+		
 			session_write();
 			
 			$resp['user'] = $savesess['xuser'] ;
@@ -38,18 +41,23 @@
 		$ha2=hash("md5", $_REQUEST['cnonce'] .":". $savesess['xuser'] .":". $nonce );
 		$rescmp=hash("md5", $ha1 . ":" . $ha2 . ":" . $nonce . ":" . $_REQUEST['cnonce'] );
 		if( $_REQUEST['result'] == $rescmp ) { // Matched!!!
+		
+			$resp['save']=$savesess ;
+		
 			// what should be copied to new session
 			$_SESSION['user']=$savesess['xuser'];
-			$_SESSION['user_type']=$savesess['user_type'];
+			$_SESSION['user_type']=$savesess['xuser_type'];
 			if( !empty($savesess['clientid']) ) {
 				$_SESSION['clientid']=$savesess['clientid'];
 			}
 			$_SESSION['welcome_name'] = $savesess['welcome_name'];
 			$_SESSION['remote']=$_SERVER['REMOTE_ADDR'] ;
-			$_SESSION['xtime'] = $_SERVER['REQUEST_TIME'] ;
-			$_SESSION['release']="V3.7.20" ;
+			$_SESSION['xtime'] = time() ;
+			$_SESSION['release']="V3.7.21" ;
+			session_write();
+						
 		    $resp['res']=1 ;
-			$resp['user']=$savesess['xuser'] ;
+			$resp['user']=$_SESSION['user'] ;
 			if( !empty($savesess['lastpage']) ) {
 				$resp['page']=$savesess['lastpage'];
 			}
@@ -58,11 +66,12 @@
 			}
 			
 			// update user last login time
-			@$conn= new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-			$sql="UPDATE app_user SET last_logon=NOW() WHERE user_name = '".$_SESSION['user']."';" ;
+			$now = new DateTime() ;
+
+			// reconnect MySQL (don't remove this one)
+			@$conn = new mysqli("p:".$smart_host, $smart_user, $smart_password, $smart_database );
+		    $sql="UPDATE app_user SET last_logon = '".$now->format("Y-m-d H:i:s")."' WHERE user_name = '".$_SESSION['user']."';" ;
 			$conn->query($sql);
-			$conn->close();
-			session_write();
 		}
 	}
 	echo json_encode($resp);

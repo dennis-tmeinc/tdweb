@@ -36,7 +36,6 @@
 //			}
 //		}
 		
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		$sql = "SELECT * FROM Drive_By_Event WHERE `idx` = $_REQUEST[tag] " ;
 		$channels = array();
 		if($result=$conn->query($sql)) {

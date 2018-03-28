@@ -3,8 +3,6 @@
 // By Dennis Chen @ TME	 - 2013-05-15
 // Copyright 2013 Toronto MicroElectronics Inc.
 // MySQL connection
-
-@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 ?>
 
 <div class="ui-widget ui-widget-content ui-corner-all" id="rpanel">
@@ -525,8 +523,3 @@ if(!filter)
 
 });
 </script>
-
-<?php
-// close database connection
-$conn->close();
-?>

@@ -13,8 +13,6 @@
 			
 	if( $logon ) {
 
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-		
 		$resp['sqls'] = array();
 		
 		

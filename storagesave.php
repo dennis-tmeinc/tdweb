@@ -14,8 +14,6 @@
 	
 	if( $logon ) {
 		if( $_SESSION['user_type'] == "admin" ) {		// admin (power user) only
-			// MySQL connection
-			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 
 			function ex($cmd, &$result, &$ret)
 			{

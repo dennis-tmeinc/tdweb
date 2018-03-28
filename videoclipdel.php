@@ -14,8 +14,6 @@
 	if( $logon ) {
 		
 		if( $_SESSION['user_type'] == 'admin' ) {
-			// MySQL connection
-			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			$sql="DELETE FROM `videoclip` WHERE `index` = '$_REQUEST[index]' ;" ;
 			if( $conn->query($sql) ) {
 				$resp['res']=1 ;	// success

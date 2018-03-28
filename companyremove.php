@@ -44,7 +44,6 @@
 			// script execution : <script> <company id> <company root directory> <database name>
 			$cmd = $td_clean." $_REQUEST[id] \"$company_root\" $database" ;
 			vfile_exec($cmd, $output, $ret) ;
-			// exec( $cmd );
 			
 			@vfile_unlink( $company_root."/companyinfo.xml" ) ;
 			@vfile_rmdir( $company_root ) ;

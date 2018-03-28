@@ -23,7 +23,6 @@
 		$videofile = rtrim( mcrypt_decrypt( "blowfish", "drivebyvideolink", base64_decode($_REQUEST['link']), "ecb" ), "\0" ) ;
 	}
 	else if( $logon ) {
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		$sql = "SELECT * FROM Drive_By_Event WHERE `idx` = $_REQUEST[tag] " ;
 		if($result=$conn->query($sql)) {
 			if( $row=$result->fetch_array(MYSQLI_ASSOC) ) {

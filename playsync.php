@@ -65,7 +65,6 @@
 				return $icon;
 			}
 			
-			@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			$sql = "SELECT * FROM vl WHERE vl_vehicle_name = '$dname' AND vl_datetime <= '$ptime1' AND vl_datetime > '$ptime2' ORDER BY vl_datetime DESC LIMIT 1 ;" ;
 
 			if( $result=$conn->query($sql) ) {

@@ -11,7 +11,6 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		
 		// get total records
 		$filter = (isset($_SESSION['videofilter']) && strlen($_SESSION['videofilter'])>2)?" WHERE ".$_SESSION['videofilter']:" WHERE FALSE "  ;
@@ -45,7 +44,6 @@
 			}
 			$result->free();
 		}
-		$conn->close();
 		echo json_encode( $grid );
 	}
 	else {

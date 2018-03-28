@@ -12,8 +12,6 @@
 	
 	if( $logon ) {
 		if( $_SESSION['user_type'] == "admin" ) {		// admin only
-			// MySQL connection
-			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			$sql="UPDATE report_parameter SET " .
 				" speed =".$_REQUEST['speed'].
 				",stop_duration =".$_REQUEST['stop_duration'].

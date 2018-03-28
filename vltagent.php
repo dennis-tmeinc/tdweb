@@ -103,9 +103,7 @@ function avl_recv( $s, $timeout )
 
 function avl_connect( $avlip )
 {
-	global $smart_server, $smart_user, $smart_password, $smart_database ;
-	
-	@$conn=new mysqli( $smart_server, $smart_user, $smart_password, $smart_database );
+	global $conn;
 	$sql = "SELECT * FROM `tdconfig` " ;
 	if( $result = $conn->query($sql) ) {
 		if( $row=$result->fetch_array() ) {
@@ -114,7 +112,6 @@ function avl_connect( $avlip )
 		}
 		$result->free();
 	}
-	$conn->close();
 	
     $errno=0;$errstr='';
 	$sock = stream_socket_client( "tcp://$avlip:40510", $errno, $errstr, 5);
@@ -143,9 +140,7 @@ function avl_connect( $avlip )
 
 function avl_getlist( $sock )
 {
-	global $smart_server, $smart_user, $smart_password, $smart_database ;
-	
-	@$conn=new mysqli( $smart_server, $smart_user, $smart_password, $smart_database );
+	global $conn ;
 
 	$avlp = new SimpleXMLElement( '<avlp></avlp>' );
 	$avlp->dvrlist='';
@@ -156,7 +151,6 @@ function avl_getlist( $sock )
 		}
 		$result->free();
 	}
-	$conn->close();
 
 	avl_send( $sock, 23, $avlp ) ;
 	$r = avl_recv( $sock, 10 );

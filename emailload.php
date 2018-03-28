@@ -11,7 +11,6 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		$sql="SELECT smtpServer,smtpServerPort,security,recipient,authenticationUserName,senderAddr,alertRecipients,panicAlertRecipients,sendSummaryDaily,senderName,tmSendDaily FROM tdconfig ;" ;
 		if( $result=$conn->query($sql) ) {
 			$resp['email'] = $result->fetch_assoc() ;

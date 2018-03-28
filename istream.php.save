@@ -29,12 +29,10 @@ else {
 //   ve: previous video end time ( search time )
 function findvideo( &$chctx, $camera, $busname )
 {
+	global $conn ;
 
     $ret = false ;
 
-	global $smart_server, $smart_user, $smart_password, $smart_database ;
-	@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-	
 	$searchtime = $chctx['ve'];
 	@$st = new DateTime($searchtime);
 	if( empty($st) ) {
@@ -126,8 +124,6 @@ function findvideo( &$chctx, $camera, $busname )
 		$result->free();
 	}
 
-	$conn->close();	
-	
 	return $ret ;
 }
 
@@ -221,7 +217,6 @@ switch ( $_REQUEST['cmd'] ) {
 			$sql .= "ORDER BY `dat`" ;
 			$resp['number'] = 0 ;
 			
-			@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			if( $result = $conn->query($sql) ) {
 				$resp['list'] = array();
 				while( $row=$result->fetch_array() ) {
@@ -230,7 +225,6 @@ switch ( $_REQUEST['cmd'] ) {
 				}
 				$result->free();
 			}
-			$conn->close();
 		}
         break;
 		
@@ -256,7 +250,6 @@ switch ( $_REQUEST['cmd'] ) {
 			$sql = $sql . " ORDER BY time_start" ;
 			
 			$resp['number'] = 0 ;
-			@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			if( $result = $conn->query($sql) ) {
 				$resp['number'] = 0 ;
 				$resp['list'] = array();
@@ -287,7 +280,6 @@ switch ( $_REQUEST['cmd'] ) {
 				}
 				$result->free();
 			}
-			$conn->close();
 		}
 
         break;
@@ -325,7 +317,7 @@ switch ( $_REQUEST['cmd'] ) {
 			$play = array();
 			if( !empty( $_REQUEST['headersize'] ) ) {
 				$_SESSION['playlist']['headersize'] = $_REQUEST['headersize'] ;
-				session_save( 'playlist', $_SESSION['playlist'] );
+				session_write();
 			}
 				
 			$busname = $_SESSION['playlist']['info']['name'] ;

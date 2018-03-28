@@ -78,7 +78,6 @@
 			if( !is_dir($driveby_eventdir) )
 				@mkdir( $driveby_eventdir );
 			// to convert data from data base to local file
-			@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			$sql = "SELECT * FROM Drive_By_Event" ;
 			if($result=$conn->query($sql)) {
 				while( $row = $result->fetch_array(MYSQLI_ASSOC) ) {

@@ -28,16 +28,7 @@
 			11: panic alert
 		*/
 
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-		$sql = "select now();" ;
 		$reqdate = new DateTime() ;
-		// use mysql time instead if possible
-		if($result=$conn->query($sql)) {
-			if( $row=$result->fetch_array() ) {
-				$reqdate = new DateTime( $row[0] );
-			}
-			$result->free();
-		}
 		if( strstr($_SESSION['dashboardpage'], 'dashboardmorning') ) {		// dashboard morning?
 			$reqdate->sub(new DateInterval('P1D'));
 		}
@@ -409,8 +400,6 @@
 		}
 		
 		$resp['res'] = 1 ;
-		
-		$conn->close();
 	}
 	echo json_encode( $resp );
 ?>

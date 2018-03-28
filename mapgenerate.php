@@ -38,7 +38,6 @@
 		$startTime=$startTime->format("Y-m-d H:i:s");	    		// MYSQL format
 		$endTime=$endTime->format("Y-m-d H:i:s");	    			// MYSQL format
 
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		// secaped sql values
 		$esc_req=array();		
 		foreach( $_REQUEST as $key => $value ){
@@ -358,7 +357,6 @@
 		else {
 			$filter = "FALSE" ;
 		}
-		$conn->close();
 
 		$mapfilter['evcounts'] = $resp['count'] ;
 		$mapfilter['filter'] = $filter ;

@@ -12,17 +12,7 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
-
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-		$sql = "select now();" ;
 		$reqdate = new DateTime() ;
-		// use mysql time instead if possible
-		if($result=$conn->query($sql)) {
-			if( $row=$result->fetch_array() ) {
-				$reqdate = new DateTime( $row[0] );
-			}
-			$result->free();
-		}
 		if( strstr($_SESSION['dashboardpage'], 'dashboardmorning') ) {		// dashboard morning?
 			$reqdate->sub(new DateInterval('P1D'));
 		}
@@ -110,7 +100,6 @@
 			}
 			$result->free();
 		}
-		$conn->close();
 		echo json_encode( $grid );
 	}
 	else {
