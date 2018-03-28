@@ -14,7 +14,7 @@ header( 'Location: logon.php' );
 	<meta name="description" content="Touch Down Center by TME V2.5">
 	<meta name="author" content="Dennis Chen @ TME, 2013-06-15">	
 	<link rel="shortcut icon" href="/favicon.ico" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><?php echo "<link href=\"https://code.jquery.com/ui/1.11.0/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script>(window.jQuery || document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>'));</script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /><script src="jq/jquery-ui.js"></script><script>(window.jQuery || document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>'));</script>
 	<script src="md5min.js"></script>
 	<style> body { display:none; } </style>
 	<script>
@@ -147,14 +147,16 @@ if (typeof(Storage) !== "undefined") {
 <div id="workarea" style="width:752px;margin:auto;min-height:400px;"> 
 <div>&nbsp;</div>
 <img alt="Touch Down Center (Internet Connection Required)" 
-<?php if( empty($support_viewtrack_logo) ){ ?>
-	src="res/main-logo-top.jpg" 
+<?php if( !empty($support_viewtrack_logo) ){ ?>
+	src="res/main-logo-vt-top.png" 
+<?php } else if( !empty($support_fleetmonitor_logo) ){ ?>
+	src="res/main-logo-fm-top.png" 
 <?php } else { ?> 
-	src="res/main-logo-top-vt.png" 
+	src="res/main-logo-td-top.jpg" 
 <?php } ?>
 />
 <form style="padding-left:60px;padding-right:60px;padding-top:20px;padding-bottom:20px;">
-<fieldset><legend> Sign in to Touch Down Center </legend>
+<fieldset><legend> Sign in to <?php echo $product_name ; ?></legend>
 <div style="padding-left:20px;">
 
 <?php if(!empty($support_multicompany) ) { ?>

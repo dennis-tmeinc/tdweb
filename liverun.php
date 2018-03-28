@@ -104,7 +104,7 @@ function dvr_openlive($stream)
 }
 
 $stream_headcode = 0 ;
-$audio_codec = "pcm_alaw" ;
+$audio_codec = "alaw" ;
 $audio_samplerate = 8000 ;
 
 $afile = NULL ;
@@ -128,10 +128,10 @@ function on_file_header( $frame )
 	$stream_headcode = substr($frame, 0, 4 );
 	$acode = unpack( "vv", substr($frame, 12) )['v'] ;
 	if($acode == 2) {
-		$audio_codec = "pcm_alaw" ;
+		$audio_codec = "alaw" ;
 	}
 	else {
-		$audio_codec = "pcm_mulaw" ;
+		$audio_codec = "mulaw" ;
 	}
 	$audio_samplerate = unpack( "Vv", substr($frame, 16) )['v'] ;
 	
@@ -171,13 +171,13 @@ function on_ps_header($frame, $start)
 
 function on_receive_frame( $frame ) 
 {
-	global $vfile, $afile, $vfilename, $video_prefix, $video_live ;
+	global $vfile, $afile, $vfilename, $video_prefix, $video_live, $cache_dir ;
 	global $audio_codec , $audio_samplerate ;
 	global $support_liveaudio ;
 	global $stream_headcode ;
-	static $video_serno = 0 ;
-	static $video_updatetime = 0 ;
 	static $vname ;
+	static $vframes = 0 ;
+	static $asize = 0 ;
 	
 	$framesize = strlen( $frame ) ;
 	if( $stream_headcode === 0 && $framesize == 40 ) {
@@ -204,11 +204,13 @@ function on_receive_frame( $frame )
 					$framelen -= $headerlen ;
 					if( $afile ) {
 						fwrite( $afile, substr( $frame, $pos, $framelen ));
+						$asize += $framelen ;
 					}
 					$vstart = $pos + $framelen ;
 				}
 				else if( $packtype == "\xe0" ) {
 					$framelen = on_video_frame( $frame, $pos, $headerlen );
+					$vframes++ ;
 					if( $vfile ) {
 						fwrite( $vfile, substr( $frame, $vstart,  $pos + $framelen - $vstart ) );
 					}
@@ -220,9 +222,8 @@ function on_receive_frame( $frame )
 				else if( $packtype == "\xbc" ) {	// program_stream_map ? this come with every I frame, so I just use it as I frame indicator
 					// other video header (indication of a key frame)
 					$framelen = on_pes_packet( $frame, $pos );
-
-					$nowt = time();
-					if( $nowt-$video_updatetime > 2 || empty($vfile) ) {
+			
+					if( $vframes > 2 || empty($vfile) ) {
 						if( !empty($afile) ) {
 							fclose($afile) ;
 							$afile=NULL ;
@@ -231,32 +232,39 @@ function on_receive_frame( $frame )
 							fclose($vfile) ;
 							$vfile = NULL ;
 							if( empty($support_liveaudio) ) {
-								$ffmpeg = "bin\\ffmpeg.exe -y -i $vname.v -codec:v copy $vname.mp4" ;
+								$ffmpeg = "bin\\ffmpeg.exe  -nostdin -y -i $vname.v -codec:v copy $vname.mp4" ;
 							}
 							else {
-								$ffmpeg = "bin\\ffmpeg.exe -y -f u8 -acodec $audio_codec -ar $audio_samplerate -i $vname.a -i $vname.v -codec:v copy $vname.mp4" ;
+								if( $asize > 1000 ) {
+									$audioTime = $asize / $audio_samplerate  ;
+									//$ffmpeg = "bin\\ffmpeg.exe  -nostdin -y -f u8 -acodec $audio_codec -ar $audio_samplerate -i $vname.a -i $vname.v -codec:v copy -t $audioTime $vname.mp4" ;
+									$ffmpeg = "bin\\ffmpeg.exe -nostdin -y -f $audio_codec -ar $audio_samplerate -i $vname.a -i $vname.v -codec:v copy -t $audioTime $vname.mp4" ;
+								}
+								else {
+									//$ffmpeg = "bin\\ffmpeg.exe -nostdin -y -f u8 -acodec $audio_codec -ar $audio_samplerate -i $vname.a -i $vname.v -codec:v copy $vname.mp4" ;
+									$ffmpeg = "bin\\ffmpeg.exe -nostdin -y -f $audio_codec -ar $audio_samplerate -i $vname.a -i $vname.v -codec:v copy $vname.mp4" ;
+								}
 							}
 							exec( $ffmpeg );
-							$mp4box = "bin\\mp4box.exe $vname.mp4 -dash 100000 -rap -out $vname.mpd" ;
+
+							$mp4box = "bin\\mp4box.exe $vname.mp4 -tmp $cache_dir -dash 50000 -rap -out $vname.mpd" ;
+							live_lock();
 							exec( $mp4box );
 							live_update( "$vname.mpd" ) ;
-							@unlink( "$vname.a" ) ;
-							@unlink( "$vname.v" ) ;
+							live_unlock();
 							@unlink( "$vname.mp4" ) ;
 						}
 						if($video_live) {
-							$video_serno = $video_serno % 4 + 1 ;
-							$vname = "$video_prefix.$video_serno" ;
-							live_lock();
-							foreach( glob( "${vname}*" ) as $val ) {
-								@unlink( $val ) ;
-							}
-							live_unlock();
+							//static $video_serno = 0 ;
+							//$video_serno = $video_serno % 4 + 1 ;
+							//$vname = "$video_prefix.$video_serno" ;
+							$vname = $video_prefix.'x' ;
+							$vframes = 0 ;
 							$vfile = fopen( "$vname.v", "w" );
+							$asize = 0 ;
 							if( !empty($support_liveaudio) ) {
 								$afile = fopen( "$vname.a", "w" );
 							}
-							$video_updatetime = $nowt ;
 						}
 						else {
 							break;
@@ -405,7 +413,7 @@ function live_stop()
 		fclose($afile) ;
 		$afile = NULL ;
 	}
-	foreach( glob( "${video_prefix}.*" ) as $val ) {
+	foreach( glob( "${video_prefix}x*" ) as $val ) {
 		@unlink( $val ) ;
 	}
 	

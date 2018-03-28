@@ -74,7 +74,8 @@ if( $logon && !empty($_REQUEST['phone']) ) {
 		// get dvr channel info
 		// REQCHANNELINFO
 		if( dvr_req( $stream, 4 ) ) {
-			if( dvr_ans( $stream, $ansdata, $databuf ) > 1 ) {		// ANSCHANNELDATA
+			$ans = dvr_ans( $stream, $ansdata, $databuf ) ;
+			if( $ans > 1 ) {		// ANSCHANNELDATA
 				$resp['res'] = 1 ;
 				$resp['channels'] = array();
 				for( $ch=0 ; $ch < $ansdata; $ch++ ) {
@@ -90,11 +91,38 @@ if( $logon && !empty($_REQUEST['phone']) ) {
 					}
 				}
 			}
+			else {
+				// try use REQGETCHANNELSETUP
+				$resp['channels'] = array();
+				for( $ch = 0 ; $ch < 256 ; $ch ++ ) {
+					if( dvr_req( $stream, 14, $ch ) ) {
+						if( dvr_ans( $stream, $ansdata, $databuf ) > 1 ) {		// ANSCHANNELDATA
+							if( strlen( $databuf ) > 4 ) {
+								$en = unpack("V", $databuf )[1] ;
+								if( $en ) {
+									$n = substr( $databuf, 4, 64 ) ;
+									$resp['channels'][] = array(
+										"camera" => $ch ,
+										"name" => strstr( $n, "\0", true )  );
+								}
+							}
+						}
+						else break;
+					}
+					else break ;
+				}
+				if( !empty( $resp['channels'] ) ) {
+					$resp['res'] = 1 ;
+				}
+			}
 		}
 		else {
 			$resp['errmsg'] = "No connection." ;
 		}
 		$stream = NULL ;
+	}
+	else {
+		$resp['errmsg'] = "Can't open stream." ;
 	}
 }
 

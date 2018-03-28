@@ -95,6 +95,7 @@ while( time() - $starttime < 15 ){
 		$dashfile = $cache_dir . DIRECTORY_SEPARATOR . (string)($Representation->BaseURL) ;
 		if( is_readable($dashfile) ) {
 			header("Content-Type: video/mp4");
+			header("x-dash-sn: $jv[sn]");
 			setcookie($xcookiename, $jv['sn'] ) ;
 			
 			if( !empty( $_SERVER['HTTP_X_MIME'] ) ){

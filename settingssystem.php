@@ -11,7 +11,7 @@ session_save('settingpage', $_SERVER['REQUEST_URI'] );
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta content="Touch Down Center by TME" name="description" />
 	<meta content="Dennis Chen @ TME, 2013-05-15" name="author" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><?php echo "<link href=\"https://code.jquery.com/ui/1.11.0/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script>if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script src="https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /><script src="jq/jquery-ui.js"></script><script>if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script src="https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script>
 	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none;}" ?>
 	</style>
@@ -668,19 +668,21 @@ text-align: center;
 </head>
 <body>
 <div id="container">
-<div id="header" style="text-align: right;"><span style="color:#006400;"><span style="font-size: 14px;"><span>Welcome </span></span></span><span style="color:#2F4F4F;"><span style="font-size: 14px;margin-right:24px;"><?php echo $_SESSION['welcome_name'] ;?></span></span><span><a href="logout.php" style="background-color:#98bf21;text-decoration:none;text-align:center;"> Logout </a></span><span  id="servertime" style="color:#800080;font-size: 11px; margin-left:30px;margin-right:30px;"></span><span style="color:#B22222;"><span style="font-size: 12px;"><span>TOUCH DOWN CENTER <?php echo $_SESSION['release']; ?></span></span></span></div>
+<div id="header" style="text-align: right;"><span style="color:#006400;"><span style="font-size: 14px;"><span>Welcome </span></span></span><span style="color:#2F4F4F;"><span style="font-size: 14px;margin-right:24px;"><?php echo $_SESSION['welcome_name'] ;?></span></span><span><a href="logout.php" style="background-color:#98bf21;text-decoration:none;text-align:center;"> Logout </a></span><span  id="servertime" style="color:#800080;font-size: 11px; margin-left:30px;margin-right:30px;"></span><span style="color:#B22222;"><span style="font-size: 12px;"><span><?php echo $product_name . "  " .  $_SESSION['release']; ?></span></span></span></div>
 
-<div id="lpanel"><?php if( empty($support_viewtrack_logo) ){ ?>
-	<img alt="index.php" src="res/side-TD-logo-clear.png" />
-<?php } else { ?> 
+<div id="lpanel"><?php if( !empty($support_viewtrack_logo) ){ ?>
 	<img alt="index.php" src="res/side-VT-logo-clear.png" />
+<?php } else if( !empty($support_fleetmonitor_logo) ){ ?>
+	<img alt="index.php" src="res/side-FM-logo-clear.png" />
+<?php } else { ?> 
+	<img alt="index.php" src="res/side-TD-logo-clear.png" />
 <?php } ?>
 	<p style="text-align: center;"><span style="font-size:11px;"><a href="http://www.247securityinc.com/" style="text-decoration:none;">247 Security Inc.</a></span></p>
 <ul style="list-style-type:none;margin:0;padding:0;">
 	<li><a class="lmenu" href="dashboard.php"><img onmouseout="this.src='res/side-dashboard-logo-clear.png'" onmouseover="this.src='res/side-dashboard-logo-fade.png'" src="res/side-dashboard-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="mapview.php"><img onmouseout="this.src='res/side-mapview-logo-clear.png'" onmouseover="this.src='res/side-mapview-logo-fade.png'" src="res/side-mapview-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="reportview.php"><img onmouseout="this.src='res/side-reportview-logo-clear.png'" onmouseover="this.src='res/side-reportview-logo-fade.png'" src="res/side-reportview-logo-clear.png" /> </a></li>
-	<li><a class="lmenu" href="videos.php"><img onmouseout="this.src='res/side-videos-logo-clear.png'" onmouseover="this.src='res/side-videos-logo-fade.png'" src="res/side-videos-logo-clear.png" /> </a></li>
+	<?php if( !empty($enable_videos) ){ ?><li><a class="lmenu" href="videos.php"><img onmouseout="this.src='res/side-videos-logo-clear.png'" onmouseover="this.src='res/side-videos-logo-fade.png'" src="res/side-videos-logo-clear.png" /> </a></li><?php } ?>
 	<?php if( !empty($enable_livetrack) ){ ?><li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li><?php } ?>
 	<?php if( !empty($support_driveby) && ( $_SESSION['user_type'] == "operator" || $_SESSION['user'] == "admin" ) ){ ?>
 	<li><a class="lmenu" href="driveby.php"><img onmouseout="this.src='res/side-driveby-logo-clear.png'" onmouseover="this.src='res/side-driveby-logo-fade.png'" src="res/side-driveby-logo-clear.png" /> </a></li>
@@ -722,7 +724,6 @@ bus2 : high tempterature
 	<li><a href="#setting-mss">MSS Setup</a></li>
 	<li><a href="#setting-localmss">Local MSS Setup</a></li>
 <!-- <li><a href="#setting-email">E-mail Setup</a></li> -->
-	<li><a href="#setting-ui">User Interface</a></li>
 </ul>
 
 <div id="setting-storage">
@@ -771,44 +772,59 @@ bus2 : high tempterature
 	</caption>
 	<tbody>
 		<tr>
+			<td><img alt="" class="evicon" src="res/map_icons_stop.png" /></td>
 			<td style="text-align: right;">Stopping(s)</td>
 			<td><input name="stop_duration" type="text" /></td>
+
+			<td><img alt="" class="evicon" src="res/map_icons_rs.png" /></td>
 			<td style="text-align: right;">Racing Start</td>
 			<td><input name="racing_start" size="5" type="text" />g</td>
 		</tr>
 		<tr>
+			<td><img alt="" class="evicon" src="res/map_icons_desstop.png" /></td>
 			<td style="text-align: right;">Bus Stops(s)</td>
 			<td><input name="bstop_duration" type="text" /></td>
+			<td><img alt="" class="evicon" src="res/map_icons_ri.png" /></td>
 			<td style="text-align: right;">Rear Impact</td>
 			<td><input name="rear_impact" size="5" type="text" />g</td>
 		</tr>
 		<tr>
+			<td><img alt="" class="evicon" src="res/map_icons_idle.png" /></td>
 			<td style="text-align: right;">Idling (s)</td>
 			<td><input name="idle_duration" type="text" /></td>
+			<td><img alt="" class="evicon" src="res/map_icons_hb.png" /></td>
 			<td style="text-align: right;">Hard Brake</td>
 			<td><input name="hard_brake" size="5" type="text" />g</td>
 		</tr>
 		<tr>
+			<td><img alt="" class="evicon" src="res/map_icons_park.png" /></td>
 			<td style="text-align: right;">Parking (s)</td>
 			<td><input name="park_duration" type="text" /></td>
+			<td><img alt="" class="evicon" src="res/map_icons_fi.png" /></td>
 			<td style="text-align: right;">Front Impact</td>
 			<td><input name="front_impact" size="5" type="text" />g</td>
 		</tr>
 		<tr>
+			<td><img alt="" class="evicon" src="res/map_icons_speed.png" /></td>
 			<td style="text-align: right;">Speeding</td>
 			<td><input name="speed" type="text" />mph</td>
+			<td><img alt="" class="evicon" src="res/map_icons_ht.png" /></td>
 			<td style="text-align: right;">Hard Turn</td>
 			<td><input name="hard_turn" size="5" type="text" />g</td>
 		</tr>
 		<tr>
+			<td></td>
 			<td style="text-align: right;">MaxUploadTime</td>
 			<td><input name="maxuploadtime" type="text" />minute(s)</td>
+			<td><img alt="" class="evicon" src="res/map_icons_si.png" /></td>
 			<td style="text-align: right;">Side Impact</td>
 			<td><input name="side_impact" size="5" type="text" />g</td>
 		</tr>
 		<tr>
+			<td></td>
 			<td style="text-align: right;">MaxConcurrentUpload</td>
 			<td><input name="maxconcurrentupload" type="text" /></td>
+			<td><img alt="" class="evicon" src="res/map_icons_br.png" /></td>
 			<td style="text-align: right;">Bumpy Ride</td>
 			<td><input name="bumpy_ride" size="5" type="text" />g</td>
 		</tr>
@@ -962,79 +978,6 @@ bus2 : high tempterature
 <p>&nbsp;</p>
 </div>
 
-<div id="setting-ui">
-<table border="0" cellpadding="1" cellspacing="5">
-	<caption>
-	<h3>Select UI Theme</h3>
-	</caption>
-	<tbody>
-		<tr>
-			<td><input alt="UI Lightness" id="ui-lightness" src="https://jqueryui.com/resources/images/themeGallery/theme_90_ui_light.png" style="width: 90px; height: 80px;" title="UI lightness" type="image" /></td>
-			<td><input alt="UI darkness" id="ui-darkness" src="https://jqueryui.com/resources/images/themeGallery/theme_90_ui_dark.png" style="width: 90px; height: 80px;" title="UI darkness" type="image" /></td>
-			<td><input alt="Smoothness" id="smoothness" src="https://jqueryui.com/resources/images/themeGallery/theme_90_smoothness.png" style="width: 90px; height: 80px;" title="Smoothness" type="image" /></td>
-			<td><input alt="Start" id="start" src="https://jqueryui.com/resources/images/themeGallery/theme_90_start_menu.png" style="width: 90px; height: 80px;" title="Start" type="image" /></td>
-			<td><input alt="Redmond" id="redmond" src="https://jqueryui.com/resources/images/themeGallery/theme_90_windoze.png" style="width: 90px; height: 80px;" title="Redmond" type="image" /></td>
-			<td><input alt="Sunny" id="sunny" src="https://jqueryui.com/resources/images/themeGallery/theme_90_sunny.png" style="width: 90px; height: 80px;" title="Sunny" type="image" /></td>
-		</tr>
-		<tr>
-			<td style="text-align: center;">UI lightness</td>
-			<td style="text-align: center;">UI darkness</td>
-			<td style="text-align: center;">Smoothness</td>
-			<td style="text-align: center;">Start</td>
-			<td style="text-align: center;">Redmond</td>
-			<td style="text-align: center;">Sunny</td>
-		</tr>
-		<tr>
-			<td><input alt="Overcast" id="overcast" src="https://jqueryui.com/resources/images/themeGallery/theme_90_overcast.png" style="width: 90px; height: 80px;" title="Over cast" type="image" /></td>
-			<td><input alt="Le Frog" id="le-frog" src="https://jqueryui.com/resources/images/themeGallery/theme_90_le_frog.png" style="width: 90px; height: 80px;" title="Le Frog" type="image" /></td>
-			<td><input alt="Flick" id="flick" src="https://jqueryui.com/resources/images/themeGallery/theme_90_flick.png" style="width: 90px; height: 80px;" title="Flick" type="image" /></td>
-			<td><input alt="Pepper Grinder" id="pepper-grinder" src="https://jqueryui.com/resources/images/themeGallery/theme_90_pepper_grinder.png" style="width: 90px; height: 80px;" title="Pepper Grinder" type="image" /></td>
-			<td><input alt="Eggplant" id="eggplant" src="https://jqueryui.com/resources/images/themeGallery/theme_90_eggplant.png" style="width: 90px; height: 80px;" title="Eggplant" type="image" /></td>
-			<td><input alt="Dark Hive" id="dark-hive" src="https://jqueryui.com/resources/images/themeGallery/theme_90_dark_hive.png" style="width: 90px; height: 80px;" title="Dark Hive" type="image" /></td>
-		</tr>
-		<tr>
-			<td style="text-align: center;">Overcast</td>
-			<td style="text-align: center;">Le Frog</td>
-			<td style="text-align: center;">Flick</td>
-			<td style="text-align: center;">Pepper Grinder</td>
-			<td style="text-align: center;">Eggplant</td>
-			<td style="text-align: center;">Dark Hive</td>
-		</tr>
-		<tr>
-			<td><input alt="Cupertino" id="cupertino" src="https://jqueryui.com/resources/images/themeGallery/theme_90_cupertino.png" style="width: 90px; height: 80px;" title="Cupertino" type="image" /></td>
-			<td><input alt="South Street" id="south-street" src="https://jqueryui.com/resources/images/themeGallery/theme_90_south_street.png" style="width: 90px; height: 80px;" title="South Street" type="image" /></td>
-			<td><input alt="Blitzer" id="blitzer" src="https://jqueryui.com/resources/images/themeGallery/theme_90_blitzer.png" style="width: 90px; height: 80px;" title="Blitzer" type="image" /></td>
-			<td><input alt="Humanity" id="humanity" src="https://jqueryui.com/resources/images/themeGallery/theme_90_humanity.png" style="width: 90px; height: 80px;" title="Humanity" type="image" /></td>
-			<td><input alt="Hot Sneaks" id="hot-sneaks" src="https://jqueryui.com/resources/images/themeGallery/theme_90_hot_sneaks.png" style="width: 90px; height: 80px;" title="Hot Sneaks" type="image" /></td>
-			<td><input alt="Excite Bike" id="excite-bike" src="https://jqueryui.com/resources/images/themeGallery/theme_90_excite_bike.png" style="width: 90px; height: 80px;" title="Excite Bike" type="image" /></td>
-		</tr>
-		<tr>
-			<td style="text-align: center;">Cupertino</td>
-			<td style="text-align: center;">South Street</td>
-			<td style="text-align: center;">Blitzer</td>
-			<td style="text-align: center;">Humanity</td>
-			<td style="text-align: center;">Hot Sneaks</td>
-			<td style="text-align: center;">Excite Bike</td>
-		</tr>
-		<tr>
-			<td><input alt="Vader" id="vader" src="https://jqueryui.com/resources/images/themeGallery/theme_90_black_matte.png" style="width: 90px; height: 80px;" title="Vader" type="image" /></td>
-			<td><input alt="Dot Luv" id="dot-luv" src="https://jqueryui.com/resources/images/themeGallery/theme_90_dot_luv.png" style="width: 90px; height: 80px;" title="Dot Luv" type="image" /></td>
-			<td><input alt="Mint Choc" id="mint-choc" src="https://jqueryui.com/resources/images/themeGallery/theme_90_mint_choco.png" style="width: 90px; height: 80px;" title="Mint Choc" type="image" /></td>
-			<td><input alt="Black Tie" id="black-tie" src="https://jqueryui.com/resources/images/themeGallery/theme_90_black_tie.png" style="width: 90px; height: 80px;" title="Black Tie" type="image" /></td>
-			<td><input alt="Trontastic" id="trontastic" src="https://jqueryui.com/resources/images/themeGallery/theme_90_trontastic.png" style="width: 90px; height: 80px;" title="Trontastic" type="image" /></td>
-			<td><input alt="Swanky Purse" id="swanky-purse" src="https://jqueryui.com/resources/images/themeGallery/theme_90_swanky_purse.png" style="width: 90px; height: 80px;" title="Swanky Purse" type="image" /></td>
-		</tr>
-		<tr>
-			<td style="text-align: center;">Vader</td>
-			<td style="text-align: center;">Dot Luv</td>
-			<td style="text-align: center;">Mint Choc</td>
-			<td style="text-align: center;">Black Tie</td>
-			<td style="text-align: center;">Trontastic</td>
-			<td style="text-align: center;">Swanky Purse</td>
-		</tr>
-	</tbody>
-</table>
-</div>
 </div>
 <!-- Backup Database Dialog -->
 

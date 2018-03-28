@@ -21,6 +21,10 @@ if( !empty($_REQUEST[session_name()]) ) {
 	session_id ($_REQUEST[session_name()]);
 }
 
+if( empty($product_name) ) {
+	$product_name = "TOUCH DOWN CENTER" ;
+}
+
 session_start();
 
 // load client config
