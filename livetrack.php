@@ -17,36 +17,11 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	</style>
 	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
-	<script>
+	<script src="td_alert.js"></script><script>
 // start up 
 var map  ;
 
 $(document).ready(function(){
-
-// update TouchDown alert
-function touchdownalert()
-{
-	$.getJSON("td_alert.php", function(resp){
-		if( resp.res == 1 ) { 
-			$("#rt_msg").empty();
-			var td_alert = resp.td_alert ;
-			if( td_alert.length>0 ) {
-				var txt="";
-				for(var i=0;i<2&&i<td_alert.length;i++) {
-					if( i>0 ) txt+="\n" ;
-					txt+=td_alert[i].dvr_name + " : "+td_alert[i].description ;
-				}
-				$("#rt_msg").text(txt);
-			}
-			$("#servertime").text(resp.time);
-			setTimeout(touchdownalert,60000);
-		}
-		else {
-			window.location.assign("logout.php");
-		}		
-	});
-}
-touchdownalert();
 
 $("button").button();
 $(".btset").buttonset();
@@ -233,6 +208,18 @@ function showpin( avlp, id, iconimg, clean )
 			}
 			else {
 				iconimg = "res/map_icons_stop.png" ;
+				if( avlp.di ) {
+					for( var idx = 0 ; idx < vltsensor.length; idx++ ) {
+						if( vltsensor[idx].sensor_name.toUpperCase() == "STOP ARM ON" ) {
+							var di = parseInt( avlp.di, 16 )  & (1<<(idx/2)) ;
+							var h = idx%2 ;
+							if( ( di && h ) || ( di==0 && h==0 ) ) {
+								iconimg = "res/map_icons_desstop.png" ;
+							}
+							break ;
+						}
+					}
+				}
 			}
 		}
 		
@@ -439,26 +426,7 @@ function tdwebc_message( tdwebc )
 		}
 		else if( cmd == '27' || cmd == '28' ) {	//AVL_CURRENT_DATA_QUERY(27) AVL_CURRENT_DATA_REPORT(28)
 			if( tdwebc[i].source.dvrs && tdwebc[i].source.dvrs.dvr ) {
-				var stop_arm = 0 ;
-				if( avlp.di ) {
-					var di = parseInt( avlp.di, 16 ) ;
-					var bm = 1 ;
-					for( var idx = 0 ; idx < 32; idx++ ) {
-						if( bm & di ) {
-							if( vltsensor[idx].sensor_name.toUpperCase() == "STOP ARM ON" ) {
-								stop_arm = 1 ;
-								break;
-							}
-						}
-						bm <<= 1 ;
-					}
-				}
-				if( stop_arm ) {
-					showpin( avlp, "CD__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_desstop.png", true );
-				}
-				else {
-					showpin( avlp, "CD__"+tdwebc[i].source.dvrs.dvr	, "route_icon.php", true );
-				}
+				showpin( avlp, "CD__"+tdwebc[i].source.dvrs.dvr	, "route_icon.php", true );
 			}
 		}
 		else if( cmd == "32" ) {      // AVL_DI_EVENT(32)
@@ -1223,6 +1191,37 @@ $( "button[name='setupdvr']" ).click(function(e){
 });
 
 
+$( window ).unload( function(){
+	// save map position
+	if( sessionStorage ) {
+		var localsession = {} ;
+		var tdsess = sessionStorage.getItem('tdsess');
+		if( tdsess ) {
+			localsession = JSON.parse(tdsess);
+		}
+		var center = map.getCenter();
+		var zoom = map.getZoom();
+		localsession.tdcmap={ lat:center.latitude,lon:center.longitude,zoom:zoom };
+		sessionStorage.setItem('tdsess', JSON.stringify(localsession));
+	}
+	// finish vlt session
+	vltparam.vltserial++ ;
+	$.ajax( {
+		url: "vltunload.php",
+		data: vltparam ,
+		async: false ,	
+		timeout: 500
+	});
+});
+
+$("select[name='vehicle']").change(function(e){
+	var x=this.value ;
+});
+
+function showup()
+{
+trigger_resize();
+
 var mapcenter = new Microsoft.Maps.Location(35, -100);
 var mapzoom = 4 ;
 var mapinit=false ;
@@ -1264,35 +1263,10 @@ if( !mapinit ) {
 	});
 }
 
-$( window ).unload( function(){
-	// save map position
-	if( sessionStorage ) {
-		var localsession = {} ;
-		var tdsess = sessionStorage.getItem('tdsess');
-		if( tdsess ) {
-			localsession = JSON.parse(tdsess);
-		}
-		var center = map.getCenter();
-		var zoom = map.getZoom();
-		localsession.tdcmap={ lat:center.latitude,lon:center.longitude,zoom:zoom };
-		sessionStorage.setItem('tdsess', JSON.stringify(localsession));
-	}
-	// finish vlt session
-	vltparam.vltserial++ ;
-	$.ajax( {
-		url: "vltunload.php",
-		data: vltparam ,
-		async: false ,	
-		timeout: 500
-	});
-});
-
-$("select[name='vehicle']").change(function(e){
-	var x=this.value ;
-});
+}
 
 // show up 
-$('#rcontainer').show('slow', trigger_resize );
+$('#rcontainer').show('slow', showup );
 
 });
 
@@ -1523,7 +1497,7 @@ Pre-Defined Zone:
 </div>
 
 <div id="workarea">
-<div id="tdcmap">Bing Maps</div>
+<div id="tdcmap">Maps</div>
 </div>
 
 </div>

@@ -3,24 +3,18 @@
 //   Load user info, create password hash
 //   parameter:
 //		user: userid, c: clientid, n: nonce
-// By Dennis Chen @ TME	 - 2013-05-15
+// By Dennis Chen @ TME	 - 2014-04-23
 // Copyright 2013 Toronto MicroElectronics Inc.
 
 $noredir = 1 ;
 require 'session.php' ;
 
 if( !empty($_REQUEST['c']) ) {
-	// unset database 
-	$smart_host="";
-	$smart_user="" ;
-	$smart_password="" ;
-	$smart_database="" ;
-	
 	$_SESSION['clientid'] = $_REQUEST['c'];
 	session_write() ;
 	$clientcfg = 'client/'.$_SESSION['clientid'].'/config.php' ;
 	if( file_exists ( $clientcfg ) ) {
-		require $clientcfg ;
+		include $clientcfg ;
 	}
 	
 	if(	$database_persistent ) {

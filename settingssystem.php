@@ -15,7 +15,7 @@ session_save('settingpage', $_SERVER['REQUEST_URI'] );
 	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none;}" ?>
 	</style>
-	<script>
+	<script src="td_alert.js"></script><script>
 // start up 
 
 function setcookie(cname,value,expires) {
@@ -35,31 +35,6 @@ $(".btset").buttonset();
 $(".btset input").change(function(){
    location=$(this).attr("href");
 });
-			
-// update TouchDown alert
-function touchdownalert()
-{
-	$.getJSON("td_alert.php", function(resp){
-		if( resp.res == 1 ) { 
-			$("#rt_msg").empty();
-			var td_alert = resp.td_alert ;
-			if( td_alert.length>0 ) {
-				var txt="";
-				for(var i=0;i<2&&i<td_alert.length;i++) {
-					if( i>0 ) txt+="\n" ;
-					txt+=td_alert[i].dvr_name + " : "+td_alert[i].description ;
-				}
-				$("#rt_msg").text(txt);
-			}
-			$("#servertime").text(resp.time);
-			setTimeout(touchdownalert,60000);
-		}
-		else {
-			window.location.assign("logout.php");
-		}		
-	});
-}
-touchdownalert();
 			
 var tab=0;
 if( sessionStorage ) {
@@ -151,6 +126,8 @@ $( "#dialog_backupdatabase" ).dialog(
 			param.backupname = $( "#dialog_backupdatabase input").val();
 			$.getJSON("backupstart.php", param, function(resp){
 				if( resp.res==1 ) {
+					if( resp.progressfile )
+						progfile = resp.progressfile ;
 					$("#progressmessage").text("Backup in progress, please wait");
 					$( "#dialog_progress" ).dialog( "option", "title", "Backup" );
 					$( "#dialog_progress" ).dialog("open");
@@ -181,6 +158,8 @@ $( "#dialog_restoredatabase" ).dialog(
 			$.getJSON("backuprestore.php", param, function(resp){
 				$( "#dialog_restoredatabase" ).dialog( "close" );
 				if( resp.res==1 ) {
+					if( resp.progressfile )
+						progfile = resp.progressfile ;
 					$("#progressmessage").text("Restore in progress, please wait");
 					$( "#dialog_progress" ).dialog( "option", "title", "Restore" );
 					$( "#dialog_progress" ).dialog("open");
@@ -244,6 +223,7 @@ $("button#restoredatabase").click(function(){
 
 // backup/restore progress
 
+var progfile ;
 var progvalue ;
 var progCloseTimer=null ;
 var progInUse = false ;
@@ -280,7 +260,9 @@ $( "#dialog_progress" ).dialog(
 		
 		function inprogress() {
 			if( $( "#dialog_progress" ).dialog( "isOpen" ) )
-			$.getJSON("backupgetprogress.php", function(resp){
+			var param=new Object ;
+			param.progressfile = progfile ;			
+			$.getJSON("backupgetprogress.php", param, function(resp){
 				if( resp.res==1 ) {
 					var toval = parseFloat(resp.percentage) ;
 					if( toval < 0 ) {
@@ -290,9 +272,10 @@ $( "#dialog_progress" ).dialog(
 					else if( toval>= 100 ) {
 						$( "#progressbar" ).progressbar( "value", 100 );
 						$( "#progress-label" ).text( "Complete!" );
-						var complete=new Object ;
-						complete.complete="1" ;
-						$.getJSON("backupgetprogress.php", complete);
+						var param=new Object ;
+						param.complete="1" ;
+						param.progressfile = progfile ;
+						$.getJSON("backupgetprogress.php", param);
 						if( smoothTimer	) {
 							clearTimeout(smoothTimer);
 							smoothTimer=null ;
@@ -530,32 +513,33 @@ $("button#mssshowmap").click(function(event){
 	if( !zoomlevel ) {
 		zoomlevel=15 ;
 	}
-	if( !mssmap ) {
-		var mssloc = new Microsoft.Maps.Location(lat, lon) ;
-		mssmap = new Microsoft.Maps.Map(document.getElementById("mssmap"), 
-           	{credentials: <?php echo '"'. $map_credentials . '"'; ?> ,
-			zoom: zoomlevel,
-			center: mssloc,
-            enableSearchLogo: false,
-            enableClickableLogo: false,
-        });
+	$("#mssmap").show("slow", function() {
+		if( !mssmap ) {
+			var mssloc = new Microsoft.Maps.Location(lat, lon) ;
+			mssmap = new Microsoft.Maps.Map(document.getElementById("mssmap"), 
+				{credentials: <?php echo '"'. $map_credentials . '"'; ?> ,
+				zoom: zoomlevel,
+				center: mssloc,
+				enableSearchLogo: false,
+				enableClickableLogo: false,
+			});
+			
+			var pin=new Microsoft.Maps.Pushpin(mssloc, {draggable: true});
+			mssmap.entities.push(pin);
+			Microsoft.Maps.Events.addHandler(pin, 'drag', function(e){
+				var latlon = e.entity.getLocation();
+				$("#mssform input[name='mss_lat']").val(latlon.latitude.toFixed(6)); 
+				$("#mssform input[name='mss_lon']").val(latlon.longitude.toFixed(6));
+			});  
 		
-		var pin=new Microsoft.Maps.Pushpin(mssloc, {draggable: true});
-		mssmap.entities.push(pin);
-		Microsoft.Maps.Events.addHandler(pin, 'drag', function(e){
-			var latlon = e.entity.getLocation();
-			$("#mssform input[name='mss_lat']").val(latlon.latitude.toFixed(6)); 
-			$("#mssform input[name='mss_lon']").val(latlon.longitude.toFixed(6));
-		});  
-	
-		attachmapviewchangeend = Microsoft.Maps.Events.addHandler(mssmap, 'viewchangeend', function(e){
-			$("#mssform").data("zoomlevel", mssmap.getZoom() );
-		}); 
-	}
-	else {
-		mssmap.setView({ zoom: zoomlevel, center: new Microsoft.Maps.Location(lat, lon) })
-	}
-	$("#mssmap").show("slow");
+			attachmapviewchangeend = Microsoft.Maps.Events.addHandler(mssmap, 'viewchangeend', function(e){
+				$("#mssform").data("zoomlevel", mssmap.getZoom() );
+			}); 
+		}
+		else {
+			mssmap.setView({ zoom: zoomlevel, center: new Microsoft.Maps.Location(lat, lon) })
+		}	
+	});
 });
 
 $("button#msshidemap").click(function(event){

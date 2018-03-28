@@ -9,27 +9,11 @@ $_SESSION['dashboardpage']=$_SERVER['REQUEST_URI'] ;
 	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.4/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.4/jquery-ui.min.js"></script><script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script><script src="picker.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	</style>
-	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script><script>
+	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
+	<script src="td_alert.js"></script><script>
 // start up 
 $(document).ready(function(){
-			
-// update TouchDown alert
-function touchdownalert()
-{
-	$.getJSON("td_alert.php", function(td_alert){
-		$("#rt_msg").empty();
-		if( td_alert.length>0 ) {
-			var txt="";
-			for(var i=0;i<2&&i<td_alert.length;i++) {
-				if( i>0 ) txt+="\n" ;
-				txt+=td_alert[i].dvr_name + " : "+td_alert[i].description ;
-			}
-			$("#rt_msg").text(txt);
-		}
-	});
-}
-touchdownalert();
-			
+	
 $("button").button();	
 $(".btset").buttonset();
 

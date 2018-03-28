@@ -7,7 +7,11 @@
 @$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 ?>
 
-<div class="ui-widget ui-widget-content ui-corner-all" id="rpanel"><button id="generate" style="font-size:1.3em;">Generate</button>
+<div class="ui-widget ui-widget-content ui-corner-all" id="rpanel">
+<table style="width:100%;"><tr>
+<td><button id="generate" style="font-size:1.3em;">Generate</button></td>
+<td id="gen_count"></td>
+</tr></table>
 <p/>
 
 <form action="#" id="filterform">
@@ -244,6 +248,7 @@ function quickfilter_load()
 							$("form#filterform")[0].reset();
 							// fill form fields
 							filterform_load(qf[0]);
+							$("#filterform select[name='zoneName']").change();
 						}
 					}
 				});
@@ -288,7 +293,7 @@ $("button#savequickfilter").click(function(e){
 		//	alert( resp.errormsg );
 		// }
 		else {
-			alert( "Saving quick filter failed!");
+			alert( "Can't save this quick filter!");
 		}
 	});
 });
@@ -403,11 +408,18 @@ function wait( w )
 // generate button
 $("button#generate").click(function(e){
 	e.preventDefault();
+	map_clear();
 	wait(true);
 	var fdata = filterform_data();
 	$.getJSON("mapgenerate.php", fdata, function(resp){
 		wait(false);
 		if( (resp instanceof Array) || resp.res == 1 ) {
+			if( resp.count && resp.count>0 ) {
+				$("td#gen_count").html(resp.count);
+			}
+			else {
+				$("td#gen_count").html('');
+			}
 			map_generate(resp, fdata);
 		}
 		else if( resp.errormsg ) {
@@ -417,11 +429,11 @@ $("button#generate").click(function(e){
 		console.log( "error" ); 
 		wait(false);
 	});
-	map_clear();
 });	
 
 // reset button
 $("button#reset").click(function(){
+	$("td#gen_count").html('');
 	$.getJSON("eventparameterload.php",function(eventparameter){
 		$("form#filterform")[0].reset();
 		if( eventparameter.index ) {

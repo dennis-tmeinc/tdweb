@@ -16,36 +16,12 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	</style>
 	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
+	<script src="td_alert.js"></script>	
 	<script>
 // start up 
 var map ;
 
 $(function(){
-
-// update TouchDown alert
-function touchdownalert()
-{
-	$.getJSON("td_alert.php", function(resp){
-		if( resp.res == 1 ) { 
-			$("#rt_msg").empty();
-			var td_alert = resp.td_alert ;
-			if( td_alert.length>0 ) {
-				var txt="";
-				for(var i=0;i<2&&i<td_alert.length;i++) {
-					if( i>0 ) txt+="\n" ;
-					txt+=td_alert[i].dvr_name + " : "+td_alert[i].description ;
-				}
-				$("#rt_msg").text(txt);
-			}
-			$("#servertime").text(resp.time);
-			setTimeout(touchdownalert,60000);
-		}
-		else {
-			window.location.assign("logout.php");
-		}		
-	});
-}
-touchdownalert();
 
 $("button").button();
 $(".btset").buttonset();
@@ -548,7 +524,7 @@ function loadvlmap()
 <?php include "mapfilter.php" ; ?>
 
 <div id="workarea">
-<div id="tdcmap">Bing Maps</div>
+<div id="tdcmap">Maps</div>
 </div>
 
 <form id="formplayvideo" enctype="application/x-www-form-urlencoded" method="get" action="playvideo.php" target="_blank" >

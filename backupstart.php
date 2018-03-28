@@ -41,15 +41,32 @@
 				if( empty( $backup_path ) ) {
 					$backup_path=sys_get_temp_dir();
 				}
-				$fpercent = fopen($backup_path.'/bkpercent', 'w');
+				else {
+					// try make dir
+					@mkdir( $backup_path );
+				}
+				$progressfile = tempnam ( $backup_path, "per" ) ;
+				$fpercent = fopen($progressfile, 'w');
 				fwrite($fpercent, "-1");
 				fclose($fpercent);
-			
-				$cmdline = $php_cmd . ' backupscript.php bk'. urlencode( $_REQUEST['backupname'] ) ;
-				if( !empty( $_SESSION['clientid'] ) ) {
-					$cmdline .= ' '.rawurlencode( $_SESSION['clientid'] );
-				}
+				$resp['progressfile'] = $progressfile ;
+
+				// backup script argument
+				//      argv[1] : backup file path
+				//      argv[2] : database server
+				//      argv[3] : database user
+				//      argv[4] : database password
+				//      argv[5] : database name
+				//      argv[6] : progress file
+				$backupname = $backup_path."/bk".urlencode( $_REQUEST['backupname'] );
+				
+				$resp['backupname'] = $backupname ;
+				
+				$cmdline = $php_cmd . " backupscript.php \"$backupname\" $smart_host $smart_user $smart_password $smart_database $progressfile" ;
 				pclose(popen( $cmdline, "r"));
+				
+				$resp['cmdline'] = $cmdline ;
+				
 				$resp['res']=1;
 			}
 		}

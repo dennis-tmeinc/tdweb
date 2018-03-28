@@ -1,6 +1,15 @@
 Touch Down Center 
 Release Notes
 
+V3.7.12 (2014-04-24) (by Dennis)
+	Fix save live track configure max_count, max_bytes to new defined fields on table 'vlt_config'
+	On display live track route event icon, speed value have higher priortiy then stop arm status. 
+	Fix database backup/restore script failure on multi-company mode.
+	Add speed field on report view export
+    Delayed map object creating on page "Map View", "Live Track", "Settings Zones" , "Settings MSS" (fix chrome v34 map issur)
+	Add Dashbard summary list dialog
+	Multi-Company login failure fixed
+
 V3.7.11 (2014-04-22) (by Dennis)
 	Add TDWeb multi company login
 	Add TDWeb multi company management
@@ -9,6 +18,12 @@ V3.7.11 (2014-04-22) (by Dennis)
 	Creating script executed with parameters:   <script> <company id> <company root directory> <database name>
 	On remove company, call TDWin removing script/excutable. script name set on variable $td_clean in file config.php.
 	Removing script executed with parameters:   <script> <company id> <company root directory> <database name>
+    Each company site has a unique company ID and company root folder
+    All companies use a single MySQL server and has their own database
+    On logon screen, leave company id empty and enter "SuperAdmin" as user name to enter company management mode. Default password for "SuperAdmin" is empty.
+    Create a new company will create a file name "config.php" under "client/<id>" folder, do not encode, compile or obfuscate this file.
+    On create or remove a company , tdweb would execute script to setup or remove all data/database related to this company. (Tongrui to provide these script/utility)
+    On each company root folder would generate a file named "companyinfo.xml" , it contain company information entered on company management page. The file is in XML format.
 
 
 V3.7.10 (2014-04-09) (by Dennis)

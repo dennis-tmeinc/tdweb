@@ -11,8 +11,8 @@
 
 $noredir=1 ;
 $noupdatetime=1 ;
-require_once 'session.php' ;
-require_once 'vfile.php' ;
+require 'session.php' ;
+require 'vfile.php' ;
 
 header("Content-Type: application/json");
 

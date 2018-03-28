@@ -37,12 +37,12 @@
 				unset($row['vlt_impact']);
 				
 				// temperatry solution for 'max connt' and 'max bytes' 
-				$row['vlt_maxcount'] = $row['vlt_log_time'] ;
-				unset($row['vlt_log_time']);
+				$row['vlt_maxcount'] = $row['vlt_max_count'] ;
+				unset($row['vlt_max_count']);
 
-				$row['vlt_maxbytes'] = $row['vlt_log_distance'] ;
-				unset($row['vlt_log_distance']);
-				
+				$row['vlt_maxbytes'] = $row['vlt_max_kb'] ;
+				unset($row['vlt_max_kb']);
+
 				foreach( $row as $key => $value )
 				{
 					if( empty($row[$key] ) ) 

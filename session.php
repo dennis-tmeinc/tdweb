@@ -28,6 +28,15 @@ if( !empty( $_SESSION['clientid'] )) {
 	$clientcfg = 'client/'.$_SESSION['clientid'].'/config.php' ;
 	if( file_exists ( $clientcfg ) ) {
 		require $clientcfg ;
+		// fixed directories for multi companies
+		if( !empty($company_root) ) {
+			// MSS configure file
+			$mss_conf=$company_root."\\mss.conf";
+			// Dashboard Option file
+			$dashboard_conf=$company_root."\\dashboardoption.config" ;
+			// database backup file location, 
+			$backup_path=$company_root."\\smartbackup" ;
+		}		
 	}
 	else {
 		unset($_SESSION['clientid']);
@@ -47,16 +56,6 @@ else {
 /* page ui */
 if( !empty($_COOKIE['ui']))
 	$default_ui_theme = $_COOKIE['ui'] ;	
-
-// fixed directories for multi companies
-if( !empty($company_root) ) {
-	// MSS configure file
-	$mss_conf=$company_root."\\mss.conf";
-	// Dashboard Option file
-	$dashboard_conf=$company_root."\\dashboardoption.config" ;
-	// database backup file location, 
-	$backup_path=$company_root."\\smartbackup" ;
-}
 
 // store $_SESSION variable after session_write_close()
 function session_write()

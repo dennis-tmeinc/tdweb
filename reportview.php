@@ -21,38 +21,14 @@ session_save('mapfilter', array() );
 		min-width:760px;
 	}
 	</style>
-	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script><script>
+	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
+<script src="td_alert.js"></script><script>
 // start up 
 
 var eventmap = null ;
 
 $(document).ready(function(){
-					
-// update TouchDown alert
-function touchdownalert()
-{
-	$.getJSON("td_alert.php", function(resp){
-		if( resp.res == 1 ) { 
-			$("#rt_msg").empty();
-			var td_alert = resp.td_alert ;
-			if( td_alert.length>0 ) {
-				var txt="";
-				for(var i=0;i<2&&i<td_alert.length;i++) {
-					if( i>0 ) txt+="\n" ;
-					txt+=td_alert[i].dvr_name + " : "+td_alert[i].description ;
-				}
-				$("#rt_msg").text(txt);
-			}
-			$("#servertime").text(resp.time);
-			setTimeout(touchdownalert,60000);
-		}
-		else {
-			window.location.assign("logout.php");
-		}		
-	});
-}
-touchdownalert();
-
+				
 $("button").button();
 $(".btset").buttonset();
 

@@ -24,36 +24,11 @@ if( $logon ) {
 		background-color:#fee;
 	}
 	</style>
-	<script>
+	<script src="td_alert.js"></script><script>
     // start up 
         
 $(document).ready(function(){
 				
-// update TouchDown alert
-function touchdownalert()
-{
-	$.getJSON("td_alert.php", function(resp){
-		if( resp.res == 1 ) { 
-			$("#rt_msg").empty();
-			var td_alert = resp.td_alert ;
-			if( td_alert.length>0 ) {
-				var txt="";
-				for(var i=0;i<2&&i<td_alert.length;i++) {
-					if( i>0 ) txt+="\n" ;
-					txt+=td_alert[i].dvr_name + " : "+td_alert[i].description ;
-				}
-				$("#rt_msg").text(txt);
-			}
-			$("#servertime").text(resp.time);
-			setTimeout(touchdownalert,60000);
-		}
-		else {
-			window.location.assign("logout.php");
-		}		
-	});
-}
-touchdownalert();
-
 $("button").button();	
 $(".btset").buttonset();
 
@@ -732,13 +707,7 @@ $("button#renamegroup").click(function(){
 
 // Zone Tab
 
-var zonemap = new Microsoft.Maps.Map(document.getElementById("zonemap"), 
-{ credentials: <?php echo '"'. $map_credentials . '"'; ?> ,
-  enableSearchLogo: false,
-  enableClickableLogo: false,
-  center: new Microsoft.Maps.Location(35, -100),
-  zoom: 4
-});
+var zonemap ;
 
 function showzone(zone)
 {
@@ -1104,6 +1073,17 @@ function sizezonemap(){
 function tab_zone()
 {
 	sizezonemap();
+
+	if( !zonemap ) {
+		zonemap = new Microsoft.Maps.Map(document.getElementById("zonemap"), 
+		{ credentials: <?php echo '"'. $map_credentials . '"'; ?> ,
+		  enableSearchLogo: false,
+		  mapTypeId : Microsoft.Maps.MapTypeId.road,
+		  enableClickableLogo: false
+		});
+	}
+
+
 	if( zonemap.entities.getLength() <= 0 ) {
 		setTimeout(updzonelist,1000);
 	}

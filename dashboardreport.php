@@ -63,7 +63,18 @@
 			}
 			$result->free();
 		}
-
+		
+		// Veh. In-Service List
+		$sql = 'SELECT vehicle_name from vehicle WHERE Vehicle_report_'.$day_short[ $reqdate->format('w') ]." != 'n' AND vehicle_out_of_service = 0 ;";
+		$result=$conn->query($sql);
+		$resp['report']['list_Vehicles_In_Service'] = array() ;
+		if( $result ){
+			while( $row = $result->fetch_array(MYSQLI_ASSOC) ){
+				$resp['report']['list_Vehicles_In_Service'][] = $row ;
+			}
+			$result->free();
+		}
+		
 		// Veh.Checked-In
 		$sql = "SELECT count(DISTINCT de_vehicle_name) FROM dvr_event WHERE de_event = 1 AND de_datetime BETWEEN '$date_begin' AND '$date_end' ;";
 		$result=$conn->query($sql);
@@ -74,6 +85,17 @@
 			$result->free();
 		}
 
+		// Veh.Checked-In List
+		$sql = "SELECT de_vehicle_name, de_datetime FROM dvr_event WHERE de_event = 1 AND de_datetime BETWEEN '$date_begin' AND '$date_end' ORDER BY de_datetime DESC";
+		$result=$conn->query($sql);
+		$resp['report']['list_Vehicles_Checkedin_day'] = array() ;
+		if( $result ){
+			while( $row = $result->fetch_array(MYSQLI_ASSOC) ){
+				$resp['report']['list_Vehicles_Checkedin_day'][] = $row ;
+			}
+			$result->free();
+		}
+		
 		// Veh. Uploaded
 		$sql = "SELECT count(DISTINCT vehicle_name) FROM `videoclip` WHERE time_upload BETWEEN '$date_begin' AND '$date_end' ;";
 		$result=$conn->query($sql);
@@ -84,6 +106,17 @@
 			$result->free();
 		}
 
+		// Veh. Uploaded List
+		$sql = "SELECT vehicle_name, time_upload FROM videoclip WHERE time_upload BETWEEN '$date_begin' AND '$date_end' ORDER BY time_upload DESC;";
+		$result=$conn->query($sql);
+		$resp['report']['list_Vehicles_Uploaded_day'] = array() ;
+		if( $result ){
+			while( $row = $result->fetch_array(MYSQLI_ASSOC) ){
+				$resp['report']['list_Vehicles_Uploaded_day'][] = $row ;
+			}
+			$result->free();
+		}
+		
 		// Marked Events
 		$sql = "SELECT count(*) FROM `vl` WHERE vl_incident = '23' AND vl_datetime BETWEEN '$date_begin' AND '$date_end' ;";
 		$result=$conn->query($sql);
@@ -94,8 +127,19 @@
 			$result->free();
 		}
 
+		// Marked events list
+		$sql = "SELECT vl_vehicle_name, vl_datetime FROM `vl` WHERE vl_incident = '23' AND vl_datetime BETWEEN '$date_begin' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		$resp['report']['list_marked_events'] = array() ;
+		if( $result ){
+			while( $row = $result->fetch_array(MYSQLI_ASSOC) ){
+				$resp['report']['list_marked_events'][] = $row ;
+			}
+			$result->free();
+		}
+		
 		// System Alerts
-		$sql = "SELECT count(*) FROM `td_alert` WHERE date_time BETWEEN '$date_begin' AND '$date_end' ;";
+		$sql = "SELECT count(*) FROM `td_alert` WHERE  alert_code in (2,3,4,5) AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
 		$result=$conn->query($sql);
 		if( $result ){
 			if( $row = $result->fetch_array(MYSQLI_NUM) ){
@@ -104,6 +148,25 @@
 			$result->free();
 		}
 			
+		// System Alerts list
+		$alert_types=array();
+		$alert_types[2]="Fan Filter" ;
+		$alert_types[3]="Connection" ;
+		$alert_types[4]="Camera" ;
+		$alert_types[5]="Recording" ;
+ 
+		$sql = "SELECT dvr_name, description, alert_code, date_time FROM `td_alert` WHERE  alert_code in (2,3,4,5) AND date_time BETWEEN '$date_begin' AND '$date_end' ORDER BY `date_time` DESC ";
+		$resp['report']['list_system_alerts'] = array() ;
+		$result=$conn->query($sql);
+		if( $result ){
+			while( $row = $result->fetch_array(MYSQLI_ASSOC) ){
+				if( !empty( $alert_types[ $row['alert_code'] ] ) ) {
+					$row['alert_code'] = $alert_types[ $row['alert_code'] ] ;
+				}
+				$resp['report']['list_system_alerts'][] = $row ;
+			}
+			$result->free();
+		}
 		
 		$resp['res'] = 1 ;
 		

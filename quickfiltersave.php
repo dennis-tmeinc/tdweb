@@ -43,8 +43,7 @@
 		
 		$sql="SELECT * FROM quickfilter WHERE `name` = '$esc_req[name]';" ;
 		$result=$conn->query($sql) ;
-		if( $result->num_rows>0 ) {	// to update
-		
+		if( $result && $result->num_rows>0 ) {	// to update
 			$sql=
 "UPDATE quickfilter SET 
  `timeType`=$_REQUEST[timeType],
@@ -109,8 +108,14 @@
 (empty($_REQUEST['bBumpyRide'])?"0,":"1,"). 
 "$_REQUEST[stopDuration], $_REQUEST[idleDuration], $_REQUEST[parkDuration], $_REQUEST[desStopDuration], $_REQUEST[speedLimit], $_REQUEST[gRacingStart], $_REQUEST[gHardBrake], $_REQUEST[gHardTurn], $_REQUEST[gFrontImpact], $_REQUEST[gRearImpact], $_REQUEST[gSideImpact], $_REQUEST[gBumpyRide]);"	;
 		}
-		if( $conn->query($sql) ) {
-			$resp['res']=1 ;	// success
+		if( ($result = $conn->query($sql)) ) {
+			$resp['sql'] = $sql ;
+			if( $conn->affected_rows > 0 ) {
+				$resp['res']=1 ;	// success
+			}
+			else {
+				$resp['errormsg']="This filter may be created by other user!" ;
+			}
 		}
 		else {
 			$resp['res']=0;
@@ -119,5 +124,6 @@
 		}			
 
 	}
+
 	echo json_encode($resp);
 ?>

@@ -16,36 +16,12 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	</style>
 	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
+	<script src="td_alert.js"></script>
 	<script>
 // start up 
 var map ;
 
 $(function(){
-
-// update TouchDown alert
-function touchdownalert()
-{
-	$.getJSON("td_alert.php", function(resp){
-		if( resp.res == 1 ) { 
-			$("#rt_msg").empty();
-			var td_alert = resp.td_alert ;
-			if( td_alert.length>0 ) {
-				var txt="";
-				for(var i=0;i<2&&i<td_alert.length;i++) {
-					if( i>0 ) txt+="\n" ;
-					txt+=td_alert[i].dvr_name + " : "+td_alert[i].description ;
-				}
-				$("#rt_msg").text(txt);
-			}
-			$("#servertime").text(resp.time);
-			setTimeout(touchdownalert,60000);
-		}
-		else {
-			window.location.assign("logout.php");
-		}		
-	});
-}
-touchdownalert();
 
 $("button").button();
 $(".btset").buttonset();
@@ -73,24 +49,6 @@ $(window).resize(function(){
 	trigger_resize();
 });
 
-var mapcenter = new Microsoft.Maps.Location(35, -100);
-var mapzoom = 4 ;
-var mapinit=false ;
-if( sessionStorage ) {
-	var tdsess = sessionStorage.getItem('tdsess');
-	var localsession ;
-	if( tdsess ) {
-		localsession = JSON.parse(tdsess);
-	}
-	if( localsession && localsession.tdcmap ) {
-		if( localsession.tdcmap.zoom ) {
-			mapcenter = new Microsoft.Maps.Location(localsession.tdcmap.lat, localsession.tdcmap.lon);
-			mapzoom = localsession.tdcmap.zoom ;
-			mapinit=true ;
-		}
-	}
-}
-
 function map_showaddress( latitude, longitude, address )
 {
 	function copyaddress() 
@@ -105,56 +63,6 @@ function map_showaddress( latitude, longitude, address )
 	ibox.setLocation( new Microsoft.Maps.Location(latitude, longitude) ); 
 	var desc = "<div>"+address+"</div>" ;
 	ibox.setOptions( { title:"Address", description: desc, actions: iaction, height: 128, id: "-1", visible: true, zIndex: 10 } );
-}
-
-
-map = new Microsoft.Maps.Map(document.getElementById("tdcmap"),
-{credentials: <?php echo "'$map_credentials'"; ?> ,
-center: mapcenter,
-zoom: mapzoom,
-enableSearchLogo: false,
-enableClickableLogo: false,
-mapTypeId : Microsoft.Maps.MapTypeId.road
-});
-
-Microsoft.Maps.Events.addThrottledHandler( map, "viewchangeend", function(){
-	loadvlmap();
-	mapmove=false ;
-}, 100 ) ;
-
-Microsoft.Maps.Events.addHandler( map, "viewchangestart", function(){
-	mapmove=true ;
-}) ;
-
-Microsoft.Maps.Events.addHandler( map, "rightclick", function(e){
-	if( e.target == map ) {
-		var point = new Microsoft.Maps.Point(e.getX(), e.getY());
-		var loc = map.tryPixelToLocation(point);
-		$.getJSON("mapquery.php?p="+loc.latitude + "," + loc.longitude, function(resp){
-			if( resp.res && resp.map && resp.map.name && resp.map.point && resp.map.name ) {
-				var dy = resp.map.point.coordinates[0] - loc.latitude ;
-				var dx = resp.map.point.coordinates[1] - loc.longitude ;
-				var dist = Math.sqrt( dx*dx + dy*dy) ;
-				if( dist < 0.01 ) {
-					map_showaddress( resp.map.point.coordinates[0], resp.map.point.coordinates[1], resp.map.name );
-				}
-			}
-		});
-	}
-}) ;
-
-if( !mapinit ) {
-	$.getJSON("mapquery.php", function(resp){
-		if( resp.res && resp.map && resp.map.bbox && resp.map.bbox.length>=4) {
-			setTimeout( function(){
-				var nbounds = Microsoft.Maps.LocationRect.fromLocations( [
-					new Microsoft.Maps.Location( resp.map.bbox[0], resp.map.bbox[1] ),
-					new Microsoft.Maps.Location( resp.map.bbox[2], resp.map.bbox[3] )
-					] );
-				map.setView({bounds:nbounds});
-			}, 1000 ) ;
-		}
-	});
 }
 
 // disable context menu (rightclick) on map
@@ -273,8 +181,83 @@ else {
 	$("button#playsync").hide();
 }
 
+function showup()
+{
+trigger_resize();
+
+var mapcenter = new Microsoft.Maps.Location(35, -100);
+var mapzoom = 4 ;
+var mapinit=false ;
+if( sessionStorage ) {
+	var tdsess = sessionStorage.getItem('tdsess');
+	var localsession ;
+	if( tdsess ) {
+		localsession = JSON.parse(tdsess);
+	}
+	if( localsession && localsession.tdcmap ) {
+		if( localsession.tdcmap.zoom ) {
+			mapcenter = new Microsoft.Maps.Location(localsession.tdcmap.lat, localsession.tdcmap.lon);
+			mapzoom = localsession.tdcmap.zoom ;
+			mapinit=true ;
+		}
+	}
+}
+
+map = new Microsoft.Maps.Map(document.getElementById("tdcmap"),
+{credentials: <?php echo "'$map_credentials'"; ?> ,
+center: mapcenter,
+zoom: mapzoom,
+enableSearchLogo: false,
+enableClickableLogo: false,
+mapTypeId : Microsoft.Maps.MapTypeId.road
+});
+
+Microsoft.Maps.Events.addThrottledHandler( map, "viewchangeend", function(){
+	loadvlmap();
+	mapmove=false ;
+}, 100 ) ;
+
+Microsoft.Maps.Events.addHandler( map, "viewchangestart", function(){
+	mapmove=true ;
+}) ;
+
+Microsoft.Maps.Events.addHandler( map, "rightclick", function(e){
+	if( e.target == map ) {
+		var point = new Microsoft.Maps.Point(e.getX(), e.getY());
+		var loc = map.tryPixelToLocation(point);
+		$.getJSON("mapquery.php?p="+loc.latitude + "," + loc.longitude, function(resp){
+			if( resp.res && resp.map && resp.map.name && resp.map.point && resp.map.name ) {
+				var dy = resp.map.point.coordinates[0] - loc.latitude ;
+				var dx = resp.map.point.coordinates[1] - loc.longitude ;
+				var dist = Math.sqrt( dx*dx + dy*dy) ;
+				if( dist < 0.01 ) {
+					map_showaddress( resp.map.point.coordinates[0], resp.map.point.coordinates[1], resp.map.name );
+				}
+			}
+		});
+	}
+}) ;
+
+if( !mapinit ) {
+	$.getJSON("mapquery.php", function(resp){
+		if( resp.res && resp.map && resp.map.bbox && resp.map.bbox.length>=4) {
+			setTimeout( function(){
+				var nbounds = Microsoft.Maps.LocationRect.fromLocations( [
+					new Microsoft.Maps.Location( resp.map.bbox[0], resp.map.bbox[1] ),
+					new Microsoft.Maps.Location( resp.map.bbox[2], resp.map.bbox[3] )
+					] );
+				map.setView({bounds:nbounds});
+			}, 1000 ) ;
+		}
+	});
+}
+
+
+
+}
+
 // show up 
-$('#rcontainer').show('slow', trigger_resize );
+$('#rcontainer').show('slow', showup );
 
 });
 
@@ -554,7 +537,7 @@ function loadvlmap()
 <?php include "mapfilter.php" ; ?>
 
 <div id="workarea">
-<div id="tdcmap">Bing Maps</div>
+<div id="tdcmap">Maps</div>
 </div>
 
 <form id="formplayvideo" enctype="application/x-www-form-urlencoded" method="get" action="playvideo.php" target="_blank" >

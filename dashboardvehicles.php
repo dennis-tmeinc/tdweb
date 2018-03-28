@@ -74,15 +74,18 @@
 		
 		for( $i=0; $i<$vcount; $i++ ) {
 		
+			set_time_limit(30);
+		
 			$vehicle = array();
 			$vehicle[0] = $v_in_service[$i] ;
 			
 			// Last Check-in
 			$vehicle[1]='';
-			$sql = "SELECT de_datetime FROM dvr_event WHERE de_vehicle_name = '$v_in_service[$i]' AND de_event = 1 AND de_datetime BETWEEN '$date_begin' AND '$date_end' ORDER BY de_datetime DESC ;";
+			$sql = "SELECT MAX(de_datetime) FROM dvr_event WHERE de_vehicle_name = '$v_in_service[$i]' AND de_event = 1 AND de_datetime BETWEEN '$date_begin' AND '$date_end' ";
 			if( $result = $conn->query($sql) ) {
-				if( $row = $result->fetch_array(MYSQLI_NUM) ) {
-					$vehicle[1]=$row[0];
+				if( $row = $result->fetch_array() ) {
+					if( $row[0] )
+						$vehicle[1]=$row[0];
 				}
 				$result->free();
 			}
@@ -176,7 +179,7 @@
 			if( $alerts>0 ) $alert_types[]="Fan Filter" ;
 			
 			$vehicle[5] = implode('/', $alert_types);
-
+			
 			// Good or Bad?
 			$vehicle[6] = empty($vehicle[5])?'<span style="color:#0f0;font-size:14px;"><strong>Good</strong></span>':'<span style="color:#B22;font-size:14px;"><strong>Bad</strong></span>' ;
 

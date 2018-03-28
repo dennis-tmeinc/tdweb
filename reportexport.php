@@ -79,7 +79,7 @@
 			}
 		}
 		
-		fputs( $output, "Vehicle,Driver,Activity,DateTime,Duration,Coordinates\r\n");
+		fputs( $output, "Vehicle,Driver,Activity,DateTime,Duration,Speed,Coordinates\r\n");
 
 		if( $result = $conn->query($sql,MYSQLI_USE_RESULT) ) {
 			// contents
@@ -90,6 +90,7 @@
 				$line[] = vl_icon($row);
 				$line[] = $row['vl_datetime'];
 				$line[] = $row['vl_time_len'];
+				$line[] = $row['vl_speed'];
 				$line[] = $row['vl_lat'].' '.$row['vl_lon'];
 				fputcsv ( $output , $line );
 			}

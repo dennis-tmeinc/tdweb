@@ -55,9 +55,7 @@
 		$esc_req['vlt_maxbytes'] = (int)$esc_req['vlt_maxbytes'];
 		
 		// temperatry solution for 'max connt' and 'max bytes' 
-		//    vlt_maxcount => vlt_log_time
-		//    vlt_maxbytes => vlt_log_distance
-		$sql = "INSERT INTO vlt_config (vlt_config_id, vlt_gpio, vlt_impact, vlt_speed, vlt_time_interval, vlt_dist_interval, vlt_temperature, vlt_geo, vlt_idling, vlt_log_time, vlt_log_distance, vlt_user_name ) VALUES ('$vltid', '$vlt_gpio' , '$esc_req[vlt_impact_front],$esc_req[vlt_impact_rear],$esc_req[vlt_impact_side],$esc_req[vlt_impact_bumpy]', '$esc_req[vlt_speed]', '$esc_req[vlt_time_interval]' , '$esc_req[vlt_dist_interval]' ,'$esc_req[vlt_temperature]', '$esc_req[vlt_geo]' ,'$esc_req[vlt_idling]', '$esc_req[vlt_maxcount]', '$esc_req[vlt_maxbytes]', '$_SESSION[user]' ) " ;
+		$sql = "INSERT INTO vlt_config (vlt_config_id, vlt_gpio, vlt_impact, vlt_speed, vlt_time_interval, vlt_dist_interval, vlt_temperature, vlt_geo, vlt_idling, vlt_max_count, vlt_max_kb, vlt_user_name ) VALUES ('$vltid', '$vlt_gpio' , '$esc_req[vlt_impact_front],$esc_req[vlt_impact_rear],$esc_req[vlt_impact_side],$esc_req[vlt_impact_bumpy]', '$esc_req[vlt_speed]', '$esc_req[vlt_time_interval]' , '$esc_req[vlt_dist_interval]' ,'$esc_req[vlt_temperature]', '$esc_req[vlt_geo]' ,'$esc_req[vlt_idling]', '$esc_req[vlt_maxcount]', '$esc_req[vlt_maxbytes]', '$_SESSION[user]' ) " ;
 		if( $conn->query($sql) ) {
 			$resp['res'] |= 1 ;		// success
 		}	
