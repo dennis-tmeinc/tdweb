@@ -50,7 +50,7 @@
 				$resp['vehicle_name'] = $row['vehicle_name'] ;
 				$resp['time_start'] = $row['time_start'] ;
 				$resp['channel'] = $row['channel'] ;
-				// $resp['filename'] = basename($row['path']) ;
+				$resp['index'] = $row['index'] ;
 				if( vfile_size( $row['path'] ) > 1000 ) {
 					$resp['mp4'] = "mp4preview.php?index=".$row['index'] ;
 					$resp['res'] = 1 ;

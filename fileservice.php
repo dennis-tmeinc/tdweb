@@ -303,7 +303,12 @@ if( !empty($_REQUEST['n']) && !empty($_REQUEST['c']) ) {
 		break;
   }
 }
-header("Content-Type: application/json");
-echo json_encode($resp);
 
+if( !empty($resp) ) {
+	if (!headers_sent()) 
+		header("Content-Type: application/json");
+	echo json_encode($resp);
+}
+
+exit;
 ?>

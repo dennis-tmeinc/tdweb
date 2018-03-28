@@ -184,75 +184,94 @@ function webplay_settitle()
 	webplay_playtime = ptime ;
 
 	var clipinfo = $( "video#webplay" ).data("clipinfo") ;
-	var dt = clipinfo.time_start.split(" "); 
-	var d = dt[0].split("-");
-	var t = dt[1].split(":");
-	var dt = new Date( d[0], d[1]-1, d[2], t[0], t[1], t[2], 0 );
-	var start_time = dt.getTime() ;
-	
-	var dt = new Date( start_time + webplay_playtime * 1000 ) ;
-	var dyear = dt.getFullYear() ;
-	var dmon = dt.getMonth() + 1 ;
-	if( dmon<10 ) dmon = "0" + dmon ;
-	var ddate = dt.getDate() ;
-	if( ddate < 10 ) ddate = "0" + ddate ;
-	var dhour = dt.getHours() ;
-	if( dhour < 10 ) dhour = "0" + dhour ;
-	var dmin = dt.getMinutes() ;
-	if( dmin < 10 ) dmin = "0" + dmin ;
-	var dsec = dt.getSeconds() ;
-	if( dsec < 10 ) dsec = "0" + dsec ;
-	var dstr = dyear + "-" + dmon + "-" + ddate + ' ' + dhour + ":" + dmin + ":" + dsec ;
+	if( clipinfo ) {
+		var dt = clipinfo.time_start.split(" "); 
+		var d = dt[0].split("-");
+		var t = dt[1].split(":");
+		var dt = new Date( d[0], d[1]-1, d[2], t[0], t[1], t[2], 0 );
+		var start_time = dt.getTime() ;
+		
+		var dt = new Date( start_time + webplay_playtime * 1000 ) ;
+		var dyear = dt.getFullYear() ;
+		var dmon = dt.getMonth() + 1 ;
+		if( dmon<10 ) dmon = "0" + dmon ;
+		var ddate = dt.getDate() ;
+		if( ddate < 10 ) ddate = "0" + ddate ;
+		var dhour = dt.getHours() ;
+		if( dhour < 10 ) dhour = "0" + dhour ;
+		var dmin = dt.getMinutes() ;
+		if( dmin < 10 ) dmin = "0" + dmin ;
+		var dsec = dt.getSeconds() ;
+		if( dsec < 10 ) dsec = "0" + dsec ;
+		var dstr = dyear + "-" + dmon + "-" + ddate + ' ' + dhour + ":" + dmin + ":" + dsec ;
 
-	$( ".tdcdialog#dialog_webplay" ).dialog("option", "title", clipinfo.vehicle_name + " - " + clipinfo.camera_name[ clipinfo.channel ] + "   " + dstr );	
+		$( ".tdcdialog#dialog_webplay" ).dialog("option", "title", clipinfo.vehicle_name + " - " + clipinfo.camera_name[ clipinfo.channel ] + "   " + dstr );	
+	}
 }
 
 // try pre-load video
 function webplay_preload() {
 	var clipinfo = $( "video#webplay" ).data("clipinfo") ;
-	var param=new Object ;
-	param.dir = 1 ;
-	param.vehicle_name = clipinfo.vehicle_name ;
-	param.time_start = clipinfo.time_start ;
-	param.channel = clipinfo.channel ;
-	$.getJSON("webplay.php", param , function(resp){
-		if( resp.res == 1 ) {
-			$.get( resp.mp4 ) ;	// to cache the video file
-		}
-	});	
+	if( clipinfo && $( "video#webplay" )[0].autoplay && !clipinfo.preload ) {
+		clipinfo.preload = true ;
+		$( "video#webplay" ).data("clipinfo", clipinfo);
+		
+		var param=new Object ;
+		param.dir = 1 ;
+		param.vehicle_name = clipinfo.vehicle_name ;
+		param.time_start = clipinfo.time_start ;
+		param.channel = clipinfo.channel ;
+		$.getJSON("webplay.php", param , function(resp){
+			if( resp.res == 1 ) {
+				$.get( resp.mp4 ) ;	// to cache the video file
+			}
+		});	
+	}
 }
 
 function webplay_playnext() {
 	var clipinfo = $( "video#webplay" ).data("clipinfo") ;
-	var param=new Object ;
-	param.dir = 1 ;
-	param.vehicle_name = clipinfo.vehicle_name ;
-	param.time_start = clipinfo.time_start ;
-	param.channel = clipinfo.channel ;
-	$.getJSON("webplay.php", param , function(resp){
-		if( resp.res == 1 ) {
-			$( "video#webplay" ).data("clipinfo", resp );
-			webplay_play();
-		}
-	});		
+	if( clipinfo && $( "video#webplay" )[0].autoplay ) {
+		var param=new Object ;
+		param.dir = 1 ;
+		param.vehicle_name = clipinfo.vehicle_name ;
+		param.time_start = clipinfo.time_start ;
+		param.channel = clipinfo.channel ;
+		$.getJSON("webplay.php", param , function(resp){
+			if( resp.res == 1 ) {
+				$( "video#webplay" ).data("clipinfo", resp );
+				if( $( "video#webplay" )[0].autoplay )
+					webplay_play();
+			}
+		});		
+	}
 }
 
 function webplay_play()
 {
 	var clipinfo = $( "video#webplay" ).data("clipinfo") ;
-	$( "video#webplay" )[0].onended = function(){
-		webplay_playnext();
+	if( clipinfo ) {
+		webplay_playtime = -1 ;
+		webplay_settitle();
+		var video = $( "video#webplay" )[0] ;
+		video.autoplay=true;
+		video.src = clipinfo.mp4 ;
+		video.load();
 	}
-	$( "video#webplay" )[0].onerror = function(){
-		webplay_playnext();
-	}	
-	$( "video#webplay" )[0].oncanplay = webplay_preload ;
-	webplay_playtime = -1 ;
-	webplay_settitle();
-	$( "video#webplay" )[0].ontimeupdate = webplay_settitle ;
-	$( "video#webplay" )[0].src = clipinfo.mp4  ;
-	$( "video#webplay" )[0].play();
 }
+
+function webplay_close()
+{
+	$( "video#webplay" ).removeData( "clipinfo" );
+	$( "video#webplay" )[0].autoplay=false;
+	$( "video#webplay" )[0].src = "" ;
+	$( "video#webplay" )[0].load() ;
+}
+
+$( "video#webplay" )[0].onended = webplay_playnext ;
+$( "video#webplay" )[0].onerror = webplay_playnext ;
+$( "video#webplay" )[0].oncanplaythrough = webplay_preload ;
+$( "video#webplay" )[0].ontimeupdate = webplay_settitle ;
 
 var webplay_1open=0 ;
 
@@ -260,11 +279,6 @@ $( ".tdcdialog#dialog_webplay" ).dialog({
 	autoOpen: false,
 	width:"auto",
 	modal: true,
-	beforeClose: function( event, ui ) {
-		// $( "video#webplay" )[0].src = "" ;
-		$( "video#webplay" )[0].autoplay=false;
-		$( "video#webplay" )[0].pause();	
-	},
 	resize: function( event, ui ) {
 		$( "video#webplay" )[0].width=$( "div#dialog_webplay" ).width() - $( ".tdcdialog#dialog_webplay" ).data("wdif");
 		$( "video#webplay" )[0].height=$( "div#dialog_webplay" ).height() - $( ".tdcdialog#dialog_webplay" ).data("hdif");
@@ -290,6 +304,9 @@ $( ".tdcdialog#dialog_webplay" ).dialog({
 		$("select#webplay_camera")[0].selectedIndex=clipinfo.channel ;
 		webplay_play();
 	},
+	close: function( event, ui ) {
+		webplay_close();
+	},
 	create: function( event, ui ) {
 
 		$( "video#webplay" ).on('contextmenu', function(e){
@@ -298,51 +315,57 @@ $( ".tdcdialog#dialog_webplay" ).dialog({
 		
 		$("select#webplay_camera").change( function(){
 			var clipinfo = $( "video#webplay" ).data("clipinfo") ;
-			var param=new Object ;
-			param.dir = 3 ;
-			param.vehicle_name = clipinfo.vehicle_name ;
-			param.time_start = clipinfo.time_start ;
-			param.channel = $("select#webplay_camera")[0].selectedIndex ;
-			wait(1);
-			$.getJSON("webplay.php", param , function(resp){
-				wait(0);
-				if( resp.res == 1 ) {
-					$( "video#webplay" ).data("clipinfo", resp );
-					webplay_play();
-				}
-			});
+			if( clipinfo ) {
+				var param=new Object ;
+				param.dir = 3 ;
+				param.vehicle_name = clipinfo.vehicle_name ;
+				param.time_start = clipinfo.time_start ;
+				param.channel = $("select#webplay_camera")[0].selectedIndex ;
+				wait(1);
+				$.getJSON("webplay.php", param , function(resp){
+					wait(0);
+					if( resp.res == 1 ) {
+						$( "video#webplay" ).data("clipinfo", resp );
+						webplay_play();
+					}
+				});
+			}
 		});	
 		$("button#webplay_prev").click(function(){
 			var clipinfo = $( "video#webplay" ).data("clipinfo") ;
-			var param=new Object ;
-			param.dir = 2 ;
-			param.vehicle_name = clipinfo.vehicle_name ;
-			param.time_start = clipinfo.time_start ;
-			param.channel = clipinfo.channel ;
-			wait(1);
-			$.getJSON("webplay.php", param , function(resp){
-				wait(0);
-				if( resp.res == 1 ) {
-					$( "video#webplay" ).data("clipinfo", resp );
-					webplay_play();
-				}
-			});		
+			if( clipinfo ) {
+				var param=new Object ;
+				param.dir = 2 ;
+				param.vehicle_name = clipinfo.vehicle_name ;
+				param.time_start = clipinfo.time_start ;
+				param.channel = clipinfo.channel ;
+				wait(1);
+				$.getJSON("webplay.php", param , function(resp){
+					wait(0);
+					if( resp.res == 1 ) {
+						$( "video#webplay" ).data("clipinfo", resp );
+						webplay_play();
+					}
+				});	
+			}
 		});
 		$("button#webplay_next").click(function(){
 			var clipinfo = $( "video#webplay" ).data("clipinfo") ;
-			var param=new Object ;
-			param.dir = 1 ;
-			param.vehicle_name = clipinfo.vehicle_name ;
-			param.time_start = clipinfo.time_start ;
-			param.channel = clipinfo.channel ;
-			wait(1);
-			$.getJSON("webplay.php", param , function(resp){
-				wait(0);
-				if( resp.res == 1 ) {
-					$( "video#webplay" ).data("clipinfo", resp );
-					webplay_play();
-				}
-			});		
+			if( clipinfo ) {
+				var param=new Object ;
+				param.dir = 1 ;
+				param.vehicle_name = clipinfo.vehicle_name ;
+				param.time_start = clipinfo.time_start ;
+				param.channel = clipinfo.channel ;
+				wait(1);
+				$.getJSON("webplay.php", param , function(resp){
+					wait(0);
+					if( resp.res == 1 ) {
+						$( "video#webplay" ).data("clipinfo", resp );
+						webplay_play();
+					}
+				});	
+			}
 		});
 
 		$("button#webplay_reload").click(function(){
@@ -509,7 +532,7 @@ Vehicles &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="selectallvehicle">Select All<
 </div>
 <!-- Video Clip Preview Dialog -->
 <div class="tdcdialog" id="dialog_webplay">
-<video id="webplay" width="480" height="360" src="" type="video/mp4" poster="res/vidloading.gif" controls autoplay >
+<video id="webplay" width="480" height="360" src="" type="video/mp4" poster="res/vidloading.gif" controls >
 Your browser does not support the video tag.
 </video> 
 <hr />

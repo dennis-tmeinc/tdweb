@@ -116,10 +116,10 @@ function mp4cache_load( $index )
 							set_time_limit(600) ;
 							$tmp_mp4 = $preview_dir."t".$hash.".mp4" ;
 							$conv266="bin\\conv266\\conv266.exe" ;
-							if( empty($GLOBALS["conv266_text"]) ) {
-								$conv266 .= ' -a ' ;
-							}
 							if( !empty( $GLOBALS["use_conv266"] ) && vfile_exists( $conv266 ) ) {
+								if( empty($GLOBALS["conv266_text"]) ) {
+									$conv266 .= ' -a ' ;
+								}
 								$cmdline = "$conv266 -i \"$ifile\" -f \"$tmp_mp4\"" ;
 							}
 							else {
@@ -129,7 +129,12 @@ function mp4cache_load( $index )
 							vfile_exec( $cmdline );
 							
 							if( vfile_exists( $tmp_mp4 ) ) {
-								vfile_rename( $tmp_mp4, $preview_file );
+								if( vfile_size( $tmp_mp4 ) > 1000 ) {
+								  vfile_rename( $tmp_mp4, $preview_file );
+								}
+								else {
+								   vfile_unlink( $tmp_mp4 );
+								}
 							}
 						}
 					}
@@ -214,9 +219,7 @@ function mp4cache_output( $index )
 				$t1 = gettimeofday(true);
 				
 				vfile_seek( $f, $offset );
-				while( $len > 0 ) {
-					if( connection_aborted () ) 
-						break;
+				while( $len > 0  && !connection_aborted ()) {
 					set_time_limit(30);
 
 					$r = $len ;
