@@ -492,8 +492,8 @@ function map_generate_x(mapevent, formdata)
 			<td id="hoursofvideo">&nbsp;</td>
 		</tr>
 		<tr>
-			<td style="text-align: right;">&nbsp;</td>
-			<td>&nbsp;</td>
+			<td style="text-align: right;">Drive By Total:</td>
+			<td id="drivebytotal">&nbsp;</td>
 			<td style="text-align: right;">Speeding Total:</td>
 			<td id="speedings">&nbsp;</td>
 			<td style="text-align: right;">Marked Events:</td>

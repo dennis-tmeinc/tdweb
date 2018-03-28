@@ -23,7 +23,16 @@
 			$req = json_decode( $_REQUEST['info'], true ) ;
 			
 			$info = $req ;
-			$info['name'] = $req['dvrid'] ;
+			
+			// duplicate info['name'] 
+			if( !empty( $info['dvrid'] ) ) {
+				$info['name'] = $info['dvrid'] ;
+			}
+			
+			// assing info['encoder']
+			if( empty( $info['type'] ) || (int)$info['type'] == 5 ) {
+				$info['encoder'] = "266" ;		// support 266 only now
+			}
 
 			$server = array();
 			$server['protocol'] = "dvr" ;

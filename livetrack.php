@@ -267,8 +267,8 @@ function showpin( avlp, id, iconimg, clean )
 		if( newview )
 			map.setView( view );
 		map.entities.push(pushpin);
-
-		Microsoft.Maps.Events.addThrottledHandler(pushpin, 'mouseover', function(e){
+		
+		function pushpin_info(e){
 			var pidx = parseInt( e.target.getText() ); 
 			var avlp ;
 			if( vlt_pins[pidx] ) {
@@ -278,15 +278,18 @@ function showpin( avlp, id, iconimg, clean )
 				return ;
 			}
 
-			var infotitle =   '<img src="'+e.target.getIcon()+'" /> ' + vlt_pins[pidx].vid.substr(4) ;
-			
 			// remove old infobox
 			for( var i=map.entities.getLength()-1;i>=0;i--) {
 				var en = map.entities.get(i);
 				if ( en instanceof Microsoft.Maps.Infobox ) { 
+					if( en.getVisible() && en.getId() == pidx ) {
+						return ;
+					}
 					map.entities.removeAt(i);  
 				}
 			}
+
+			var infotitle =   '<img src="'+e.target.getIcon()+'" /> ' + vlt_pins[pidx].vid.substr(4) ;
 			
 			// date & time
 			var dstr = '20'+avlp.pos.substr(0,2)+'-'+avlp.pos.substr(2,2)+'-'+avlp.pos.substr(4,2)+'T'+avlp.pos.substr(6,2)+':'+avlp.pos.substr(8,2)+':'+avlp.pos.substr(10,2)+'Z' ;
@@ -305,12 +308,17 @@ function showpin( avlp, id, iconimg, clean )
 			var desc = dyear + "-" + dmon + "-" + ddate + ' ' + dhour + ":" + dmin + ":" + dsec ;
 			var lines = 1 ;
 			
+			// speed
 			var speed = parseFloat( avlp.pos.substr(34) ) ;
 			if( speed > 0.5 ) {
+				// convert km to mph
+				speed = speed / 1.609344 ;
+				
 				desc += "<br/>Speed: "+speed.toFixed(1);
 				lines++;
 			}
 
+			// di mask
 			if( avlp.di && avlp.mask ) {
 				var mask = parseInt( avlp.mask, 16 );
 				var bm = 1 ;
@@ -334,8 +342,11 @@ function showpin( avlp, id, iconimg, clean )
 				}
 			}
 			
+			// temperature
 			if( avlp.temp ) {
-				desc += "<br/>Temperature: "+avlp.temp;
+				// C to F
+				var temperatureF = avlp.temp * 9 /5 + 32 ;
+				desc += "<br/>Temperature: "+temperatureF.toFixed(0);
 				lines ++ ;
 			}
 
@@ -373,9 +384,12 @@ function showpin( avlp, id, iconimg, clean )
 			
 			map.entities.push(new Microsoft.Maps.Infobox(e.target.getLocation(), {
 				showPointer:true,showCloseButton:true,
-				title:infotitle, description: desc, height: iheight,  zIndex: 10, actions: iaction
+				title:infotitle, description: desc, height: iheight,  zIndex: 10, id: pidx,  actions: iaction
 				}));
-		}, 100 );  
+		}		
+
+		Microsoft.Maps.Events.addThrottledHandler(pushpin, 'mouseover', pushpin_info, 100 );  
+		Microsoft.Maps.Events.addHandler(pushpin, 'click', pushpin_info);  
 	}
 }
 
@@ -1147,6 +1161,7 @@ $( "button[name='liveview']" ).click(function(e){
 		// for live view button:
 		dvrdetail['support_playback'] = 0 ;
 		dvrdetail['support_live'] = 1 ;
+		dvrdetail['playmode'] = "live" ;
 			
 		$("form#liveviewform input[name='info']").val( JSON.stringify( dvrdetail ) );
 		$('form#liveviewform').submit();

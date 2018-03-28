@@ -9,7 +9,7 @@
 // By Dennis Chen @ TME	 - 2013-11-21
 // Copyright 2013 Toronto MicroElectronics Inc.
 
-    require 'session.php' ;
+    require_once 'session.php' ;
 	header("Content-Type: application/json");
 
 	if( $logon ) {
@@ -46,13 +46,13 @@
 						$xml->avlp->dist = 0 ;
 					}
 					else {
-						$xml->avlp->dist = $vdata['vlt_dist_interval'] * 0.3048 ;		// feet to meters
+						$xml->avlp->dist = (int)( $vdata['vlt_dist_interval'] * 0.3048 );		// feet to meters
 					}
 					if( empty($vdata['vlt_speed']) ) {
 						$xml->avlp->speed = 0 ;
 					}
 					else {
-						$xml->avlp->speed = $vdata['vlt_speed'] * 1.609344 ;		// mph to km/h
+						$xml->avlp->speed = (int)( $vdata['vlt_speed'] * 1.609344 );		// mph to km/h
 					}
 					$xml->avlp->maxc = $vdata['vlt_maxcount'] ;
 					$xml->avlp->maxkb = $vdata['vlt_maxbytes'] ;
@@ -86,7 +86,7 @@
 					$xml->avlp->lo = dechex($io_low);
 					$xml->avlp->hi = dechex($io_high) ;
 					$xml->avlp->idle = $vdata['vlt_idling'] ;
-					$tempc = ( $vdata['vlt_temperature'] - 32 ) * 5/9 ;		// F to C
+					$tempc = (int)(( $vdata['vlt_temperature'] - 32 ) * 5/9 ) ;		// F to C
 					if( $tempc < 1 ) {
 						$xml->avlp->temp = 0 ;
 					}

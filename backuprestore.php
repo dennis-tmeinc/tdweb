@@ -47,6 +47,9 @@
 				fclose($fpercent);
 			
 				$cmdline = $php_cmd . ' restorescript.php bk'. urlencode( $_REQUEST['backupname'] ) ;
+				if( !empty( $_SESSION['clientid'] ) ) {
+					$cmdline .= ' '.rawurlencode( $_SESSION['clientid'] );
+				}
 				pclose(popen( $cmdline, "r"));
 				$resp['res']=1;
 			}

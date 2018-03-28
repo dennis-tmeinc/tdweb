@@ -1,13 +1,13 @@
 <?php
 	// SQL server
-	$smart_host="localhost" ;
+	$smart_host="tdweb.saferus.com" ;
 	$smart_user="server" ;
 	$smart_password="password" ;
 	$smart_database="smart" ;
 	$database_persistent=true ;
 
 	// List of timezone: http://php.net/manual/en/timezones.php
-	$timezone = "US/Eastern" ;
+	$timezone = "US/Pacific" ;
 	
 	// number of icons on map , acture number of icons may get doubled
 	$map_icons=100;
@@ -19,7 +19,7 @@
 	$dashboard_conf="C:\\SmartSvrApps\\dashboardoption.config" ;
 	
 	// backup file location, 
-	$backup_path="smartbackup" ;
+	$backup_path="C:\\SmartSvrApps\\tdweb.saferus" ;
 	
 	// set to 1 to include auto_increment fields in backup.
 	$backup_auto_increment = 0 ;
@@ -38,18 +38,14 @@
 	
 	// zone moving mode, "cross" or "center"
 	// $zone_mode = "cross" ;
-	
-	// bing map
-	$map_credentials="AnC6aHa2J8jWAluq14HQu6HDH1cDshGtPEPrYiotanIf-q6ZdoSiVGd96wzuDutw" ;
 
 	// Default map location, comment it to auto detect
-	$map_area="Toronto" ;
+	$map_area="San Francisco" ;
 	
 	// session timeout (max half hour)
 	$session_timeout=900 ;	
-	$session_path= "session";
-	$session_idname = "touchdownid";
-	//$remote_fileserver = "http://192.168.42.52/tdc/fileservice.php" ;	
+
+	$remote_fileserver = "http://tdweb.saferus.com/tdc/fileservice.php" ;	
 	
 
 	// avaialbe ui: ui-lightness ui-darkness smoothness start redmond sunny 
@@ -68,8 +64,9 @@
 	$enable_livetrack = 1 ;
 	// live track server (AVL Service)
 
-	$avlservice = "http://localhost:40520/avlservice" ;
-	$avlcbserver = "http://localhost:80" ;
+	$avlservice = "http://tdweb.saferus.com:40520/avlservice" ;
+	// this should be the public ip (domain name) of web server
+	$avlcbserver = "http://127.0.0.1:80" ;
 	$avlcbapp = "vltevent.php" ;
 	
 	// setup time zone

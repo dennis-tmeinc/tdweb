@@ -9,29 +9,14 @@
 // V3.0
 //      Show only today or yesterday alerts
 
-
-require_once 'config.php' ;
+$noredir=1 ;
+$noupdatetime=1 ;
+require_once 'session.php' ;
 require_once 'vfile.php' ;
-
-session_save_path( $session_path );
-session_name( $session_idname );
-session_start();
 
 header("Content-Type: application/json");
 
-$resp=array('res' => 0);	
-$xt = time() ;
-if( empty($_SESSION['user']) ||
-	empty($_SESSION['xtime']) || 
-	$xt>$_SESSION['xtime']+$session_timeout ||
-	empty($_SESSION['clientid']) ||
-	empty($_SESSION['release']) ||
-	$_SESSION['clientid']!=$_SERVER['REMOTE_ADDR'] 
-	){
-	$resp['errormsg']="Session error!";
-}
-else {
-	session_write_close();
+if( $logon ) {
 	
 	@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 

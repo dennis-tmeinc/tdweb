@@ -3,14 +3,10 @@
 //   Checking user password
 // By Dennis Chen @ TME	 - 2013-07-12
 // Copyright 2013 Toronto MicroElectronics Inc.
-	
-	
-	require_once 'config.php' ;
 
-	session_save_path( $session_path );
-	session_name( $session_idname );
-	session_start();
-	
+	$noredir = 1 ;
+	require_once 'session.php' ;
+
 	header("Content-Type: application/json");
 	
 	$resp=array();
@@ -29,10 +25,13 @@
 			// what should be copied to new session
 			$_SESSION['user']=$savesess['xuser'];
 			$_SESSION['user_type']=$savesess['user_type'];
+			if( !empty($savesess['clientid']) ) {
+				$_SESSION['clientid']=$savesess['clientid'];
+			}
 			$_SESSION['welcome_name'] = $savesess['welcome_name'];
-			$_SESSION['clientid']=$_SERVER['REMOTE_ADDR'] ;
+			$_SESSION['remote']=$_SERVER['REMOTE_ADDR'] ;
 			$_SESSION['xtime'] = $_SERVER['REQUEST_TIME'] ;
-			$_SESSION['release']="V3.7.8" ;
+			$_SESSION['release']="V3.7.9" ;
 	
 		    $resp['res']=1 ;
 			$resp['user']=$savesess['xuser'] ;
@@ -48,6 +47,7 @@
 			$sql="UPDATE app_user SET last_logon=NOW() WHERE user_name = '".$_SESSION['user']."';" ;
 			$conn->query($sql);
 			$conn->close();
+			session_write();
 		}
 	}
 	echo json_encode($resp);

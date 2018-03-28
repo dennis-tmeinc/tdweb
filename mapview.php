@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head><?php 
-require 'session.php'; 
+require_once "session.php" ;
 session_save('lastpage', $_SERVER['REQUEST_URI'] );
 
 // clear map filter
@@ -445,12 +445,17 @@ function loadvlmap()
 				var pinlocation = new Microsoft.Maps.Location( mapevent[i][3], mapevent[i][4] );
 				var pushpin= new Microsoft.Maps.Pushpin(pinlocation, pushpinOptions);
 				
-				Microsoft.Maps.Events.addThrottledHandler(pushpin, 'mouseover', function(e){
+				function pin_info(e){
+
 					var vl_id=parseInt(e.target.getText()); 
+					var eventInfobox = map_infobox() ;
+					if( eventInfobox.getVisible() && eventInfobox.getId() == vl_id ) {
+						return ;
+					}
 					// e.target.setOptions( {zIndex: 10 } );		// to prevent Infobox flashing
 					var loc=e.target.getLocation() ;
 
-					var eventInfobox = map_infobox() ;
+
 			
 					eventInfobox.setLocation( loc );
 					var icon = e.target.getIcon() ;
@@ -493,8 +498,13 @@ function loadvlmap()
 							if( ibox )
 								ibox.setOptions( { title:ititle, description: desc, actions: iaction, id: v.vl.vl_id, height: iheight,  zIndex: 10 } );
 						}
-					});
-				}, 200 );  
+					});				
+				}
+				
+				Microsoft.Maps.Events.addThrottledHandler(pushpin, 'mouseover', pin_info, 200 );  
+				Microsoft.Maps.Events.addThrottledHandler(pushpin, 'click', pin_info, 200 );  
+
+
 
 				map.entities.push(pushpin);
 			}

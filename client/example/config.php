@@ -19,7 +19,7 @@
 	$dashboard_conf="C:\\SmartSvrApps\\dashboardoption.config" ;
 	
 	// backup file location, 
-	$backup_path="smartbackup" ;
+	$backup_path="C:\\smartbackup" ;
 	
 	// set to 1 to include auto_increment fields in backup.
 	$backup_auto_increment = 0 ;
@@ -43,12 +43,11 @@
 	$map_credentials="AnC6aHa2J8jWAluq14HQu6HDH1cDshGtPEPrYiotanIf-q6ZdoSiVGd96wzuDutw" ;
 
 	// Default map location, comment it to auto detect
-	$map_area="Toronto" ;
+	$map_area="San Francisco" ;
 	
 	// session timeout (max half hour)
 	$session_timeout=900 ;	
-	$session_path= "session";
-	$session_idname = "touchdownid";
+
 	//$remote_fileserver = "http://192.168.42.52/tdc/fileservice.php" ;	
 	
 

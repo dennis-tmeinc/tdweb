@@ -45,6 +45,7 @@
 		$info['camera_number'] = 0 ;
 		$info['support_playback'] = 1 ;
 		$info['support_live'] = 0 ;
+		$info['playmode'] = "playback" ;
 		$info['playtime'] = "2000-01-01 00:00:00" ;
 		
 		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );

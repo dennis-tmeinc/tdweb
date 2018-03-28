@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head><?php 
-require 'session.php'; 
+require_once 'session.php'; 
+require_once 'vfile.php' ;
 
 // remember recent page
 session_save('dashboardpage', $_SERVER['REQUEST_URI'] );

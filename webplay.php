@@ -38,7 +38,7 @@
 			$sql = "SELECT * FROM videoclip WHERE `index` = $_REQUEST[index] ;" ;
 		}
 		$resp['ser'] = $_REQUEST['ser'];
-				
+
 		if($result=$conn->query($sql)) {
 			while( $row=$result->fetch_array() ) {
 				$resp['vehicle_name'] = $row['vehicle_name'] ;

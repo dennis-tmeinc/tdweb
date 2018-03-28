@@ -9,7 +9,7 @@
 // V2.5
 //   load from dashboard option file
 
-	require 'session.php' ;
+	require_once 'session.php' ;
 	require_once 'vfile.php' ;
 	
 	header("Content-Type: application/json");

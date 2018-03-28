@@ -16,6 +16,13 @@
 		$backupname=$argv[1];
 	}
 	
+	if( !empty($argv[2]) ) {		// client id
+		$clientcfg = 'client/'.rawurldecode($argv[2]).'/config.php' ;
+		if( file_exists ( $clientcfg ) ) {
+			require_once $clientcfg ;
+		}
+	}
+	
 	if( empty( $backup_path ) ) {
 		$backup_path=sys_get_temp_dir();
 	}

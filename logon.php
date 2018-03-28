@@ -1,22 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head><?php 
-require_once 'config.php';
-
-// setup time zone
-date_default_timezone_set($timezone) ;	
-// persistent database connection
-if(	$database_persistent ) {
-	$smart_server = "p:".$smart_host ;
+$noredir = 1 ;
+require_once 'session.php' ;
+if( isset($_REQUEST['cid'])) {
+$_SESSION['clientid'] = $_REQUEST['cid'];
+session_write();
+header( 'Location: logon.php' );
 }
-else {
-	$smart_server = $smart_host ;
-}
-
-// ui
-if( !empty($_COOKIE['ui']))
-	$default_ui_theme = $_COOKIE['ui'] ;
-
 ?>
 	<title>Touch Down Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
@@ -141,13 +132,29 @@ $("body").show();
 <form style="padding-left:60px;padding-right:60px;padding-top:20px;padding-bottom:20px;">
 <fieldset><legend> Sign in to Touch Down Center </legend>
 <div style="padding-left:20px;">
+
+<div id="dclientid" style="display:none">
+<p>Client ID<br />
+<input id="clientid" name="clientid" type="password" /></p>
+</div>
+
 <p>User ID<br />
 <input id="userid" name="userid" type="text" /></p>
 
 <p>Password<br />
 <input id="password" name="password" type="password" /></p>
 
-<p><button id="usersignin" type="submit">Sign In</button></p>
+<table border="0" cellpadding="0" cellspacing="0" style="width:95%">
+	<tbody>
+		<tr>
+			<td><button id="usersignin" type="submit">Sign In</button></td>
+			<td style="text-align: right;"><?php 
+				if( !empty( $_SESSION['clientid'] ) ) echo $_SESSION['clientid'] ;
+			?></td>
+		</tr>
+	</tbody>
+</table>
+
 </div>
 </fieldset>
 </form>

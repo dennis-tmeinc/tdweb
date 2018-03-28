@@ -6,7 +6,8 @@
 // By Dennis Chen @ TME	 - 2013-11-28
 // Copyright 2013 Toronto MicroElectronics Inc.
 
-require_once 'config.php'; 
+$noredir = 1 ;
+require_once 'session.php'; 
 
 // send xml (avlp) packet
 function avl_send( $s, $cmd, $xml )

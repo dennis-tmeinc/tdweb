@@ -5,6 +5,39 @@
 
 require_once 'config.php' ;
 
+if( empty($session_path) ) {
+	$session_path= "session";
+}
+if( empty($session_idname) ) {
+	$session_idname = "touchdownid";
+}
+
+session_save_path( $session_path );
+session_name( $session_idname );
+
+if( !empty( $session_id ) ) {
+	session_id ($session_id);
+}
+if( !empty($_REQUEST[session_name()]) ) {
+	session_id ($_REQUEST[session_name()]);
+}
+session_start();
+
+// load client config
+if( !empty( $_SESSION['clientid'] )) {
+	$clientcfg = 'client/'.$_SESSION['clientid'].'/config.php' ;
+	if( file_exists ( $clientcfg ) ) {
+		require_once $clientcfg ;
+	}
+	else {
+		unset($_SESSION['clientid']);
+	}
+}
+	
+/* page ui */
+if( !empty($_COOKIE['ui']))
+	$default_ui_theme = $_COOKIE['ui'] ;	
+		
 // setup time zone
 date_default_timezone_set($timezone) ;	
 // persistent database connection
@@ -14,13 +47,6 @@ if(	$database_persistent ) {
 else {
 	$smart_server = $smart_host ;
 }
-
-session_save_path( $session_path );
-session_name( $session_idname );
-if( !empty($_REQUEST[session_name()]) ) {
-	session_id ($_REQUEST[session_name()]);
-}
-session_start();
 
 // store $_SESSION variable after session_write_close()
 function session_write()
@@ -63,34 +89,28 @@ $resp=array('res' => 0);
 $xt = time() ;
 if( empty($_SESSION['user']) ||
 	empty($_SESSION['xtime']) || 
-	$xt>$_SESSION['xtime']+$session_timeout ||
-	empty($_SESSION['clientid']) ||
-	empty($_SESSION['release']) ||
-	$_SESSION['clientid']!=$_SERVER['REMOTE_ADDR'] 
-	){
+	$xt>$_SESSION['xtime']+$session_timeout )
+	{
 	// logout
 	unset($_SESSION['user']) ;
-	session_write_close();
 	$resp['errormsg']="Session error!";
 	$resp['session'] = 0 ;
 	$logon=false ;
 	/* AJAX check */
-	if( empty($_SERVER['HTTP_X_REQUESTED_WITH']) ) {
+	if( empty($noredir) && empty($_SERVER['HTTP_X_REQUESTED_WITH']) ) {
 		header( 'Location: logon.php' ) ;
 	}	
 	$resp['session'] = 'e' ;		// session ended
 }
 else {
 	$oldsessiontime = $_SESSION['xtime'] ;
-	$_SESSION['xtime']=$xt ;
-	session_write_close();
+	if( empty( $noupdatetime ) )
+		$_SESSION['xtime']=$xt ;
 	$logon=true ;
 	$resp['session'] = 'l' ;		// session login
-	/* page ui */
-	if( !empty($_COOKIE['ui']))
-		$default_ui_theme = $_COOKIE['ui'] ;	
 }
 
-return ;
+session_write_close();
 
+return ;
 ?>

@@ -7,7 +7,7 @@
 // By Dennis Chen @ TME	 - 2013-07-03
 // Copyright 2013 Toronto MicroElectronics Inc.
 
-    require 'session.php' ;
+    require_once 'session.php' ;
 	require_once 'vfile.php' ;
 	header("Content-Type: application/json");
 	

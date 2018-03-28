@@ -130,12 +130,14 @@
 						$offset = 0 ;
 						// test for only return partial contents
 						if( empty( $mp4preloadsize ) ) {
-							$mp4preloadsize = 100000 ;		// 100 K
+							$mp4preloadsize = 102400 ;		// 100 K
 						}
-						$len = $mp4preloadsize ;
-						$lastpos = $len - 1 ;	
-						header( sprintf("Content-Range: bytes %d-%d/%d", $offset, $lastpos, $fs ));
-						header( "HTTP/1.1 206 Partial Content" );						
+						if( $mp4preloadsize < $fs ) {
+							$len = $mp4preloadsize ;
+							$lastpos = $len - 1 ;	
+							header( sprintf("Content-Range: bytes %d-%d/%d", $offset, $lastpos, $fs ));
+							header( "HTTP/1.1 206 Partial Content" );								
+						}
 					}
 
 					if( $len>0 ) {

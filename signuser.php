@@ -3,8 +3,9 @@
 //   Load user info, create password hash
 // By Dennis Chen @ TME	 - 2013-05-15
 // Copyright 2013 Toronto MicroElectronics Inc.
-	
-require_once 'config.php' ;
+
+$noredir = 1 ;
+require_once 'session.php' ;
 
 // clean old session files
 $xt = time() ;
@@ -21,12 +22,6 @@ else {
    mkdir($session_path) ;
 }
 
-session_save_path( $session_path );
-session_name( $session_idname );
-session_start();
-	
-$_SESSION=array();
-
 header("Content-Type: application/json");
 
 $resp=array();
@@ -38,6 +33,8 @@ if( empty($conn) ) {
 	$resp['errormsg'] = "Database error!" ;
 	goto done;
 }
+
+unset($_SESSION['user']) ;
 
 // escaped string for SQL
 $esc_req=array();
@@ -79,6 +76,7 @@ if( $result=$conn->query($sql) ) {
 		$resp['keytype']=$_SESSION['keytype'] ;
 		$resp['nonce']=$_SESSION['nonce'] ;
 		$resp['res']=1 ;
+		session_write();
 	}
 	$result->free();
 }

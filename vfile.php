@@ -2,7 +2,6 @@
 // vfile.php - video file interface
 // By Dennis Chen @ TME	 - 2014-01-03
 // Copyright 2013 Toronto MicroElectronics Inc.
-require_once 'config.php' ;
 
 // debug string
 function debug_out( $ostr )

@@ -11,7 +11,7 @@
 // V2.5
 //    save to dashboard option file, only admin user allowed
 
-	require 'session.php' ;
+	require_once 'session.php' ;
 	require_once 'vfile.php' ;
 	header("Content-Type: application/json");
 	

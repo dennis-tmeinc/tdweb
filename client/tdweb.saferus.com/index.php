@@ -1,13 +1,11 @@
 <?php 
 $noredir = 1 ;
-require 'session.php' ;
-
-if( !empty($_SESSION['lastpage'])) {
-	header( 'Location: '.$_SESSION['lastpage'] ) ;
-}
-else {
-	header( 'Location: dashboard.php' ) ;
-}
+chdir( '../../' );
+include_once "session.php" ;
+$d = dirname( $_SERVER['REQUEST_URI']."x" );
+$_SESSION['clientid'] = basename( $d );
+session_write();
+header( 'Location: '.dirname( dirname( $d ) ).'/logon.php' ) ;
 ?><!DOCTYPE html>
 <html>
 <head>

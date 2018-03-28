@@ -3,28 +3,14 @@
 // By Dennis Chen @ TME	 - 2013-09-25
 // Copyright 2013 Toronto MicroElectronics Inc.
 
-require_once 'config.php' ;
+$noredir = 1 ;
+require_once 'session.php' ;
 require_once 'vfile.php' ;
-
-session_save_path( $session_path );
-session_name( $session_idname );
-@$sid=$_REQUEST[session_name()] ;
-if( !empty($sid) ) {
-	session_id ($sid);
-}
-session_start();
 
 $resp = array();
 $resp['error'] = 0 ;
 
-$xt = $_SERVER['REQUEST_TIME'];
-if( empty($_SESSION['user']) ||
-	empty($_SESSION['user_type']) ||
-	empty($_SESSION['xtime']) || 
-    $xt<$_SESSION['xtime'] ||
-	$xt>$_SESSION['xtime']+$session_timeout ||
-	empty($_SESSION['clientid']) ) 
-{
+if(	! $logon ) {
 	// error session
 	$resp['error']=101 ;
 	$resp['error_message'] = "Session error!" ;
@@ -33,30 +19,7 @@ if( empty($_SESSION['user']) ||
 	}
 }
 else {
-	$_SESSION['xtime']=$xt ;
-}
-
-session_write_close();
-
-// store one variable to session
-function session_save( $vname, $value )
-{
-	$fsess = fopen( session_save_path().'/sess_'.session_id(), 'r+' );
-	if( $fsess ) {
-		flock( $fsess, LOCK_EX ) ;		// exclusive lock
-		
-		$sess_str = fread( $fsess, 20000 );
-		session_decode ( $sess_str ) ;
-		$_SESSION[$vname] = $value ;
-		$sess_str = session_encode() ;
-		rewind( $fsess ) ;
-		fwrite( $fsess, $sess_str );
-		fflush( $fsess ) ;              // flush before releasing the lock
-		ftruncate( $fsess, ftell($fsess));
-
-		flock( $fsess, LOCK_UN ) ;		// unlock ;
-		fclose( $fsess );
-	}
+	$resp['error'] = 0 ;
 }
 
 // Get channel info from camera, and busname ( playtime in $chctx['ve'] )

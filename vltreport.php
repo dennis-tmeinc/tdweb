@@ -8,12 +8,11 @@
 // By Dennis Chen @ TME	 - 2013-11-21
 // Copyright 2013 Toronto MicroElectronics Inc.
 
+	$noupdatetime = 1 ;
     require 'session.php' ;
 	header("Content-Type: application/json");
 
 	if( $logon ) {
-		// recover old session time, to let live track page time out
-		session_save( 'xtime', $oldsessiontime );
 
 		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 	

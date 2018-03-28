@@ -9,43 +9,34 @@
 
 header("Content-Type: application/xml");
 
-$resp = new SimpleXMLElement('<tdwebc><status>Error</status></tdwebc>') ;
+$xmlresp = new SimpleXMLElement('<tdwebc><status>Error</status></tdwebc>') ;
 
 if( empty($_REQUEST['xml']) ) {
-	$resp->status="ErrorNoXML" ;
-	$resp->errormsg='No XML parameter!' ;
+	$xmlresp->status="ErrorNoXML" ;
+	$xmlresp->errormsg='No XML parameter!' ;
 	goto done ;
 }
 
 @$tdwebc = new SimpleXMLElement($_REQUEST['xml']) ;
 
 if( empty( $tdwebc->session ) ) {
-	$resp->status='ErrorXML' ;
-	$resp->errormsg='XML document error or session error';
+	$xmlresp->status='ErrorXML' ;
+	$xmlresp->errormsg='XML document error or session error';
 	goto done ;
 }
 
 $vltsession = $tdwebc->session ;
-$resp->session=$vltsession ;
+$xmlresp->session=$vltsession ;
 $ss = explode('-', $vltsession);
 
-require_once 'config.php' ;
+$session_id = $ss[0] ;
+$noredir = 1 ;
+require_once 'session.php' ;
 
-session_save_path( $session_path );
-session_name( $session_idname );
-session_id( $ss[0] );
-session_start();
-session_write_close();
-
-$xt = $_SERVER['REQUEST_TIME'];
-if( empty($_SESSION['user']) ||
-	empty($_SESSION['xtime']) || 
-	$xt>$_SESSION['xtime']+$session_timeout ||
-	empty($_SESSION['release'])	)
-{
+if( !$logon ) {
 	// session wrong
-	$resp->status='ErrorSessionEnd' ;
-	$resp->errormsg='Session not exist or expired.' ;
+	$xmlresp->status='ErrorSessionEnd' ;
+	$xmlresp->errormsg='Session not exist or expired.' ;
 	goto done ;
 }
 
@@ -55,7 +46,7 @@ if( empty($_SESSION['user']) ||
 if( empty($vltserialno) ) 
 	$vltserialno = '' ;		// no serial (generic)
 else 
- 	$resp->serialno = $tdwebc->serialno ;
+ 	$xmlresp->serialno = $tdwebc->serialno ;
 
 $mtime = time();	
 
@@ -75,22 +66,22 @@ if( $result=$conn->query($sql) ) {
 }
 
 if( empty( $listener ) ) {
-   	$resp->status='ErrorSessionEnd' ;
-	$resp->errormsg='Unexpected message.' ;
+   	$xmlresp->status='ErrorSessionEnd' ;
+	$xmlresp->errormsg='Unexpected message.' ;
 	goto done ;
 }
 
 if( empty($vltcommand) || $vltcommand < 1 || $vltcommand >200  ) {		// No command ?
-   	$resp->status='ErrorCommand' ;
-	$resp->errormsg='Wrong command value.' ;
+   	$xmlresp->status='ErrorCommand' ;
+	$xmlresp->errormsg='Wrong command value.' ;
 	goto done ;
 }
-$resp->command=$vltcommand ;
+$xmlresp->command=$vltcommand ;
 
 if( empty( $tdwebc->ack ) ) {
 	// an event ?
-	$resp->ack = '2' ;
-	$resp->reason = '0' ;
+	$xmlresp->ack = '2' ;
+	$xmlresp->reason = '0' ;
 }
 
 // append this message to table
@@ -106,8 +97,8 @@ if( !empty( $tdwebc->avlp ) ) {
 }
 
 // success
-$resp->status='OK' ;
+$xmlresp->status='OK' ;
 
 done:	
-	echo $resp->asXML() ;
+	echo $xmlresp->asXML() ;
 ?>
