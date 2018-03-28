@@ -19,14 +19,10 @@
 	if( $logon && !empty($webplay_support) ) {
 		$chmapname = 'chmap' ;
 		if( empty( $_REQUEST['index'] ) ) {
-			$channel = $_REQUEST['channel'] ;
 			// map channel number
-			if( !empty( $_REQUEST['vehicle_name'] ) ) {
-				$chmapname = 'chmap-' . $_REQUEST['vehicle_name'] ;
-				if( !empty($_SESSION[$chmapname] ) ) {
-					$channel = $_SESSION[$chmapname][$channel] ;
-				}
-			}
+			$chmapname = 'chmap-' . $_REQUEST['vehicle_name'] ;
+			$channel = $_REQUEST['channel'] ;
+			@$channel = $_SESSION[$chmapname][$channel] ;
 			
 			if( empty( $_REQUEST['dir'] ) ) {
 				$sql = "SELECT * FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = $channel AND (  `time_start` <= '$_REQUEST[time_start]' OR `time_end` >= '$_REQUEST[time_start]' ) LIMIT 100" ;
@@ -42,9 +38,12 @@
 			}
 		}
 		else {
+			unset( $_SESSION[$chmapname] );
 			$sql = "SELECT * FROM videoclip WHERE `index` = $_REQUEST[index] ;" ;
 		}
-		$resp['ser'] = $_REQUEST['ser'];
+		
+		if( !empty($_REQUEST['ser']) )
+			$resp['ser'] = $_REQUEST['ser'];
 
 		if($result=$conn->query($sql)) {
 			while( $row=$result->fetch_array() ) {
@@ -64,6 +63,7 @@
 		// detect total channel number
 		if( $resp['res'] == 1 ) {
 			if( empty($_SESSION[$chmapname] ) ) {
+				$chmapname = 'chmap-' . $resp['vehicle_name'] ;
 				$sql = "SELECT DISTINCT channel FROM videoclip WHERE `vehicle_name` = '$resp[vehicle_name]' ORDER BY channel " ;
 				$chmap = array();
 				if( $result = $conn->query($sql) ) {

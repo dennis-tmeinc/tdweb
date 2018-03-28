@@ -23,7 +23,14 @@ else {
 }
 
 // Get channel info from camera channel, and busname ( playtime in $chctx['ve'] )
-// channel context
+// parameter,
+//   
+//  chctx: channel context
+//   (input)
+//   hs: default file header size
+//   ve: previous video end time ( search time )
+//  channel: initial channel number (as in videoclip table)
+//  busname: bus (vehicle) name
 //   (input)
 //   hs: default file header size
 //   ve: previous video end time ( search time )
@@ -190,12 +197,7 @@ function videodata( &$chctx, &$data, &$vheaddata )
 // return channel number 
 function getChannel( $camera )
 {
-	$camera -= 1 ;
-	@$channel_map = $_SESSION['playlist']['channel_map'] ;
-	if( isset($channel_map[$camera]) ) {
-		return $channel_map[$camera] ;
-	}
-	return $camera ;
+	return $camera - 1 ;
 }
 
 if( !empty( $_REQUEST['serno'] ) ) {

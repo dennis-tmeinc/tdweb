@@ -29,7 +29,7 @@
 			$xml->company = $_SESSION['clientid'] ;
 		
 		$xml->session = $vltsession ;
-		$xml->serialno = $serialno ;
+		@$xml->serialno = $_REQUEST['vltserial'] ;
 		$xml->target->avl='' ;
 		$xml->avlp='' ;
 		$xml->command='9999' ; 		// AVL_AUTO_REPORT_CONF(26)
@@ -44,7 +44,7 @@
 			fwrite( $fvlt, "{}" );			// empty class
 	
 			ftruncate( $fvlt, ftell($fvlt) );
-			fflush( $flvt ) ;              	// flush before release the lock
+			fflush( $fvlt ) ;              	// flush before release the lock
 			flock( $fvlt, LOCK_UN ) ;		// unlock ;
 			fclose( $fvlt );
 		}

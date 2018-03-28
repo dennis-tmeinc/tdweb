@@ -38,7 +38,7 @@
 			fwrite( $fvlt, json_encode($vlt) );
 	
 			ftruncate( $fvlt, ftell($fvlt) );
-			fflush( $flvc ) ;              	// flush before release the lock
+			fflush( $fvlt ) ;              	// flush before release the lock
 			flock( $fvlt, LOCK_UN ) ;		// unlock ;
 			fclose( $fvlt );
 		}

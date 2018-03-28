@@ -113,7 +113,7 @@
 					$expires=24*3600;		// expired in 1 day
 					header('Cache-Control: public, max-age='.$expires);
 					$lastmodtime = gmdate('D, d M Y H:i:s ', $vstat['mtime']).'GMT';
-					$etag = hash('md5', $videofile.$fsize.$vstat['mtime'] );
+					$etag = hash('md5', $hash.$vstat['mtime'].$vstat['size'] );
 					header('Expires: '.gmdate('D, d M Y H:i:s ', $_SERVER['REQUEST_TIME']+$expires).'GMT');
 					if( (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH']==$etag ) ) {
 						header("HTTP/1.1 304 Not Modified");

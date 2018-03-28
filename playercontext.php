@@ -76,15 +76,21 @@ function playbackcontext( $index, $vehicle_name, $playtime )
 	}
 	
 	// find channels number
-	$channel_map = array();
 	$camera_number = 0 ;
+	$info['cameras'] = array( 
+		'available' => 0 ,
+		'channels' => array()
+			);
 	$sql = "SELECT DISTINCT channel FROM videoclip WHERE `vehicle_name` = '$info[name]' ORDER BY channel " ;
 	if( $result = $conn->query($sql) ) {
 		while( $row=$result->fetch_array() ) {
-			$channel_map[$camera_number] = $row[0] ;
-			$camera_number ++ ;
+			$camera_number = $row[0] + 1 ;
 			$camera_name = 'camera' . $camera_number ;
-			$info[$camera_name] = 'camera-' . ($row[0]+1) ;
+			$info[$camera_name] = 'camera-' . $camera_number ;
+
+			$n = $info['cameras']['available'];
+			$info['cameras']['channels'][$n] = $camera_number ;
+			$info['cameras']['available'] = $n+1 ;
 		}
 		$result->free();
 	}
@@ -92,7 +98,6 @@ function playbackcontext( $index, $vehicle_name, $playtime )
 
 	$playlist = array();
 	$playlist['info'] = $info ;
-	$playlist['channel_map'] = $channel_map ;
 	$_SESSION['playlist'] = $playlist;
 	
 	// default player sync time

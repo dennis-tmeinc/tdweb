@@ -87,7 +87,7 @@ function vfile_stat( $filename )
 	}
 	else {
 		// local file
-		$st = stat( $filename ); 
+		@$st = stat( $filename ); 
 		if( $st ) {
 			$st['type'] = filetype( $filename ) ;
 		}
@@ -237,7 +237,7 @@ function vfile_glob( $filename )
 	return false ;
 }
 
-function vfile_exec($cmd, &$output, &$ret)
+function vfile_exec($cmd, &$output = null, &$ret = null)
 {
 	if( vfile_remote() ) {
 		// remote file
