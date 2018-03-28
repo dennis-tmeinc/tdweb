@@ -24,6 +24,10 @@
 		$vltsession = session_id().'-'.$_REQUEST['vltpage'];
 	
 		$xml = new SimpleXMLElement('<tdwebc></tdwebc>') ;
+		// clientid support
+		if( !empty( $_SESSION['clientid'] ) )
+			$xml->company = $_SESSION['clientid'] ;
+		
 		$xml->session = $vltsession ;
 		$xml->serialno = $serialno ;
 		$xml->target->avl='' ;

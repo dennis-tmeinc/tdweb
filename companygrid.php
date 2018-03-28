@@ -60,9 +60,10 @@
 							if( !empty($companyinfo->ContactEmail) )
 								$row['cell'][3]=(string)$companyinfo->ContactEmail ; 
 						}
+						$resp['rows'][] = $row ;
 					}
 					
-					$resp['rows'][] = $row ;
+					//$resp['rows'][] = $row ;
 				}
 			}
 			if( count($resp['rows']) >= $_REQUEST['rows'] ) break ;

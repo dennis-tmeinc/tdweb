@@ -26,6 +26,9 @@
 		$cmd = '27' ;				// AVL_CURRENT_DATA_QUERY
 		
 		$xml = new SimpleXMLElement('<tdwebc></tdwebc>') ;
+		// clientid support
+		if( !empty( $_SESSION['clientid'] ) )
+			$xml->company = $_SESSION['clientid'] ;
 		$xml->callbackurl = $avlcbserver . dirname($_SERVER['REQUEST_URI']).'/' . $avlcbapp ;
 		$xml->session = $vltsession ;
 		$xml->serialno = $serialno ;

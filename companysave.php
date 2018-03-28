@@ -94,9 +94,12 @@
 			@mkdir(  $company_root  );
 		}
 
-		set_var( $cfgfile, "\$timezone", $_REQUEST['TimeZone'] );
-		set_var( $cfgfile, "\$map_area", $_REQUEST['MapArea'] );
-		set_var( $cfgfile, "\$session_timeout", $_REQUEST['SessionTimeout'] );
+		if( !empty($_REQUEST['TimeZone']) )
+			set_var( $cfgfile, "\$timezone", $_REQUEST['TimeZone'] );
+		if( !empty($_REQUEST['MapArea']) )
+			set_var( $cfgfile, "\$map_area", $_REQUEST['MapArea'] );
+		if( !empty($_REQUEST['SessionTimeout']) )
+			set_var( $cfgfile, "\$session_timeout", $_REQUEST['SessionTimeout'] );
 		
 		$companyinfo = new SimpleXMLElement( "<companyinfo></companyinfo>" );
 
@@ -119,7 +122,7 @@
 			
 			if( !empty($_REQUEST['NewCompany']) ) {
 				// create new company instance
-				if( !empty( $td_new ) && is_executable( $td_new ) ) {
+				if( !empty( $td_new ) ) {
 					// script execution : <script> <company id> <company root directory> <database name>
 					$cmd = $td_new." $_REQUEST[CompanyId] \"$company_root\" $_REQUEST[Database]" ;
 					@chdir( $company_root );

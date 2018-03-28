@@ -1,7 +1,10 @@
 <?php
 // vmqgrid.php - get video requests grid data
 // Requests:
-//		none
+//		rows:		rows per page
+//		page:		page number, start from 1
+//		sidx:		sort field
+//		sord:		sort order
 // Return:
 //      JSON array of video requests
 // By Dennis Chen @ TME	 - 2013-06-15
@@ -33,15 +36,29 @@
 			$grid['page']=$grid['total'] ;
 		}		
 		$start = $_REQUEST['rows'] * ($grid['page']-1) ;
-			
-		$sql="SELECT  vmq_id, vmq_vehicle_name, vmq_start_time, TIMEDIFF( `vmq_end_time`, `vmq_start_time`) AS duration, vmq_comp, vmq_ins_user_name, vmq_description FROM vmq ORDER BY $_REQUEST[sidx] $_REQUEST[sord] LIMIT $start, $_REQUEST[rows] ;";
+
+		$sql="SELECT  vmq_id, vmq_vehicle_name, vmq_start_time, TIMEDIFF( `vmq_end_time`, `vmq_start_time`) AS duration, vmq_comp, vmq_ins_user_name, vmq_description, vmq_end_time FROM vmq ORDER BY $_REQUEST[sidx] $_REQUEST[sord] LIMIT $start, $_REQUEST[rows] ;";
 		if( $result=$conn->query($sql) )
 		while( $row=$result->fetch_array() ) {
+			$rstatus = "Pending" ;
+			if( $row[4] != 0 ) {
+				$rstatus = "Requested" ;
+				// check if video available
+				$xsql = "SELECT count(*) FROM `videoclip` WHERE `vehicle_name`='$row[1]' AND `time_start` <= '$row[7]' AND `time_end` >= '$row[2]' ;" ;
+				if( $xresult=$conn->query($xsql) ) {
+					$xrow = $xresult->fetch_array( MYSQLI_NUM ) ;
+					if( $xrow && $xrow[0] > 0 ) {
+						$rstatus = "Completed" ;
+					}
+					$xresult->free();
+				}
+			}
 			$grid['rows'][] = array(
 					"id" => $row[0],
 					"cell" => array( 
-						$row[1], $row[2], $row[3], (($row[4]==0)?"Pending":"Completed"), $row[5], $row[6] 
-					) );
+						$row[1], $row[2], $row[3], $rstatus, $row[5], $row[6] 
+					)
+					);
 		}
 		echo json_encode( $grid );
 

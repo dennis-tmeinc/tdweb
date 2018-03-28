@@ -103,7 +103,11 @@ $("#vehicle_list").jqGrid({
       {name:'alerts', index:'alerts', width:140, sortable: true }, 
       {name:'status', index:'status', width:80, sortable: true }
     ],
-	rownumbers: true
+	rownumbers: true,
+	onSelectRow: function(id){ 
+		var vname = $("#vehicle_list").jqGrid('getCell',id, 1) ;
+		showHistory( vname );
+	}
 });
 
 function load_vehiclelist()
@@ -150,7 +154,6 @@ function load_dashboard()
 load_dashboard();		
 //setInterval(load_dashboard,300000);
 
-
 $("#list_Vehicles_In_Service").jqGrid({        
 	scroll: true,
 	datatype: "local",
@@ -160,7 +163,11 @@ $("#list_Vehicles_In_Service").jqGrid({
 	colModel :[ 
 	  {name:'vehicle_name', width:180, sortable: true }
 	],
-	rownumbers: true
+	rownumbers: true,
+	onSelectRow: function(id){ 
+		var vname = $("#list_Vehicles_In_Service").jqGrid('getCell',id, 1) ;
+		showHistory( vname );
+	}
 });
 
 $("#list_Vehicles_Checkedin_day").jqGrid({        
@@ -178,7 +185,11 @@ $("#list_Vehicles_Checkedin_day").jqGrid({
 	sortname: "de_datetime",
 	sortorder: "desc",
 	rownumbers: true,
-	rownumWidth: 50
+	rownumWidth: 50,
+	onSelectRow: function(id){ 
+		var vname = $("#list_Vehicles_Checkedin_day").jqGrid('getCell',id, 1) ;
+		showHistory( vname );
+	}	
 });
 
 $("#list_Vehicles_Uploaded_day").jqGrid({        
@@ -191,7 +202,11 @@ $("#list_Vehicles_Uploaded_day").jqGrid({
 	  {name:'vehicle_name', width:180, sortable: true }, 
 	  {name:'time_upload', width:180, sortable: true } 
 	],
-	rownumbers: true
+	rownumbers: true,
+	onSelectRow: function(id){ 
+		var vname = $("#list_Vehicles_Uploaded_day").jqGrid('getCell',id, 1) ;
+		showHistory( vname );
+	}
 });
 
 $("#list_marked_events").jqGrid({        
@@ -204,7 +219,11 @@ $("#list_marked_events").jqGrid({
 	  {name:'vl_vehicle_name', width:180, sortable: true }, 
 	  {name:'vl_datetime', width:180, sortable: true } 
 	],
-	rownumbers: true
+	rownumbers: true,
+	onSelectRow: function(id){ 
+		var vname = $("#list_marked_events").jqGrid('getCell',id, 1) ;
+		showHistory( vname );
+	}
 });
 
 $("#list_system_alerts").jqGrid({        
@@ -219,14 +238,38 @@ $("#list_system_alerts").jqGrid({
 	  {name:'alert_code', width:100, sortable: true }, 
 	  {name:'date_time', width:180, sortable: true } 
 	],
-	rownumbers: true
+	rownumbers: true,
+	onSelectRow: function(id){ 
+		var vname = $("#list_system_alerts").jqGrid('getCell',id, 1) ;
+		showHistory( vname );
+	}
 });	
 
-$("div#diaglog_list").dialog({
+$("#list_alert_history").jqGrid({        
+	scroll: true,
+	url:'dashboardalerthistorygrid.php',
+	datatype: "json",	
+	height: 240,
+	width: 600,
+	colNames:['Vehicle Name','Description', 'Alert Code', 'Alert Time'],
+	colModel :[ 
+	  {name:'dvr_name', width:120, sortable: false, }, 
+	  {name:'description', width:300, sortable: false }, 
+	  {name:'alert_code', width:130, sortable: false }, 
+	  {name:'date_time', width:180, sortable: true } 
+	],
+	sortname: 'date_time',
+    sortorder: 'desc',
+	rownumbers: true
+});	  
+
+$("div#diaglog_alert_history").dialog({
 	autoOpen: false,
 	width:"auto",
 	modal: true,
-
+	open: function( event, ui ) {
+		$("#list_alert_history").trigger("reloadGrid");
+	},
 	buttons:{
 		"Close": function() {
 			$( this ).dialog( "close" );
@@ -234,15 +277,61 @@ $("div#diaglog_list").dialog({
 	}
 });
 
+function showHistory( vname )
+{
+	$("#list_alert_history").setGridParam( {url: "dashboardalerthistorygrid.php?vehicle="+vname, page: 1} );
+	$("div#diaglog_alert_history").dialog("option", {title:"Alert History : "+vname });
+	$("div#diaglog_alert_history").dialog("open");
+}
+
+
+var dialogid = '';
+var selectedvehicle = "";
+
+$("div#diaglog_list").dialog({
+	autoOpen: false,
+	width:"auto",
+	modal: true,
+	buttons:{
+		"Close": function() {
+			$( this ).dialog( "close" );
+		}
+	}
+});
 
 $(".sum_circle").click(function(){
-	var id = $(this).attr("id") ;
+	dialogid = $(this).attr("id") ;
 	$(".listgrid").hide();
-	$("div.listgrid#"+id+"_list_d").show();
-	$("div#diaglog_list").dialog("option", {title:$("div.listgrid#"+id+"_list_d").attr("title") });
+	
+	$("div.listgrid#"+dialogid).show();
+	$("div#diaglog_list").dialog("option", {title:$("div.listgrid#"+dialogid).attr("title") });
 	$("div#diaglog_list").dialog("open");
 					
 });
+
+$("td.system_alert").click(function(){
+	$(".listgrid").hide();
+	$("div.listgrid#system_alerts").show();
+
+	$("div#diaglog_list").dialog("option", {title:"System Alerts" });
+	$("div#diaglog_list").dialog("open");
+});
+
+$( "#status_type" ).buttonset();
+
+$( "input[name='status_type']" ).change(function() {
+	if( $( "input#status_simple" ).prop("checked") ) {
+		$("div#summary_simple").show("slow");
+		$("div#summary_advance").hide("slow");
+	}
+	else {
+		$("div#summary_simple").hide("slow");
+		$("div#summary_advance").show("slow");
+	}
+}).change();
+
+$("div#summary_advance").hide();
+
 		
 $("#rcontainer").show('slow');	
 });
@@ -326,26 +415,71 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 </div>
 
 <div id="diaglog_list" >
-<div  class="listgrid"  id="Vehicles_In_Service_list_d" title="Vehicles In-Service" >
+<div  class="listgrid"  id="Vehicles_In_Service" title="Vehicles In-Service" >
 <table id="list_Vehicles_In_Service"></table> 
 </div>
-<div class="listgrid" id="Vehicles_Checkedin_day_list_d" title="Vehicles Checked-In" >
+<div class="listgrid" id="Vehicles_Checkedin_day" title="Vehicles Checked-In" >
 <table id="list_Vehicles_Checkedin_day"></table> 
 </div>
-<div class="listgrid" id="Vehicles_Uploaded_day_list_d" title="Vehicles Uploaded" >
+<div class="listgrid" id="Vehicles_Uploaded_day" title="Vehicles Uploaded" >
 <table id="list_Vehicles_Uploaded_day"></table> 
 </div>
-<div class="listgrid" id="marked_events_list_d" title="Marked Events" >
+<div class="listgrid" id="marked_events" title="Marked Events" >
 <table id="list_marked_events"></table> 
 </div>
-<div class="listgrid"  id="system_alerts_list_d" title="System Alerts" >
+<div class="listgrid"  id="system_alerts" title="System Alerts" >
 <table id="list_system_alerts"></table> 
 </div>
 </div>
+<div id="diaglog_alert_history">
+<table id="list_alert_history"></table> 
+</div>
 
-<h4><?php echo $title_type; ?>Status Summary</h4>
 
-<div>
+<h4><?php echo $title_type; ?>Status Summary</h4> 
+
+<form>
+<div id="status_type">
+<input type="radio" id="status_simple" name="status_type" checked="checked"/><label for="status_simple">Simple</label>
+<input type="radio" id="status_advanced" name="status_type" /><label for="status_advanced">Advanced</label>
+</div>
+</form>
+
+<div id="summary_simple">
+<table border="1" class="summarytable" id="summary_table">
+	<thead style="font-size:22px;">
+		<tr>
+			<th scope="col">&nbsp;</th>
+			<th scope="col"><?php echo $day_title; ?></th>
+			<th scope="col">Average (day)</th>
+		</tr>
+	</thead>
+	<tbody style="font-size:20px;" >
+		<tr>
+			<td class="system_alert" >Connection Alerts</td>
+			<td class="system_alert" style="text-align: right; background-color: rgb(204, 255, 255);" id="Connection_Alerts_day" ></td>
+			<td class="system_alert" style="text-align: right; background-color: rgb(255, 204, 255);" id="Connection_Alerts_avg" ></td>
+		</tr>
+		<tr>
+			<td class="system_alert" >Camera Alerts</td>
+			<td class="system_alert" style="text-align: right; background-color: rgb(204, 255, 255);" id="Camera_Alerts_day" ></td>
+			<td class="system_alert" style="text-align: right; background-color: rgb(255, 204, 255);" id="Camera_Alerts_avg" ></td>
+		</tr>
+		<tr>
+			<td class="system_alert" >Recording Alerts</td>
+			<td class="system_alert" style="text-align: right; background-color: rgb(204, 255, 255);" id="Recording_Alerts_day"></td>
+			<td class="system_alert" style="text-align: right; background-color: rgb(255, 204, 255);" id="Recording_Alerts_avg"></td>
+		</tr>
+		<tr>
+			<td class="system_alert" >System Reset Alerts</td>
+			<td class="system_alert" style="text-align: right; background-color: rgb(204, 255, 255);" id="System_Reset_Alerts_day"></td>
+			<td class="system_alert" style="text-align: right; background-color: rgb(255, 204, 255);" id="System_Reset_Alerts_avg"></td>
+		</tr>
+	</tbody>
+</table>
+</div>
+
+<div id="summary_advance">
 <table border="1" class="summarytable" id="summary_table">
 	<thead>
 		<tr>
@@ -369,63 +503,69 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 	</thead>
 	<tbody>
 		<tr>
-			<td><span style="font-size:12px;">Operating Hours</span></td>
+			<td style="font-size:12px;">Operating Hours</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Operating_Hours_day" ></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Operating_Hours_avg" ></td>
-			<td><span style="font-size:12px;">Connection Alerts</span></td>
-			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Connection_Alerts_day" ></td>
-			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Connection_Alerts_avg" ></td>
+			<td class="system_alert" style="font-size:12px;">Connection Alerts</td>
+			<td class="system_alert" style="text-align: right; background-color: rgb(204, 255, 255);" id="Connection_Alerts_day" ></td>
+			<td class="system_alert" style="text-align: right; background-color: rgb(255, 204, 255);" id="Connection_Alerts_avg" ></td>
 		</tr>
 		<tr>
-			<td><span style="font-size:12px;">Distance Travelled</span></td>
+			<td style="font-size:12px;">Distance Travelled</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Distance_Travelled_day" ></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Distance_Travelled_avg" ></td>
-			<td><span style="font-size:12px;">Camera Alerts</span></td>
-			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Camera_Alerts_day" ></td>
-			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Camera_Alerts_avg" ></td>
+			<td class="system_alert" style="font-size:12px;">Camera Alerts</td>
+			<td class="system_alert" style="text-align: right; background-color: rgb(204, 255, 255);" id="Camera_Alerts_day" ></td>
+			<td class="system_alert" style="text-align: right; background-color: rgb(255, 204, 255);" id="Camera_Alerts_avg" ></td>
 		</tr>
 		<tr>
-			<td><span style="font-size:12px;">Vehicles Checked-In</span></td>
+			<td style="font-size:12px;">Vehicles Checked-In</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Vehicles_Checkedin_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Vehicles_Checkedin_avg"></td>
-			<td><span style="font-size:12px;">Recording Alerts</span></td>
-			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Recording_Alerts_day"></td>
-			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Recording_Alerts_avg"></td>
+			<td class="system_alert" style="font-size:12px;">Recording Alerts</td>
+			<td class="system_alert" style="text-align: right; background-color: rgb(204, 255, 255);" id="Recording_Alerts_day"></td>
+			<td class="system_alert" style="text-align: right; background-color: rgb(255, 204, 255);" id="Recording_Alerts_avg"></td>
 		</tr>
 		<tr>
-			<td><span style="font-size:12px;">Vehicles Uploaded</span></td>
+			<td style="font-size:12px;">Vehicles Uploaded</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Vehicles_Uploaded_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Vehicles_Uploaded_avg"></td>
-			<td><span style="font-size:12px;">High Temperature Alerts</span></td>
+			<td class="system_alert" style="font-size:12px;">System Reset Alerts</td>
+			<td class="system_alert" style="text-align: right; background-color: rgb(204, 255, 255);" id="System_Reset_Alerts_day"></td>
+			<td class="system_alert" style="text-align: right; background-color: rgb(255, 204, 255);" id="System_Reset_Alerts_avg"></td>
+		</tr>
+		<tr>
+			<td style="font-size:12px;">Hours Of Video</td>
+			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Hours_Of_Video_day"></td>
+			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Hours_Of_Video_avg"></td>
+			<td style="font-size:12px;">High Temperature Alerts</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Fan_Filter_Alerts_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Fan_Filter_Alerts_avg"></td>
 		</tr>
 		<tr>
-			<td><span style="font-size:12px;">Hours Of Video</span></td>
-			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Hours_Of_Video_day"></td>
-			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Hours_Of_Video_avg"></td>
-			<td><span style="font-size:12px;">Idling Alerts</span></td>
+			<td style="font-size:12px;">Total Video Clips</td>
+			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Total_Video_Clips_day"></td>
+			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Total_Video_Clips_avg"></td>
+			<td style="font-size:12px;">Idling Alerts</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Idling_Alerts_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Idling_Alerts_avg"></td>
 		</tr>
 		<tr>
-			<td><span style="font-size:12px;">Total Video Clips</span></td>
-			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Total_Video_Clips_day"></td>
-			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Total_Video_Clips_avg"></td>
-			<td><span style="font-size:12px;">G-Force Alerts</span></td>
+			<td style="font-size:12px;">G-Force Alerts</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="GForce_Alerts_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="GForce_Alerts_avg"></td>
+			<td style="font-size:12px;"></td>
+			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="NNDEF_Alerts_day"></td>
+			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="UNDEF_Alerts_day"></td>
 		</tr>
 	</tbody>
 </table>
-</div>
 
 <h4>Vehicle Status List</h4>
 <div>
 <table id="vehicle_list"></table> 
 </div>
-
-<p>&nbsp;</p>
+</div>
 
 </div>
 <!-- workarea --></div>
@@ -442,5 +582,6 @@ echo date("Y-m-d H:i") ;
 <p style="text-align: right;"><span style="font-size:11px;"><a href="http://www.247securityinc.com/" style="text-decoration:none;">247 Security Inc.</a></span></p>
 </div>
 </div>
+
 </body>
 </html>

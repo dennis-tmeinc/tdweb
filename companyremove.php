@@ -32,20 +32,20 @@
 	if( $_SESSION['superadmin'] && !empty($_REQUEST['id']) ) {
 
 		$cfgfile = "client/".$_REQUEST['id']."/config.php" ;
+
 		$company_root = get_var( $cfgfile, "\$company_root" ) ;
 		$database = get_var( $cfgfile, "\$smart_database" ) ;
-		if( $company_root && $database && !empty( $td_clean ) && is_executable( $td_clean ) ) {
+		if( $company_root && $database && !empty( $td_clean ) ) {
 			// script execution : <script> <company id> <company root directory> <database name>
 			$cmd = $td_clean." $_REQUEST[id] \"$company_root\" $database" ;
-			@chdir( $company_root );
 			exec( $cmd );
 			@unlink( $company_root."/companyinfo.xml" ) ;
-			@unlink( $company_root ) ;
+			@rmdir( $company_root ) ;
+
+			@unlink( $cfgfile ) ;
+			@rmdir( "client/".$_REQUEST['id'] );
 		}
-	
-		@unlink( $cfgfile ) ;
-		@unlink( $cfgfile = "client/".$_REQUEST['id'] );
-		
+			
 		// may need to do more cleaning on company root directory and database
 		$resp['errormsg']='success' ;
 		$resp['res'] = 1 ;

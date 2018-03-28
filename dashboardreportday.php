@@ -273,6 +273,25 @@
 			$result->free();
 		}
 
+		// System Reset Alerts
+		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = 8 AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['System_Reset_Alerts_day']=$row[0] ;
+			}
+			$result->free();
+		}
+
+		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = 8 AND date_time BETWEEN  '$date_avg' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['System_Reset_Alerts_avg']=round( ($row[0])/($dashboard_option['nAverageDuration']), 2) ;
+			}
+			$result->free();
+		}
+		
 		// High Temperature Alerts
 		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = 2 AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
 		$result=$conn->query($sql);

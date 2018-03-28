@@ -46,6 +46,11 @@
 		$cmd = '23' ;				// AVL_DVR_LIST
 		
 		$xml = new SimpleXMLElement('<tdwebc></tdwebc>') ;
+
+		// clientid support
+		if( !empty( $_SESSION['clientid'] ) )
+			$xml->company = $_SESSION['clientid'] ;
+		
 		$xml->callbackurl = $avlcbserver . dirname($_SERVER['REQUEST_URI']).'/' . $avlcbapp ;
 		$xml->session = $vltsession ;
 		$xml->serialno = $serialno ;

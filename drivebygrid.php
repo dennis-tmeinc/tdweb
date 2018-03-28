@@ -102,7 +102,7 @@
 				$resp['rows'][] = $cell ; 
 			}
 			$result->free();
-		}			
+		}
 	}
 	echo json_encode($resp);
 ?>
