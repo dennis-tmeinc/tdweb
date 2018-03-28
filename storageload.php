@@ -33,13 +33,22 @@
 		
 		$result=array();
 		$ret=-1 ;
-		ex("reg query HKLM\\Software\\tme\\touchdown",$result,$ret);
-		if( $ret != 0 ) {
-			$result=array();
-			$ret=-1 ;		
-			// query on 64 bit OS
-			ex("reg query HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown",$result,$ret);
+		
+		if( empty($stroage_regkey) ) {
+			ex("reg query HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown", $result, $ret);
+			if( $ret == 0 ) {
+				// 64bit OS
+				$stroage_regkey = "HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown" ;
+			}
+			else {
+				// 32bit OS
+				$stroage_regkey = "HKLM\\SOFTWARE\\tme\\touchdown" ;
+			}
 		}
+		
+		if( $ret!=0 )
+			ex("reg query $stroage_regkey",$result,$ret);
+			
 		if( $ret == 0 ) {	// success
 			for($i=0; $i<count($result); $i++) {
 				$keys=explode("REG_SZ",$result[$i],2);

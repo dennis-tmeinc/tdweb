@@ -1,10 +1,7 @@
 <?php
 // vltliveview.php - generate a video play back list file for live track live view
 // Request:
-//      dvrid : dvr name (bus name)
-//      ip : dvr ip address
-//      phone : dvr mobile phone #
-//      type : dvr type
+//      info : json encoded dvr info 
 // Return:
 //      .dpl file , contain JSON contents
 // By Dennis Chen @ TME	 - 2013-11-21
@@ -35,8 +32,10 @@
 			}
 
 			$server = array();
-			$server['protocol'] = "dvr" ;
-			$server['host'] = $req['ip'] ;
+			$server['protocol'] = "dvr" ;		// this default protocol
+			if( !empty( $req['ip'] ) ) {
+				$server['host'] = $req['ip'] ;
+			}
 			
 			if( !empty( $liveplay_protocol ) ) {
 				$server['protocol'] = $liveplay_protocol ;
@@ -45,6 +44,12 @@
 				}
 				if( !empty( $liveplay_port ) ) {
 					$server['port'] = $liveplay_port ;
+				}				
+				if( $server['protocol'] == "relay" ) {
+					$info['support_relay'] = 1 ;
+					if( empty( $server['host'] ) ) {
+						$server['host'] = file_get_contents("http://myip.dtdns.com/");
+					}
 				}
 			}
 			

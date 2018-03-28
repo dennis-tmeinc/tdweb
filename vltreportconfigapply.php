@@ -6,7 +6,7 @@
 //      vlt_... : vlt fields
 // Return:
 //      JSON object
-// By Dennis Chen @ TME	 - 2013-11-13
+// By Dennis Chen @ TME	 - 2013-04-08
 // Copyright 2013 Toronto MicroElectronics Inc.
 
     require 'session.php' ;
@@ -14,18 +14,9 @@
 
 	if( $logon ) {
 		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-		// escaped string for SQL
-		$esc_req=array();
-		foreach( $_REQUEST as $key => $value )
-		{
-			$esc_req[$key]=$conn->escape_string($value);
-		}
-		
+
 		$vltsession = session_id().'-'.$_REQUEST['vltpage'];
 		
-		$mtime = time();
-		$vdata = $conn->escape_string(json_encode( $_REQUEST )); 
-
 		$repcfg = array();
 		$vlt_gpio = '' ;
 		for( $io=0 ;$io<32; $io++ ) {
@@ -70,13 +61,32 @@
 			$vehicles = $_REQUEST['vlt_vehicle'] ;
 		}
 		
-		$vdata = $conn->escape_string(json_encode( $repcfg ));
-		foreach( $vehicles as $vehicle ) {
-			$sql = "DELETE FROM `_tmp_tdweb` WHERE `vname` = 'vltrepcfg' AND `user` = '$vehicle' AND `session` = '$vltsession' ; " ;
-			$conn->query($sql) ;
-			$sql = "INSERT INTO `_tmp_tdweb` (`vname`, `mtime`, `user`, `session`, `vdata` ) VALUES ( 'vltrepcfg', '$mtime', '$vehicle', '$vltsession', '$vdata' ) ;";
-			$conn->query($sql) ;
+		// vlt session file
+		$fvlt = fopen( session_save_path().'/sess_vlt_'.$vltsession, "r+" );
+		if( $fvlt ) {
+			flock( $fvlt, LOCK_EX ) ;		// exclusive lock
+			
+			@$vlt = json_decode( fread( $fvlt, 256000 ), true );
+			if(!empty( $vlt['run'] ) ) {
+				if( empty( $vlt['cfg'] ) ) {
+					$vlt['cfg'] = array() ;
+				}
+				
+				foreach( $vehicles as $vehicle ) {
+					$vlt['cfg'][$vehicle] = $repcfg ;
+				}
+
+				fseek( $fvlt, 0, SEEK_SET );
+				fwrite( $fvlt, json_encode($vlt) );
+		
+				ftruncate( $fvlt, ftell($fvlt) );
+				fflush( $flvt ) ;              	// flush before release the lock
+			}
+			
+			flock( $fvlt, LOCK_UN );
+			fclose( $fvlt );
 		}
+
 		$resp['res'] = 1 ;
 
 	}

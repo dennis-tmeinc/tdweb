@@ -4,7 +4,7 @@
 //      xml: xml document of AVL protocol
 // Return:
 //      xml document composed of AVL protocol
-// By Dennis Chen @ TME	 - 2013-11-18
+// By Dennis Chen @ TME	 - 2014-04-08
 // Copyright 2013 Toronto MicroElectronics Inc.
 
 header("Content-Type: application/xml");
@@ -50,27 +50,6 @@ else
 
 $mtime = time();	
 
-// database
-@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-
-// look for vlt event listener
-$ltime = $mtime - 800 ;
-$sql = "SELECT * FROM `_tmp_tdweb` WHERE `vname` = 'vltlistener' AND `session` = '$vltsession' AND `mtime` > $ltime ;" ;
-
-$listener = array();
-if( $result=$conn->query($sql) ) {
-	if( $row=$result->fetch_array() ) {
-		$listener = $row['vdata'] ;
-	}
-	$result->free();
-}
-
-if( empty( $listener ) ) {
-   	$xmlresp->status='ErrorSessionEnd' ;
-	$xmlresp->errormsg='Unexpected message.' ;
-	goto done ;
-}
-
 if( empty($vltcommand) || $vltcommand < 1 || $vltcommand >200  ) {		// No command ?
    	$xmlresp->status='ErrorCommand' ;
 	$xmlresp->errormsg='Wrong command value.' ;
@@ -86,18 +65,37 @@ if( empty( $tdwebc->ack ) ) {
 
 // append this message to table
 if( !empty( $tdwebc->avlp ) ) {
-	$vdata = $conn->escape_string(json_encode( $tdwebc ));
-	$sql = "INSERT INTO `_tmp_tdweb` (`vname`, `mtime`, `user`, `session`, `vdata` ) VALUES ( 'vltevent', '$mtime', '$_SESSION[user]', '$vltsession', '$vdata' ) ;";
-	$conn->query($sql) ;
-	$sevent = stream_socket_client("udp://127.255.255.255:56328");
-	if( $sevent ) {
-		fwrite($sevent,"avlp");
-		fclose($sevent);
+
+	// look for vlt event listener
+	$fvlt = fopen( session_save_path().'/sess_vlt_'.$vltsession, "r+" );
+	if( $fvlt ) {
+		flock( $fvlt, LOCK_EX ) ;		// exclusive lock
+		
+		@$vlt = json_decode( fread( $fvlt, 256000 ), true );
+		
+		if( empty( $vlt['run'] ) ) {
+			// session wrong
+			$xmlresp->status='ErrorSessionEnd' ;
+			$xmlresp->errormsg='Session not exist or expired.' ;
+		}
+		else {
+			if( empty( $vlt['events'] ) ) {
+				$vlt['events'] = array();
+			}
+			$vlt['events'][] = $tdwebc ;
+			
+			fseek( $fvlt, 0, SEEK_SET );
+			fwrite( $fvlt, json_encode( $vlt ) );
+			$xmlresp->status='OK' ;
+						
+			ftruncate( $fvlt, ftell( $fvlt ) );
+			fflush( $fvlt );
+		}
+			
+		flock( $fvlt, LOCK_UN );
+		fclose( $fvlt );
 	}
 }
-
-// success
-$xmlresp->status='OK' ;
 
 done:	
 	echo $xmlresp->asXML() ;

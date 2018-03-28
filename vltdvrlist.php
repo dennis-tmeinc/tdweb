@@ -14,17 +14,6 @@
 	if( $logon ) {
 		
 		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-		
-		// create a temporary table for vlt
-		$sql = "CREATE TABLE IF NOT EXISTS `_tmp_tdweb` (
-			`vname`   varchar(20) NOT NULL,
-			`mtime` int NOT NULL,
-			`user` varchar (40) DEFAULT NULL,
-			`session` varchar(80) DEFAULT NULL,
-			`vdata` varchar(10000) DEFAULT NULL
-		) ENGINE = MEMORY ; " ;
-
-		$conn->query($sql) ;
 				
 		$vltsession = session_id().'-'.$_REQUEST['vltpage'];
 
@@ -36,11 +25,23 @@
 			$resp['vltserial'] = $_REQUEST['vltserial'] ;
 		}
 		
-		// wait for avl events
 		$mtime = time();
 
-		$sql = "INSERT INTO `_tmp_tdweb` ( `vname`, `mtime`, `user`, `session`, `vdata` ) VALUES ('vltlistener', '$mtime', '$_SESSION[user]', '$vltsession', '1' ); ";
-		$conn->query($sql) ;
+		// create vlt session file
+		$fvlt = fopen( session_save_path().'/sess_vlt_'.$vltsession, "c" );
+		if( $fvlt ) {
+			flock( $fvlt, LOCK_EX ) ;		// exclusive lock
+
+			$vlt = array();
+			$vlt['run'] = 1 ;
+			
+			fwrite( $fvlt, json_encode($vlt) );
+	
+			ftruncate( $fvlt, ftell($fvlt) );
+			fflush( $flvc ) ;              	// flush before release the lock
+			flock( $fvlt, LOCK_UN ) ;		// unlock ;
+			fclose( $fvlt );
+		}
 		
 		$cmd = '23' ;				// AVL_DVR_LIST
 		
@@ -85,14 +86,10 @@
 			goto done ;
 		}
 	
-	
 		if( strcasecmp( $resp['status'], 'OK' )==0 ) {
 			if( !empty( $tdwebc->avlp ) ) {
-				$vdata = $conn->escape_string(json_encode( $tdwebc ));
-				$sql = "INSERT INTO `_tmp_tdweb` (`vname`, `mtime`, `user`, `session`, `vdata` ) VALUES ( 'vltevent', '$mtime', '$_SESSION[user]', '$vltsession', '$vdata' );";
-				$conn->query($sql) ;
-				//$resp['tdwebc'] = array();
-				//$resp['tdwebc'][] = $tdwebc ;
+				$resp['tdwebc'] = array();
+				$resp['tdwebc'][] = $tdwebc ;
 			}
 			else {
 				$resp['errormsg'] = "Empty data.";
@@ -102,10 +99,11 @@
 			$resp['errormsg'] = "Data pending.";
 		}
 		$resp['res'] = 1 ;
+		
+done:
+		$conn->close();
+			
 	}
-	
-	$conn->close();
-	
-done:	
+
 	echo json_encode($resp);
 ?>

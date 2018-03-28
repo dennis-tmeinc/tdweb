@@ -13,9 +13,7 @@
 	header("Content-Type: application/json");
 
 	if( $logon ) {
-		
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-				
+
 		$vltsession = session_id().'-'.$_REQUEST['vltpage'];
 
 		if( empty($_REQUEST['vltserial'])) {
@@ -68,14 +66,8 @@
 			
 				$resp['errormsg'] = "No error!";
 				
-			
-				$vdata = $conn->escape_string(json_encode( $tdwebc ));
-				$resp['vdata'] = $vdata;
-				
-				$sql = "INSERT INTO `_tmp_tdweb` (`vname`, `mtime`, `user`, `session`, `vdata` ) VALUES ( 'vltevent', '$xt', '$_SESSION[user]', '$vltsession', '$vdata' );";
-				$conn->query($sql) ;
-				//$resp['tdwebc'] = array();
-				//$resp['tdwebc'][] = $tdwebc ;
+				$resp['tdwebc'] = array();
+				$resp['tdwebc'][] = $tdwebc ;
 			}
 			else {
 				$resp['errormsg'] = "Empty data.";
@@ -86,8 +78,6 @@
 		}
 		$resp['res'] = 1 ;
 	}
-	
-	$conn->close();
 	
 done:	
 	echo json_encode($resp);

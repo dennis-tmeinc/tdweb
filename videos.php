@@ -219,7 +219,7 @@ function webplay_settitle()
 	var dt = clipinfo.time_start.split(" "); 
 	var d = dt[0].split("-");
 	var t = dt[1].split(":");
-	var dt = new Date( d[0], d[1], d[2], t[0], t[1], t[2], 0 );
+	var dt = new Date( d[0], d[1]-1, d[2], t[0], t[1], t[2], 0 );
 	var start_time = dt.getTime() ;
 	
 	var dt = new Date( start_time + webplay_playtime * 1000 ) ;

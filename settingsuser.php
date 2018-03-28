@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html>
-<head><?php 
+<head><?php
 require 'session.php'; 
 
 // remember settings sub page

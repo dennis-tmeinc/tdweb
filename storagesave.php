@@ -49,16 +49,19 @@
 						$value .= "\\" ;
 					}
 					
-					ex("reg query HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown", $result, $ret);
+					if( empty($stroage_regkey) ) {
+						ex("reg query HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown", $result, $ret);
+						if( $ret == 0 ) {
+							// 64bit OS
+							$stroage_regkey = "HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown" ;
+						}
+						else {
+							// 32bit OS
+							$stroage_regkey = "HKLM\\SOFTWARE\\tme\\touchdown" ;
+						}
+					}
 					
-					if( $ret == 0 ) {
-						// 64bit OS?
-						ex( "reg ADD HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown /v $key /f /d " . escapeshellarg( $value ));
-					}
-					else {
-						// 32bit OS?
-						ex( "reg ADD HKLM\\SOFTWARE\\tme\\touchdown /v $key /f /d " . escapeshellarg( $value ));
-					}
+					ex( "reg ADD $stroage_regkey /v $key /f /d " . escapeshellarg( $value ));
 					
 				}
 			}

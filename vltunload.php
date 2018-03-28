@@ -12,30 +12,16 @@
 	header("Content-Type: application/json");
 
 	if( $logon ) {
+		$resp['res'] = 1 ;
 		
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-				
+		// response to browser first
+		$content = json_encode($resp);
+		header( "Content-Length: ".strlen($content) );
+		echo $content ;
+		ob_flush();
+		flush();
+
 		$vltsession = session_id().'-'.$_REQUEST['vltpage'];
-		
-		$mtime = time();
-		$ltime = $mtime - $session_timeout ;
-		// Delete every thing for this session
-		$conn->query("DELETE FROM `_tmp_tdweb` WHERE `session` = '$vltsession' OR `mtime` < $ltime ");
-		
-		if( $result = $conn->query("SELECT count(*) FROM `_tmp_tdweb`") ) {
-			if( $row=$result->fetch_array() ) {
-				if( $row[0] == 0 ) {
-					$conn->query("DROP TABLE `_tmp_tdweb`");
-				}
-			}
-		}
-		$conn->close();
-	
-		$sevent = stream_socket_client("udp://127.255.255.255:56328");
-		if( $sevent ) {
-			fwrite($sevent,"avlp");
-			fclose($sevent);
-		}
 	
 		$xml = new SimpleXMLElement('<tdwebc></tdwebc>') ;
 		$xml->session = $vltsession ;
@@ -44,10 +30,28 @@
 		$xml->avlp='' ;
 		$xml->command='9999' ; 		// AVL_AUTO_REPORT_CONF(26)
 		@$avlxml = file_get_contents( $avlservice.'?xml='.rawurlencode($xml->asXML()) );	
+		
+		// clear vlt session file
+		$fvltname = session_save_path().'/sess_vlt_'.$vltsession ;
+		$fvlt = fopen( $fvltname, "r+" );
+		if( $fvlt ) {
+			flock( $fvlt, LOCK_EX ) ;		// exclusive lock
 
-		$resp['res'] = 1 ;
-	}
+			$vlt = array();
+			$vlt['run'] = 0 ;
+			
+			fwrite( $fvlt, json_encode($vlt) );
 	
-done:	
-	echo json_encode($resp);
+			ftruncate( $fvlt, ftell($fvlt) );
+			fflush( $flvt ) ;              	// flush before release the lock
+			flock( $fvlt, LOCK_UN ) ;		// unlock ;
+			fclose( $fvlt );
+		}
+		
+		// remove vlt file if possible !!!
+		@unlink( $fvltname );
+	}
+	else {
+		echo json_encode($resp);
+	}
 ?>

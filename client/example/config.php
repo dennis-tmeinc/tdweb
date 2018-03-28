@@ -4,7 +4,6 @@
 	$smart_user="server" ;
 	$smart_password="password" ;
 	$smart_database="smart" ;
-	$database_persistent=true ;
 
 	// List of timezone: http://php.net/manual/en/timezones.php
 	$timezone = "US/Eastern" ;
@@ -70,15 +69,10 @@
 	$avlservice = "http://localhost:40520/avlservice" ;
 	$avlcbserver = "http://localhost:80" ;
 	$avlcbapp = "vltevent.php" ;
-	
+	izes
 	// setup time zone
 	date_default_timezone_set($timezone) ;	
-	if(	$database_persistent ) {
-		$smart_server = "p:".$smart_host ;
-	}
-	else {
-		$smart_server = $smart_host ;
-	}
+	$smart_server = $smart_host ;
 	
 	return ;
 ?>	

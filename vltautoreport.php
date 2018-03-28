@@ -13,7 +13,6 @@
 	header("Content-Type: application/json");
 
 	if( $logon ) {
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 				
 		$vltsession = session_id().'-'.$_REQUEST['vltpage'];
 
@@ -29,14 +28,24 @@
 		$xml->callbackurl = $avlcbserver . dirname($_SERVER['REQUEST_URI']).'/' . $avlcbapp ;
 		$xml->session = $vltsession ;
 		$xml->serialno = $serialno ;
-					
-		$sql = "SELECT * FROM `_tmp_tdweb` WHERE `vname` = 'vltrepcfg' AND `session` = '$vltsession' " ;
-		if( $result = $conn->query($sql) ) {
-			while( $row=$result->fetch_array() ) {
+		
+		// read report cfg from vlt file
+		$fvlt = fopen( session_save_path().'/sess_vlt_'.$vltsession, "r" );
+		if( $fvlt ) {
+			flock( $fvlt, LOCK_SH ) ;		// read lock
+	
+			@$vlt = json_decode( fread( $fvlt, 256000 ), true );
+			
+			flock( $fvlt, LOCK_UN ) ;
+			fclose( $fvlt );
+		}
+				
+		if(!empty( $vlt['run'] ) && !empty( $vlt['cfg'] ) ) {
+			foreach ( $vlt['cfg'] as  $key => $vdata ) {
+
 				$resp['res'] = 1 ;
 				
-				$vdata = json_decode( $row['vdata'], true );
-				$xml->target->dvrs->dvr = $row['user'] ;
+				$xml->target->dvrs->dvr = $key ;
 				
 				$xml->command='26' ; 		// AVL_AUTO_REPORT_CONF(26)
 				$xml->avlp='' ;
@@ -157,7 +166,7 @@
 					$resp['stop'] = 1 ;
 				}
 				@$avlxml = file_get_contents( $avlservice.'?xml='.rawurlencode($xml->asXML()) );	// don't care what is returned
-
+				
 			}
 		}
 	}

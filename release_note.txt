@@ -1,17 +1,29 @@
 Touch Down Center 
 Release Notes
 
+V3.7.10 (2014-04-09) (by Dennis)
+	Add “Play back” button to live track page
+	Live DVR setup over td web tunneling (for DVR with internal mobile ip) (only admin can access this feature)
+	Add relay support on “Live view” and “Play Back”
+	Parameter  $liveplay_protocol = "relay" ; should be added to config.php to support new features.
+	Parameter  $liveplay_host is public ip address of relay server (ask Harrison for detail) , if relay server run on same PC of TDWeb server, this parameter is optional, TDWeb will try to detect its own public ip.
+
+
 V3.7.9 (2014-03-19) (by Dennis)
 	Fix km/h to mph convertion on live track transfer.
 	MapView show infobox on click of event icons, some browser ( Chrome on Android ) do not response to mouse over event.
-	Add Multi Client ID support in same TDWeb, 
+	Add Multi Client ID support in on TDWeb, each client has a separated configuration file.  
+    Each Client's TD Server (tdwin upload server) can be located in same PC or be connected through IP internet.
+    Default client will works as before, without client id. 
+    Client ID (if available) will be displayed on bottom-right corner of sign-in box
+
 	To add a new Client,
 		1. Create a new directory on /TouchDownCenter/www/tdc/client/<new client id>
-		2. Copy 2 files from /TouchDownCenter/www/tdc/client/example to this new directory.  ("config.php" and "index.php")
-		3. Use an text editor to make change of /TouchDownCenter/www/tdc/client/<new client id>/config.php
-		4. Following variables should be uniqe for each client configuration
+		2. Copy 2 files from  /TouchDownCenter/www/tdc/client/example  to this new created directory.  ("config.php" and "index.php")
+		3. Use an text editor to make changes of /TouchDownCenter/www/tdc/client/<new client id>/config.php
+		4. Following variables should be unique for each client configuration
 				$smart_host, $smart_database, $mss_conf, $dashboard_conf, $backup_path
-				
+		
 	To use/login with a specific client id, use url (example) :
 		http://192.168.42.52/tdc/client/<client id>
 	or
@@ -19,7 +31,7 @@ V3.7.9 (2014-03-19) (by Dennis)
 		
 	To login as default client (clear remembered client id), use url:
 		http://192.168.42.52/tdc/client	
-
+		
 
 V3.7.8 (2014-02-25) (by Dennis)
 	Add address input on "MAP VIEW" page

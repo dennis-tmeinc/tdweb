@@ -7,21 +7,6 @@
 $noredir = 1 ;
 require_once 'session.php' ;
 
-// clean old session files
-$xt = time() ;
-// clean old session files
-if( is_dir($session_path) ) {
-	// clean old session files
-	foreach (glob($session_path.'/sess_*') as $filename) {
-		if( filemtime($filename) + 86400 < $xt ) {
-			@unlink($filename);
-		}
-	}
-}
-else {
-   mkdir($session_path) ;
-}
-
 header("Content-Type: application/json");
 
 $resp=array();
@@ -83,6 +68,21 @@ if( $result=$conn->query($sql) ) {
 $conn->close();
 	
 done:	
-	echo json_encode($resp);
+
+	// flush contents before do more cleaning jobs
+	$content = json_encode($resp);
+	header( "Content-Length: ".strlen($content) );
+	echo $content ;
+	ob_flush();
+	flush();
 	
+// clean old session files
+$xt = time() ;
+// clean old session files
+foreach (glob($session_path.'/sess_*') as $filename) {
+	if( filemtime($filename) + 86400 < $xt ) {
+		@unlink($filename);
+	}
+}
+
 ?>

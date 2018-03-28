@@ -556,10 +556,10 @@ function pquery()
 vltparam.vltserial++;
 $.getJSON("vltdvrlist.php", vltparam, function(v){
 	if( v.res ) {
-		pquery();
 		if( v.tdwebc ) {
 			tdwebc_message( v.tdwebc );
 		}
+		pquery();
 	}		
 });
 
@@ -573,7 +573,8 @@ $( "button[name='getcurrentpos']" ).click(function(e){
 		form['dvrid[]'] = [] ;
 		form['dvrid[]'] = $("select[name='vltvehicle']").val() ;
 		$.getJSON("vltgetlocation.php", form, function(resp){
-			if( resp.res && resp.avlp && resp.avlp.pos ) {
+			if( resp.res && resp.tdwebc ) {
+				tdwebc_message( resp.tdwebc );
 			}
 		});
 	}
@@ -1164,9 +1165,42 @@ $( "button[name='liveview']" ).click(function(e){
 		dvrdetail['playmode'] = "live" ;
 			
 		$("form#liveviewform input[name='info']").val( JSON.stringify( dvrdetail ) );
+		
+		// unset those new properties
+		delete dvrdetail['support_playback'] ;
+		delete dvrdetail['support_live'] ;
+		delete dvrdetail['playmode'] ;
+		
 		$('form#liveviewform').submit();
 	}
 });
+
+// playback button
+$( "button[name='playback']" ).click(function(e){
+	e.preventDefault();
+	var vehicle = $("select[name='vltvehicle']").val();
+	if( vehicle ) {
+		if( vehicle instanceof Array) {
+			vehicle = vehicle[0] ;
+		}
+		var dvrdetail = vltlist[vehicle] ;
+		
+		// for live view button:
+		dvrdetail['support_playback'] = 1 ;
+		dvrdetail['support_live'] = 0 ;
+		dvrdetail['playmode'] = "playback" ;
+			
+		$("form#liveviewform input[name='info']").val( JSON.stringify( dvrdetail ) );
+		
+		// unset those new properties
+		delete dvrdetail['support_playback'] ;
+		delete dvrdetail['support_live'] ;
+		delete dvrdetail['playmode'] ;
+		
+		$('form#liveviewform').submit();
+	}
+});
+
 
 // live view button
 $( "button[name='setupdvr']" ).click(function(e){
@@ -1177,7 +1211,13 @@ $( "button[name='setupdvr']" ).click(function(e){
 			vehicle = vehicle[0] ;
 		}
 		var dvrdetail = vltlist[vehicle] ;
-		var win=window.open("http://"+dvrdetail.ip+"/", '_blank');
+		var win ;
+		if( dvrdetail.ip ) {
+			win=window.open("http://"+dvrdetail.ip+"/", '_blank');
+		}
+		else {
+			win=window.open("livesetup.php/"+dvrdetail.phone+"/system.html", '_blank');
+		}
 		win.focus();
 	}
 });
@@ -1224,7 +1264,7 @@ if( !mapinit ) {
 	});
 }
 
-$( window ).unload(function() {
+$( window ).unload( function(){
 	// save map position
 	if( sessionStorage ) {
 		var localsession = {} ;
@@ -1239,9 +1279,14 @@ $( window ).unload(function() {
 	}
 	// finish vlt session
 	vltparam.vltserial++ ;
-	$.getJSON("vltunload.php", vltparam);
+	$.ajax( {
+		url: "vltunload.php",
+		data: vltparam ,
+		async: false ,	
+		timeout: 500
+	});
 });
-		
+
 $("select[name='vehicle']").change(function(e){
 	var x=this.value ;
 });
@@ -1288,6 +1333,8 @@ $('#rcontainer').show('slow', trigger_resize );
 <div id="rcontainer">
 
 <div class="ui-widget ui-widget-content ui-corner-all" id="rpanel">
+
+<!-- 
 <fieldset>
 <legend>AVL Server</legend>
 <p><input id="AVLServer" readonly/></p>
@@ -1295,7 +1342,9 @@ $('#rcontainer').show('slow', trigger_resize );
 <?php if( $_SESSION['user_type'] == "admin" ) {	?>
 <button id="btavlserver">Change...</button>
 <?php } ?>
-</fieldset>
+</fieldset> 
+-->
+
 <h3 style="text-align: center;">Select Vehicle</h3>
 <select multiple name="vltvehicle" size="10" style="min-width:13em;margin-left:10px;margin-right:10px"  > 
 </select>
@@ -1309,9 +1358,11 @@ $('#rcontainer').show('slow', trigger_resize );
 <div style="text-align: center;"><button style="min-width:14em;" name="startautoreort">Start Auto Report</button></div>
 <div style="text-align: center;"><button style="min-width:14em;" name="stopautoreport">Stop Auto Report</button></div>
 <div style="text-align: center;"><button style="min-width:14em;" name="liveview">Live View</button></div>
+<div style="text-align: center;"><button style="min-width:14em;" name="playback">Play Back</button></div>
+<?php if( $_SESSION['user_type'] == "admin" ) { ?>
 <div style="text-align: center;"><button style="min-width:14em;" name="setupdvr">Setup DVR</button></div>
-
-<form id="liveviewform" action="vltliveview.php" target="_blank" >
+<?php } ?>
+<form id="liveviewform" action="vltliveview.php" target="_blank" method="post" >
 <input type="hidden" name="info"/>
 </form>
 

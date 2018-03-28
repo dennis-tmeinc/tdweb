@@ -22,6 +22,9 @@
 					if( !empty($row['vlt_gpio'][$i]) ) {
 						$row['vlt_gpio_'.$i] = "1" ;
 					}
+					else {
+						$row['vlt_gpio_'.$i] = "0" ;
+					}
 				}
 				unset($row['vlt_gpio']);
 				
