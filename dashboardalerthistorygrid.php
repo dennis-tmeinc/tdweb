@@ -1,7 +1,8 @@
 <?php
 // dashboardalerthistorygrid.php -  get dashboard report alert history (grid data) (td health feature)
 // Requests:
-//             
+//      vehicle : vehicle name
+//      alert :  alert code   
 // Return:
 //      JSON object, (contain event list)
 // By Dennis Chen @ TME	 - 2015-02-25
@@ -19,6 +20,10 @@
 		if( !empty( $_REQUEST["vehicle"] ) ) {
 			$filter = " WHERE dvr_name = '$_REQUEST[vehicle]' " ;
 		}
+		
+		if( !empty( $_REQUEST["alert"] ) ) {
+			$filter .= " AND alert_code = '$_REQUEST[alert]' " ;
+		}		
 		
 		// get total records	
 		$sql="SELECT count(*) FROM td_alert $filter ;" ;

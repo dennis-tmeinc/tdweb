@@ -14,22 +14,26 @@
 	$resp['page']="#" ;
 	$savesess=$_SESSION ;
 	$_SESSION = array();
+	$_SESSION['xtime']=time() ;	
+	$_SESSION['release']="V3.7.22" ;	
+	$_SESSION['remote']=$_SERVER['REMOTE_ADDR'] ;
 	
 	if( $savesess['xuser'] == 'SuperAdmin' ) {
+		
 		$ha1=$savesess['key'] ;
 		$salt=$savesess['salt'] ;
 		$nonce=$savesess['nonce'] ;
 		$ha2=hash("md5", $_REQUEST['cnonce'] .":". $savesess['xuser'] .":". $nonce );
 		$rescmp=hash("md5", $ha1 . ":" . $ha2 . ":" . $nonce . ":" . $_REQUEST['cnonce'] );
 		if( $_REQUEST['result'] == $rescmp ) { // Matched!!!
+		
 			// what should be copied to new session
 			$_SESSION['superadmin']= "--SuperAdmin--" ;
 			$_SESSION['user']=$savesess['xuser'];
 			$_SESSION['user_type']=$savesess['xuser_type'];
-		
-			session_write();
-			
-			$resp['user'] = $savesess['xuser'] ;
+			$_SESSION['welcome_name'] = $savesess['welcome_name'];
+
+			$resp['user'] = $_SESSION['user'] ;
 		    $resp['res']=1 ;
 			$resp['page']="company.php" ;
 		}	
@@ -42,8 +46,6 @@
 		$rescmp=hash("md5", $ha1 . ":" . $ha2 . ":" . $nonce . ":" . $_REQUEST['cnonce'] );
 		if( $_REQUEST['result'] == $rescmp ) { // Matched!!!
 		
-			$resp['save']=$savesess ;
-		
 			// what should be copied to new session
 			$_SESSION['user']=$savesess['xuser'];
 			$_SESSION['user_type']=$savesess['xuser_type'];
@@ -51,10 +53,6 @@
 				$_SESSION['clientid']=$savesess['clientid'];
 			}
 			$_SESSION['welcome_name'] = $savesess['welcome_name'];
-			$_SESSION['remote']=$_SERVER['REMOTE_ADDR'] ;
-			$_SESSION['xtime'] = time() ;
-			$_SESSION['release']="V3.7.21" ;
-			session_write();
 						
 		    $resp['res']=1 ;
 			$resp['user']=$_SESSION['user'] ;
@@ -74,5 +72,6 @@
 			$conn->query($sql);
 		}
 	}
+	session_write();
 	echo json_encode($resp);
 ?>

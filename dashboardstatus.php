@@ -25,7 +25,8 @@ else {
 	<script src="picker.js"></script>
 	<link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
-.sum_circle
+	
+.sum_circle_x
 {
 	margin-top: 3px;
 	background-image:url('res/big_dashboard_circles.png');
@@ -33,6 +34,16 @@ else {
 	background-repeat:no-repeat;
 	background-position:center center;
 	height: 104px;
+	font-size:36px;
+	text-align: center;
+	min-width:150px;
+}
+
+.sum_circle
+{
+	margin-top: 3px;
+	background-color: cyan;
+	height: 100px;
 	font-size:36px;
 	text-align: center;
 	min-width:150px;
@@ -51,9 +62,11 @@ color:red;
 .sum_title
 {
 height: 1em;
-font-size:11px;
+font-size:14px;
 font-weight:bold;
 text-align: center;
+background-color: blue;
+color: white;
 }
 
 #summary_table
@@ -108,7 +121,7 @@ $("#vehicle_list").jqGrid({
 	rownumbers: true,
 	onSelectRow: function(id){ 
 		var vname = $("#vehicle_list").jqGrid('getCell',id, 1) ;
-		showHistory( vname );
+		// showHistory( vname );
 	}
 });
 
@@ -156,24 +169,6 @@ function load_dashboard()
 load_dashboard();		
 //setInterval(load_dashboard,300000);
 
-$("#mss_status").jqGrid({        
-    scroll: true,
-	url:'dashboardmssgrid.php',
-	datatype: "json",		
-	height: 300,
-	width: 750,
-    colNames:['MSS id','Connection', 'HDD Status','SD1 Status','SD2 Status', 'Access Point Status'],
-    colModel :[ 
-      {name:'mss_id', index:'mss_id', width:180 }, 
-      {name:'mss_connection', index:'mss_connection', width:120 }, 
-      {name:'mss_hdd', index:'mss_hdd', width:120 }, 
-      {name:'mss_sd1', index:'mss_sd1', width:120 }, 
-      {name:'mss_sd2', index:'mss_sd2', width:120}, 
-      {name:'mss_ap', index:'mss_ap', width:120 } 
-    ],
-	rownumbers: true,
-});
-
 $("#list_Vehicles_In_Service").jqGrid({        
 	scroll: true,
 	datatype: "local",
@@ -183,11 +178,11 @@ $("#list_Vehicles_In_Service").jqGrid({
 	colModel :[ 
 	  {name:'vehicle_name', width:180, sortable: true }
 	],
-	rownumbers: true,
 	onSelectRow: function(id){ 
 		var vname = $("#list_Vehicles_In_Service").jqGrid('getCell',id, 1) ;
 		showHistory( vname );
-	}
+	},
+	rownumbers: true
 });
 
 $("#list_Vehicles_Checkedin_day").jqGrid({        
@@ -208,8 +203,8 @@ $("#list_Vehicles_Checkedin_day").jqGrid({
 	rownumWidth: 50,
 	onSelectRow: function(id){ 
 		var vname = $("#list_Vehicles_Checkedin_day").jqGrid('getCell',id, 1) ;
-		showHistory( vname );
-	}	
+		showHistory( vname, 3 );		// 3: login failed
+	}
 });
 
 $("#list_Vehicles_Uploaded_day").jqGrid({        
@@ -218,14 +213,14 @@ $("#list_Vehicles_Uploaded_day").jqGrid({
 	height: 240,
 	width: 600,
 	colNames:['Vehicle Name','Upload Time'],
-	colModel :[ 
+	colModel :[
 	  {name:'vehicle_name', width:180, sortable: true }, 
 	  {name:'time_upload', width:180, sortable: true } 
 	],
 	rownumbers: true,
 	onSelectRow: function(id){ 
 		var vname = $("#list_Vehicles_Uploaded_day").jqGrid('getCell',id, 1) ;
-		showHistory( vname );
+		showHistory( vname, 1 );	// 1: video_uploaded
 	}
 });
 
@@ -242,7 +237,7 @@ $("#list_marked_events").jqGrid({
 	rownumbers: true,
 	onSelectRow: function(id){ 
 		var vname = $("#list_marked_events").jqGrid('getCell',id, 1) ;
-		showHistory( vname );
+		showHistory( vname, 11 );  // panic event
 	}
 });
 
@@ -283,7 +278,8 @@ $("#list_solo_alerts").jqGrid({
 	rownumbers: true,
 	onSelectRow: function(id){ 
 		var vname = $("#list_solo_alerts").jqGrid('getCell',id, 1) ;
-		showHistory( vname );
+		var alertcode = $("#list_solo_alerts").data("ALERTCODE");
+		showHistory( vname, alertcode );
 	}
 });	 
 
@@ -333,9 +329,13 @@ $("div#diaglog_alert_history").dialog({
 	}
 });
 
-function showHistory( vname )
+function showHistory( vname, alertcode )
 {
-	$("#list_alert_history").setGridParam( {url: "dashboardalerthistorygrid.php?vehicle="+vname, page: 1} );
+	var uurl = "dashboardalerthistorygrid.php?vehicle="+vname ;
+	if( alertcode != null) {
+		uurl = uurl+"&alert="+alertcode ;
+	}
+	$("#list_alert_history").setGridParam( {url: uurl, page: 1} );
 	$("div#diaglog_alert_history").dialog("option", {title:"Alert History : "+vname });
 	$("div#diaglog_alert_history").dialog("open");
 }
@@ -368,7 +368,9 @@ $("td.system_alert").css( 'cursor', 'pointer' );
 $("td.sum_circle").css( 'cursor', 'pointer');
 
 $("td.system_alert").click(function(e){
-	$("#list_solo_alerts").setGridParam( {url: "dashboardsoloalertsgrid.php?alertcode="+$(e.target).attr("alertcode"), page: 1} );
+	var alertcode = $(e.target).attr("alertcode") ;
+	$("#list_solo_alerts").data("ALERTCODE", alertcode);
+	$("#list_solo_alerts").setGridParam( {url: "dashboardsoloalertsgrid.php?alertcode="+alertcode, page: 1} );
 	$("div#dialog_solo_alerts").dialog("option", {title: $(e.target).text() });
 	$("div#dialog_solo_alerts").dialog("open");
 });
@@ -392,6 +394,65 @@ $( "input[name='status_type']" ).change(function() {
 		$("div#summary_advance").show("slow");
 	}
 }).change();
+
+var mssmap = null ;
+var mssloc = new Microsoft.Maps.Location(0, 0) ;
+$("#mss_status").jqGrid({        
+    scroll: true,
+	url:'dashboardmssgrid.php',
+	datatype: "json",		
+	height: 300,
+	width: 750,
+    colNames:['MSS id','Connection', 'HDD Status','SD1 Status','SD2 Status', 'Access Point Status', 'lat', 'lon'],
+    colModel :[ 
+      {name:'mss_id', index:'mss_id', width:180 }, 
+      {name:'mss_connection', index:'mss_connection', width:120 }, 
+      {name:'mss_hdd', index:'mss_hdd', width:120 }, 
+      {name:'mss_sd1', index:'mss_sd1', width:120 }, 
+      {name:'mss_sd2', index:'mss_sd2', width:120}, 
+      {name:'mss_ap', index:'mss_ap', width:180 } ,
+      {name:'mss_lat', index:'mss_lat', hidden: true } ,
+      {name:'mss_lon', index:'mss_lon', hidden: true } 
+    ],
+	onSelectRow: function(id){ 
+		var m_lat = $("#mss_status").jqGrid('getCell',id, 7) ;
+		var m_lon = $("#mss_status").jqGrid('getCell',id, 8) ;
+		mssloc = new Microsoft.Maps.Location(m_lat, m_lon) ;
+
+		$("div#dialog_mss_location").dialog("open");	
+	},	
+	rownumbers: true,
+});
+
+$("div#dialog_mss_location").dialog({
+	autoOpen: false,
+	width:"auto",
+	height:"auto",
+	modal: true,
+	close: function(event, ui) {
+		if( mssmap ) {
+			mssmap.dispose(); 
+			mssmap = null; 
+		}
+	},
+	open: function(event, ui) {
+		mssmap = new Microsoft.Maps.Map(document.getElementById("mssmap"), 
+			{credentials: <?php echo '"'. $map_credentials . '"'; ?> ,
+			zoom: 12,
+			center: mssloc,
+			enableSearchLogo: false,
+			enableClickableLogo: false,
+		});
+		
+		var pin=new Microsoft.Maps.Pushpin(mssloc, {draggable: false});
+		mssmap.entities.push(pin);
+	},
+	buttons:{
+		"Close": function() {
+			$( this ).dialog( "close" );
+		}
+	}
+});
 
 $("div#summary_mss").hide();
 $("div#summary_advance").hide();
@@ -454,10 +515,10 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 <input href="dashboardoption.php"  name="btset" id="btoption" type="radio" /><label for="btoption"> Dashboard Options </label>
 </p>
 
-<h4><strong><?php echo $title_type; ?>Status Report</strong></h4>
+<h2><strong><?php echo $title_type; ?>Status Report</strong></h2>
 
 <div>
-<table border="0" cellpadding="1" cellspacing="1" style="min-width: 600px;">
+<table border="0" cellpadding="1" cellspacing="5" style="min-width: 600px;">
 	<tbody>
 		<tr>
 			<td class="sum_circle sum_circle_green" id="Vehicles_In_Service">0</td>
@@ -467,11 +528,11 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 			<td class="sum_circle sum_circle_red" id="system_alerts">0</td>
 		</tr>
 		<tr>
-			<td class="sum_title">Vehicles In-Service</td>
-			<td class="sum_title">Vehicles Checked-In</td>
-			<td class="sum_title">Vehicles Uploaded</td>
-			<td class="sum_title">Marked Events</td>
-			<td class="sum_title">System Alerts</td>
+			<td class="sum_title ui-widget">VEHICLES IN-SERVICE</td>
+			<td class="sum_title ui-widget">VEHICLES CHECKED-IN</td>
+			<td class="sum_title ui-widget">VEHICLES UPLOADED</td>
+			<td class="sum_title ui-widget">MARKED EVENTS</td>
+			<td class="sum_title ui-widget">VEHICLES ALERTS</td>
 		</tr>
 	</tbody>
 </table>
@@ -500,8 +561,12 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 <div id="diaglog_alert_history">
 <table id="list_alert_history"></table> 
 </div>
-
-<h4><?php echo $title_type; ?>Status Summary</h4> 
+<!-- mss map dialog -->
+<div id="dialog_mss_location" title="MSS Location">
+<div id="mssmap" style="min-height:400px;min-width:400px;" ></div>
+</div>
+<!-- end mss map dialog -->
+<h2><?php echo $title_type; ?>Status Summary</h2> 
 
 <form>
 <div id="status_type">

@@ -706,6 +706,7 @@ bus2 : high tempterature
 <input name="btset" href="settingsfleet.php" id="btfleet" type="radio" /><label for="btfleet">Fleet Setup</label>
 <input name="btset" href="settingsuser.php" id="btuser" type="radio" /><label for="btuser">User Accounts</label> 
 <input name="btset" checked="checked" href="settingssystem.php" id="btsys" type="radio" /><label for="btsys">System Configuration</label>
+<input name="btset" href="settingsemail.php" id="btemail" type="radio" /><label for="btemail">Email Configuration</label> 
 </p>
 
 <h4><strong>System Configuration</strong></h4>
@@ -716,7 +717,7 @@ bus2 : high tempterature
 	<li><a href="#setting-event">Default Event Parameters</a></li>
 	<li><a href="#setting-mss">MSS Setup</a></li>
 	<li><a href="#setting-localmss">Local MSS Setup</a></li>
-	<li><a href="#setting-email">E-mail Setup</a></li>
+<!-- <li><a href="#setting-email">E-mail Setup</a></li> -->
 	<li><a href="#setting-ui">User Interface</a></li>
 </ul>
 
@@ -890,7 +891,7 @@ bus2 : high tempterature
 <p>&nbsp;</p>
 </div>
 
-<div id="setting-email">
+<div id="setting-email" style="display:none;">
 <form id="emailsetup">
 <fieldset><legend> Email Server </legend>
 

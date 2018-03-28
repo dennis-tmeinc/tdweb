@@ -129,7 +129,24 @@
 		}
 		
 		// System Alerts
-		$sql = "SELECT count(*) FROM `td_alert` WHERE  alert_code in (2,3,4,5) AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
+
+		// System Alerts list
+		$alert_types=array(
+			"unknown",
+			"video uploaded",		
+			"High Temperature",
+			"Connection",
+			"Camera",
+			"Recording",
+			"rtc error",
+			"partial storage failure",
+			"system reset",
+			"ignition on",
+			"ignition off",
+			"panic"			
+			);
+		
+		$sql = "SELECT count(*) FROM `td_alert` WHERE  alert_code in (2,3,4,5,7) AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
 		$result=$conn->query($sql);
 		if( $result ){
 			if( $row = $result->fetch_array(MYSQLI_NUM) ){
@@ -138,14 +155,7 @@
 			$result->free();
 		}
 			
-		// System Alerts list
-		$alert_types=array();
-		$alert_types[2]="High Temperature" ;
-		$alert_types[3]="Connection" ;
-		$alert_types[4]="Camera" ;
-		$alert_types[5]="Recording" ;
- 
-		$sql = "SELECT dvr_name, description, alert_code, date_time FROM `td_alert` WHERE  alert_code in (2,3,4,5) AND date_time BETWEEN '$date_begin' AND '$date_end' ORDER BY `date_time` DESC ";
+		$sql = "SELECT dvr_name, description, alert_code, date_time FROM `td_alert` WHERE  alert_code in (2,3,4,5,7) AND date_time BETWEEN '$date_begin' AND '$date_end' ORDER BY `date_time` DESC ";
 		$resp['report']['list_system_alerts'] = array() ;
 		$result=$conn->query($sql);
 		if( $result ){

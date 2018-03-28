@@ -38,7 +38,6 @@
 			if( is_dir( $dirname ) ) {
 				$row = array();
 				$row['id'] = basename($dirname) ;
-
 				unset( $company_root );
 				$company_root = get_var( $dirname."/config.php", "\$company_root" ) ;
 				if( $company_root ) {

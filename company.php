@@ -73,7 +73,6 @@ $( "#dialog_company" ).dialog({
 });
 
 $("button").button();
-
 $("button#btnew").click(function(e){
 	e.preventDefault();
 	$("form#companyform")[0].reset();
@@ -144,18 +143,8 @@ $("button#btremove").click(function(e){
 		return ;
 	}
 	if( confirm("Confirm to remove all data related to company : " + id ) ) {
-		$.getJSON("companyremove.php", {id:id}, function(resp){
-			if( resp.res==1 ) {
-				alert( "All data related to " + id + " has been removed!");
-			}
-			else if( resp.errormsg ) {
-				alert( resp.errormsg );
-			}
-			else {
-				alert("Remove company :"+id+" failed!");
-			}
-			$("#companygrid").trigger("reloadGrid");
-		});
+		$( "#dialog_removeverify" ).data("company_id", id);
+		$( "#dialog_removeverify" ).dialog("open");
 	}
 });
 
@@ -215,6 +204,50 @@ $("button#btchangepasswd").click(function(e){
 });
 
 
+// removing company to verify password dialog
+$( "#dialog_removeverify" ).dialog({
+	autoOpen: false,
+	width:"auto",
+	modal: true,
+	buttons:{
+		"OK": function() {
+			$.getJSON("sapasswordverify.php", { p:1 }, function(resp){
+				if( resp.res ) {
+					var verpass = $("input[name='input_passwordverify']").val();
+					var key = hex_md5("SuperAdmin:"+resp.s+":"+verpass) ;
+					key = hex_md5(key+":"+resp.n) ;
+					$.getJSON("sapasswordverify.php", { p:2,k:key }, function(resp){
+						if( resp.res ) {
+							var id = $( "#dialog_removeverify" ).data("company_id");
+							$.getJSON("companyremove.php", {id:id}, function(resp){
+								if( resp.res==1 ) {
+									alert( "All data related to " + id + " has been removed!");
+								}
+								else if( resp.errormsg ) {
+									alert( resp.errormsg );
+								}
+								else {
+									alert("Remove company :"+id+" failed!");
+								}
+								$("#companygrid").trigger("reloadGrid");
+							});							
+							$( "#dialog_removeverify" ).dialog( "close" );							
+						}
+						else {
+							if( resp.errormsg ) {
+								alert( resp.errormsg );
+							}
+							else {
+								alert("Password error!");
+							}							
+						}
+					});
+				}
+			});
+		}
+	}
+});
+
 });
 </script>
 </head>
@@ -271,19 +304,28 @@ $("button#btchangepasswd").click(function(e){
 		</tr>
 		<tr>
 			<td style="text-align:right">Time Zone:</td>
-			<td><input name="TimeZone" type="text" /></td>
+			<td>
+			<select name="TimeZone">
+<?php
+$timezonelist=DateTimeZone::listIdentifiers(DateTimeZone::PER_COUNTRY, "US");
+foreach( $timezonelist as $tz ) {
+	printf('<option value="%s">%s</option>', $tz, $tz );
+};
+?>			
+			</select>
+			</td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 		</tr>
 		<tr>
 			<td style="text-align:right">Map Default Area:</td>
-			<td><input name="MapArea" type="text" /></td>
+			<td><input name="MapArea" type="text" value="USA" /></td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 		</tr>
 		<tr>
 			<td style="text-align:right">Session Timeout Value:</td>
-			<td><input name="SessionTimeout" type="text" /></td>
+			<td><input name="SessionTimeout" type="text" value="900"/></td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 		</tr>		
@@ -377,6 +419,14 @@ $("button#btchangepasswd").click(function(e){
 
 <div>
 	<button id="btchangepasswd" >Change Password</button>
+</div>
+
+<!-- Dialog Verify Password for removing company -->
+<div id="dialog_removeverify" title="Verify Super Admin Password" >
+<form id="passwordverifyform">
+	<p>Verify Password:</p>
+	<input name="input_passwordverify" type="password" />
+</form>
 </div>
 
 <!-- workarea --></div>

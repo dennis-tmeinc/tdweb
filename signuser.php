@@ -30,30 +30,16 @@ if( !empty($_REQUEST['c']) ) {
 		goto done;		
 	}
 }
-	
-// reconnect MySQL
-@$conn = new mysqli("p:".$smart_host, $smart_user, $smart_password, $smart_database );
-
-if( empty($conn) ) {
-	$resp['errormsg'] = "Database error!" ;
-	goto done;
-}
 
 unset($_SESSION['user']) ;
 $_SESSION['xtime']=time() ;
-
-// escaped string for SQL
-$esc_req=array();
-foreach( $_REQUEST as $key => $value )
-{
-	$esc_req[$key]=$conn->escape_string($value);
-}	
 
 if( !empty($support_multicompany) && empty($_REQUEST['c']) && strcasecmp($_REQUEST['user'],"SuperAdmin")==0 ) {
 
 	$_SESSION['xuser'] = "SuperAdmin"  ;
 	$_SESSION['xuser_type'] = $_SESSION['xuser'] ;
 	$_SESSION['welcome_name'] = "SuperAdmin" ;
+	
 	$nonce=' ' ;
 	$hexchar="0123456789abcdefghijklmnopqrstuvwxyz" ;
 	for( $i=0; $i<64; $i++) {
@@ -84,6 +70,21 @@ if( !empty($support_multicompany) && empty($_REQUEST['c']) && strcasecmp($_REQUE
 
 }
 else {
+	// reconnect MySQL
+	@$conn = new mysqli("p:".$smart_host, $smart_user, $smart_password, $smart_database );
+
+	if( empty($conn) ) {
+		$resp['errormsg'] = "Database error!" ;
+		goto done;
+	}
+	
+	// escaped string for SQL
+	$esc_req=array();
+	foreach( $_REQUEST as $key => $value )
+	{
+		$esc_req[$key]=$conn->escape_string($value);
+	}	
+
 	$sql="SELECT user_name, user_password, user_type, first_name, last_name FROM app_user WHERE user_name = '$esc_req[user]';" ;
 
 	if( $result=$conn->query($sql) ) {

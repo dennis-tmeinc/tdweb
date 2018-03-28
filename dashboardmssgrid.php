@@ -68,6 +68,10 @@
 					sprintf( " (%04b)", $row['mss_apErr'] );
 				}
 				
+				// location
+				$cell[6]=$row['mss_lat'] ;
+				$cell[7]=$row['mss_lon'] ;
+				
 				$grid['rows'][] = array(
 					"id" => $row[0],
 					"cell" => $cell 

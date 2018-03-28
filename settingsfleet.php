@@ -1150,6 +1150,7 @@ text-align: center;
 <input name="btset" checked="checked" href="settingsfleet.php" id="btfleet" type="radio" /><label for="btfleet">Fleet Setup</label>
 <input name="btset" href="settingsuser.php" id="btuser" type="radio" /><label for="btuser">User Accounts</label> 
 <input name="btset" href="settingssystem.php" id="btsys" type="radio" /><label for="btsys">System Configuration</label>
+<input name="btset" href="settingsemail.php" id="btemail" type="radio" /><label for="btemail">Email Configuration</label> 
 </p>
 
 <h4><strong>Fleet Setup</strong></h4>
