@@ -36,6 +36,8 @@
 		
 		// fix $to addressses
 		$to = str_replace(";", ",", $to );
+		$to = str_replace("\r", "", $to );
+		$to = str_replace("\n", ",", $to );
 
 		// fix $subject (no newlines)
 		$subject = str_replace("\r", "", $subject );
@@ -158,12 +160,14 @@
 				$toaddr = substr( $toaddr, $b1+1, $b2-$b1-1 );
 			}
 			$toaddr=trim($toaddr);	
-			// domain part
-			$domain = substr( $toaddr, strpos($toaddr, '@')+1 );
-			if( empty( $domains[$domain] ) ) {
-				$domains[$domain] = array() ;
+			if( !empty( $toaddr ) ) {
+				// domain part
+				$domain = substr( $toaddr, strpos($toaddr, '@')+1 );
+				if( empty( $domains[$domain] ) ) {
+					$domains[$domain] = array() ;
+				}
+				$domains[$domain][] = $toaddr ;
 			}
-			$domains[$domain][] = $toaddr ;
 		}
 		
 		// send out email
@@ -242,6 +246,11 @@
 		else 
 			$mail_protocol = "tcp://" ;
 		$mail_url=$mail_protocol.$mailer['smtpServer'].':'.$mailer['smtpServerPort'] ;
+		@$mxcli = stream_socket_client($mail_url);
+		if( empty($mxcli) ) {
+			// fall back using sendmail
+			return sendmail($to, $sender, $subject, $message, $attachments );
+		}
 	
 		// mail body data
 		$body = mail_body( $to, $sender, $subject, $message, $attachments ) ;
@@ -253,10 +262,10 @@
 		$myip = trim(file_get_contents("http://myip.dtdns.com/"));
 		
 		// get sender address inside "<>" brackets
-		$from = trim($sender);
-		if( strpos($from, "<")!==false )
+		$mail_from = trim($mail_from);
+		if( strpos($mail_from, "<")!==false )
 		{	
-			$from = substr( $from, strpos( $from, "<" )+1, -1 ) ;
+			$mail_from = substr( $mail_from, strpos( $mail_from, "<" )+1, -1 ) ;
 		}
 
 		// receive smpt response
@@ -268,70 +277,61 @@
 			}
 			return 5 ;	// error
 		}
-		
-		// assume error
-		$errors = 1 ;
 
 		// send out email
-		$mxcli = stream_socket_client($mail_url);
-		if($mxcli)
-		{
-			$errors = 0 ;
-			socket_set_timeout($mxcli, 10);
+		$errors = 0 ;
+		socket_set_timeout($mxcli, 10);
+		if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+
+		fwrite($mxcli, "EHLO [". $myip. "]\r\n" );
+		if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+
+		if( !empty($mail_account) ) {
+			// auth login
+			fwrite($mxcli, "AUTH LOGIN\r\n");
 			if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
-
-			fwrite($mxcli, "EHLO [". $myip. "]\r\n" );
+			
+			fwrite($mxcli, base64_encode($mail_account)."\r\n");
 			if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
-
-			if( !empty($mail_account) ) {
-				// auth login
-				fwrite($mxcli, "AUTH LOGIN\r\n");
-				if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
-				
-				fwrite($mxcli, base64_encode($mail_account)."\r\n");
-				if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
-				
-				fwrite($mxcli, $mail_password."\r\n");
-				if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
-			}
-
-			fwrite($mxcli, "MAIL FROM:<".$mail_from.">\r\n");
+			
+			fwrite($mxcli, $mail_password."\r\n");
 			if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+		}
 
-			// extract recipients
-			$to = explode(",", $to);
-			foreach( $to as $toaddr ) {
-				// extract address inside brackets
-				$b = strpos($toaddr, '<' ) ;
+		fwrite($mxcli, "MAIL FROM:<".$mail_from.">\r\n");
+		if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+
+		// extract recipients
+		$to = explode(",", $to);
+		foreach( $to as $toaddr ) {
+			// extract address inside brackets
+			$b = strpos($toaddr, '<' ) ;
+			if( $b!==false ) {
+				$toaddr = substr( $toaddr, $b+1 ) ;
+				$b = strpos($toaddr, '>' ) ;
 				if( $b!==false ) {
-					$toaddr = substr( $toaddr, $b+1 ) ;
-					$b = strpos($toaddr, '>' ) ;
-					if( $b!==false ) {
-						$toaddr = substr( $toaddr, 0, $b );
-					}
-				}
-				$toaddr = trim($toaddr);	
-				if( !empty( $toaddr ) ) {
-					fwrite($mxcli, "RCPT TO:<".$toaddr.">\r\n");
-					if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+					$toaddr = substr( $toaddr, 0, $b );
 				}
 			}
-
-			fwrite($mxcli, "DATA\r\n");
-			if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
-			// Send message data
-			fwrite($mxcli, $body);
-			if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
-
-			// Quit connection
-			fwrite($mxcli, "QUIT\r\n");
-			if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
-
-			fclose($mxcli);
+			$toaddr = trim($toaddr);	
+			if( !empty( $toaddr ) ) {
+				fwrite($mxcli, "RCPT TO:<".$toaddr.">\r\n");
+				if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+			}
 		}
-		else {
-			$errors++ ;
-		}
+
+		fwrite($mxcli, "DATA\r\n");
+		if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+		// Send message data
+		fwrite($mxcli, $body);
+		if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+
+		// Quit connection
+		fwrite($mxcli, "QUIT\r\n");
+		if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+
+		fclose($mxcli);
+
 		if( $errors==0 ) return true ;
 		else return false ;
      }

@@ -1,6 +1,11 @@
 Touch Down Center 
 Release Notes
 
+V3.7.16 (2014-07-29) (by Dennis)
+	Add Emergency Event page, (for tvs emergency , event marker, crashes ) 
+	Fix driveby report email contents 
+	Email allow carry-return, semi-colon as separator of recipients 
+	
 V3.7.15 (2014-07-23) (by Dennis)
 	Driveby page contain 5 tabs , "New Events", "Processed Events", "Deleted Events", "Reports", "Deleted Reports".
 	More columns in event lists.

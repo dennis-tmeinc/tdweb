@@ -49,7 +49,7 @@
 	$session_timeout=900 ;	
 	$session_path= "session";
 	$session_idname = "touchdownid";
-	// $remote_fileserver = "http://127.0.0.1/tdc/fileservice.php" ;
+	// $remote_fileserver = "http://209.167.16.254/tdc/fileservice.php" ;
 
 	// avaialbe ui: ui-lightness ui-darkness smoothness start redmond sunny 
 	//              overcast le-frog flick pepper-grinder eggplant dark-hive
@@ -74,6 +74,9 @@
 	$avlservice = "http://localhost:40520/avlservice" ;
 	$avlcbserver = "http://localhost:80" ;
 	$avlcbapp = "vltevent.php" ;
+	
+	// Emergency Event Support
+	// $support_emg = 1 ;
 	
 	// setup time zone
 	date_default_timezone_set($timezone) ;	

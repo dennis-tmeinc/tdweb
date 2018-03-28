@@ -320,6 +320,9 @@ $('#rcontainer').show(200);
 	<?php if( !empty($support_driveby) && ( $_SESSION['user_type'] == "operator" || $_SESSION['user'] == "admin" ) ) { ?>
 	<li><a class="lmenu" href="driveby.php"><img onmouseout="this.src='res/side-driveby-logo-clear.png'" onmouseover="this.src='res/side-driveby-logo-fade.png'" src="res/side-driveby-logo-clear.png" /> </a></li>
 	<?php } ?>	
+		<?php if( !empty($support_emg) ) { ?>
+	<li><a class="lmenu" href="emg.php"><img onmouseout="this.src='res/side-emg-logo-clear.png'" onmouseover="this.src='res/side-emg-logo-fade.png'" src="res/side-emg-logo-clear.png" /> </a></li>
+	<?php } ?>
 	<li><img src="res/side-settings-logo-green.png" /></li>
 </ul>
 </div>

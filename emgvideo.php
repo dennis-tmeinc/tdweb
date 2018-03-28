@@ -1,33 +1,25 @@
 <?php
-// drivebyvideo.php - video(mp4) file reader for drive by
+// emgvideo.php - video(mp4) file reader for emergency event
 // Request:
 //      tag : (idx) drive tag file name
 //      channel : channel name
-//  or : (from non-session external link)
-//      link : encoded tag file and channel 
 // Return:
 //      mp4 stream
 // By Dennis Chen @ TME	 - 2014-1-17
 // Copyright 2013 Toronto MicroElectronics Inc.
 //
 	
-	// don't redir to login page
-	$noredir = true ;
-    
 	require 'session.php' ;
 	require_once 'vfile.php' ;
 	// Content type
 	header("Content-Type: video/mp4");
 	
-	if( !empty( $_REQUEST['link'] ) ) {
-		$videofile = rtrim( mcrypt_decrypt( "blowfish", "drivebyvideolink", base64_decode($_REQUEST['link']), "ecb" ), "\0" ) ;
-	}
-	else if( $logon ) {
+	if( $logon ) {
 		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-		$sql = "SELECT * FROM Drive_By_Event WHERE `idx` = $_REQUEST[tag] " ;
+		$sql = "SELECT * FROM emg_event WHERE `idx` = $_REQUEST[tag] " ;
 		if($result=$conn->query($sql)) {
 			if( $row=$result->fetch_array(MYSQLI_ASSOC) ) {
-				$channels = new SimpleXMLElement( "<driveby>" . $row['Video_Files'] . "</driveby>" );
+				$channels = new SimpleXMLElement( "<emg>" . $row['Video_Files'] . "</emg>" );
 				$ch=0 ;
 				if( !empty( $_REQUEST['channel'] ) ) {
 					for( $i=0; $i<count($channels->channel); $i++ ) {

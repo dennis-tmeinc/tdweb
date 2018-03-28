@@ -39,8 +39,8 @@
 		if( $pdf_buffer ) {
 			$subject = "Stop-Arm Drive-By Violation Report" ;
 			$message = "Stop-Arm Drive-By Violation Report\n\n" .
-					   "  Date-Time: ".$x->time . "\n" .
-					   "  Plate of Violator: ".$x->plateofviolator. "\n\n" ;
+					   "  Date-Time: ".$row['Date_Time'] . "\n" .
+					   "  Plate of Violator: ".$row['Plateofviolator']. "\n\n" ;
 			if( !empty( $email['notes'] ) ) {
 				$message .= "Notes:\n". $email['notes'] ; 
 			}

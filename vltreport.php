@@ -5,7 +5,7 @@
 //      vltpage : page number
 // Return:
 //      JSON
-// By Dennis Chen @ TME	 - 2014-05-15
+// By Dennis Chen @ TME	 - 2014-07-29
 // Copyright 2013 Toronto MicroElectronics Inc.
 
 	$noupdatetime = 1 ;
@@ -27,9 +27,6 @@
 		$mtime = time();
 		$starttime = $mtime ;
 
-		// live tun register url
-		$script = rawurlencode( dirname($_SERVER['SCRIPT_NAME'])."/livetun.php" ) ;
-
 		$fvlt = fopen( session_save_path().'/sess_vlt_'.$vltsession, "r+" );
 		if( $fvlt ) {
 			// wait for message from AVL service
@@ -43,40 +40,39 @@
 					for( $i=0; $i<count($vlt['events']); $i++ ) {
 						$vdata = $vlt['events'][$i] ;
 						if( !empty( $vdata['command'] )) {
+							$phone = '';
 							if( $vdata['command'] == 23 ) {			// AVL_DVR_LIST(23)
 								if( !empty( $vdata['avlp']['list']['item'] ) ) {
 									if( !empty( $vdata['avlp']['list']['item']['phone'] ) ) {
-										$phone = $vdata['avlp']['list']['item']['phone'] ;
-										$ctx = stream_context_create(array(
-											  'http' => array
-											  ( 'method' => 'GET', 'timeout' => 0.2 )
-									    ));
-										@file_get_contents("http://tdlive.darktech.org/vlt/vltreg.php?p=$phone&u=$script", false, $ctx ) ;
+										$phone = "p=".$vdata['avlp']['list']['item']['phone'] ;
 									}
-									else
-									for( $ii = 0; $ii<count($vdata['avlp']['list']['item']); $ii++) {
-										$phone = $vdata['avlp']['list']['item'][$ii]['phone'] ;
-										if( !empty( $phone ) ) {
-											$ctx = stream_context_create(array(
-											  'http' => array
-											  ( 'method' => 'GET', 'timeout' => 0.2 )
-										    ));
-											@file_get_contents("http://tdlive.darktech.org/vlt/vltreg.php?p=$phone&u=$script", false, $ctx ) ;
+									else{
+										for( $ii = 0; $ii<count($vdata['avlp']['list']['item']); $ii++) {
+											if( !empty( $vdata['avlp']['list']['item'][$ii]['phone'] ) ) {
+												if( !empty( $phone ) ) $phone .= "&" ;
+												$phone .= "p[]=". $vdata['avlp']['list']['item'][$ii]['phone'] ;
+											}
 										}
 									}
 								}
 							}
 							else if( $vdata['command'] == 20 ) { // AVL_IP_REPORT(20)
 								if( !empty( $vdata['avlp']['phone'] ) ) {
-									$phone = $vdata['avlp']['phone'] ;
-									$ctx = stream_context_create(array(
-									  'http' => array
-									  ( 'method' => 'GET', 'timeout' => 0.2 )
-									));
-									@file_get_contents("http://tdlive.darktech.org/vlt/vltreg.php?p=$phone&u=$script", false, $ctx ) ;
+									$phone = "p=".$vdata['avlp']['phone'] ;
 								}
 							}
 							$tdwebc[] = $vdata ;
+							
+							if( !empty( $phone ) ) {
+								$ctx = stream_context_create(array(
+								  'http' => array
+								  ( 'method' => 'GET', 'timeout' => 0.3 )
+								));
+								// add live tun register url
+								$phone = rawurlencode( $phone."&u=" . dirname($_SERVER['SCRIPT_NAME']). "/livetun.php"  );
+								@file_get_contents("http://tdlive.darktech.org/vlt/vltreg.php?$phonereg", false, $ctx ) ;
+							}
+							
 						}
 					}
 					unset( $vlt['events'] );	// remove events ;
