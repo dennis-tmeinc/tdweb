@@ -1,7 +1,7 @@
 <?php
 // drivebyvideo.php - video(mp4) file reader for drive by
 // Request:
-//      tag : drive tag file name
+//      tag : (idx) drive tag file name
 //      channel : channel name
 //  or : (from non-session external link)
 //      link : encoded tag file and channel 
@@ -17,20 +17,21 @@
 	require 'session.php' ;
 	require_once 'vfile.php' ;
 	// Content type
-	header("Content-Type: video/mp4");	
+	header("Content-Type: video/mp4");
 	
-	if( true ) {
-	
-		$v = vfile_get_contents( $driveby_eventdir.'/'.$_REQUEST['tag'] );
-		
-		if( !empty($v) ) {
-
-			$x = new SimpleXMLElement( $v );
-			if( $x->busid ) {
+	if( !empty( $_REQUEST['link'] ) ) {
+		$videofile = rtrim( mcrypt_decrypt( "blowfish", "drivebyvideolink", base64_decode($_REQUEST['link']), "ecb" ), "\0" ) ;
+	}
+	else if( $logon ) {
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+		$sql = "SELECT * FROM Drive_By_Event WHERE `idx` = $_REQUEST[tag] " ;
+		if($result=$conn->query($sql)) {
+			if( $row=$result->fetch_array(MYSQLI_ASSOC) ) {
+				$channels = new SimpleXMLElement( "<driveby>" . $row['Video_Files'] . "</driveby>" );
 				$ch=0 ;
 				if( !empty( $_REQUEST['channel'] ) ) {
-					for( $i=0; $i<count($x->channel); $i++ ) {
-						if( $_REQUEST['channel'] == $x->channel[$i]->name ) {
+					for( $i=0; $i<count($channels->channel); $i++ ) {
+						if( $_REQUEST['channel'] == $channels->channel[$i]->name ) {
 							$ch = $i ;
 							break;
 						}
@@ -41,56 +42,84 @@
 					}
 				}
 					
-				if( !empty( $x->channel[$ch]->video )) {
-
-					$f = vfile_open( $x->channel[$ch]->video, 'rb' ) ;
-					if( $f ) {
-						header( "Accept-Ranges: bytes" );
-						vfile_seek( $f, 0, SEEK_END );
-						$fsize = vfile_tell( $f );				
-						if( !empty( $_SERVER['HTTP_RANGE'] ) ) {
-							$range = sscanf($_SERVER['HTTP_RANGE'] , "bytes=%d-%d");
-							if( empty($range[1]) ) {
-								// max len
-								$lastpos = $fsize - 1 ;
-							}
-							else {
-								$lastpos = $range[1] ;
-							}
-							$len = $lastpos + 1 - $range[0] ;
-							vfile_seek( $f, $range[0] );
-							header("Content-Length: $len" );
-							header( "HTTP/1.1 206 Partial Content" );
-							header( sprintf("Content-Range: bytes %d-%d/%d", $range[0], $lastpos, $fsize ));
-						}
-						else {
-							$len = $fsize ;
-							header("Content-Length: $len" );
-							vfile_seek( $f, 0 );
-						}
-
-						while( $len > 0 ) {
-							set_time_limit(30);
-							$r = $len ;
-							if( $r > 64*1024 ) {
-								$r = 64*1024 ;
-							}
-							$da = vfile_read( $f, $r ) ;
-							if( strlen( $da ) > 0 ) {
-								echo $da ;
-								$len -= $r ;
-								if( connection_aborted () ) break;
-							}
-							else {
-								break;
-							}
-						}
-						
-						vfile_close( $f );
-					}
-					
+				if( !empty( $channels->channel[$ch]->video )) {
+					$videofile = $channels->channel[$ch]->video ;
 				}
 			}
+			$result->free();
+		}
+	}
+
+	
+	if( !empty( $videofile ) ) {
+		$vstat = vfile_stat( $videofile ) ;
+	}
+	
+	if( !empty( $vstat['size'] ) ) {
+		$fsize = $vstat['size'] ;
+		
+		// enable cache 
+		$expires=24*3600;		// expired in 1 day
+		header('Cache-Control: public, max-age='.$expires);
+		$lastmodtime = gmdate('D, d M Y H:i:s ', $vstat['mtime']).'GMT';
+		$etag = hash('md5', $videofile.$fsize.$vstat['mtime'] );
+		header('Expires: '.gmdate('D, d M Y H:i:s ', $_SERVER['REQUEST_TIME']+$expires).'GMT');
+		if( (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH']==$etag ) ) {
+			header("HTTP/1.1 304 Not Modified");
+			die;
+		}
+		header('Etag: '.$etag);
+		header('Last-Modified: '.$lastmodtime);
+	
+		$f = vfile_open( $videofile, 'rb' ) ;
+		if( $f ) {
+			header( "Accept-Ranges: bytes" );
+			if( !empty( $_SERVER['HTTP_RANGE'] ) ) {
+				$range = sscanf($_SERVER['HTTP_RANGE'] , "bytes=%d-%d");
+				if( empty( $range[0] ) ) {
+					$startpos = 0 ;
+				}
+				else {
+					$startpos = $range[0] ;
+				}
+				if( empty($range[1]) ) {
+					// max len 100k
+					$lastpos = $startpos + (100*1024 - 1) ;
+					if( $lastpos >=  $fsize ) 
+						$lastpos = $fsize - 1 ;
+				}
+				else {
+					$lastpos = $range[1] ;
+				}
+				$len = $lastpos - $startpos + 1 ;
+				vfile_seek( $f, $range[0] );
+				header( "Content-Length: $len" );
+				header( "HTTP/1.1 206 Partial Content" );
+				header( "Content-Range: bytes $startpos-$lastpos/$fsize" );
+			}
+			else {
+				$len = $fsize ;
+				header("Content-Length: $len" );
+			}
+
+			while( $len > 0 ) {
+				set_time_limit(30);
+				$r = $len ;
+				if( $r > 128*1024 ) {
+					$r = 128*1024 ;
+				}
+				$da = vfile_read( $f, $r ) ;
+				if( strlen( $da ) > 0 ) {
+					echo $da ;
+					$len -= $r ;
+					if( connection_aborted () ) break;
+				}
+				else {
+					break;
+				}
+			}
+			
+			vfile_close( $f );
 		}
 	}
 ?>

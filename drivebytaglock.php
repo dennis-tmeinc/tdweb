@@ -21,8 +21,14 @@
 		// update notes to lasttag file 
 		if( !empty($_REQUEST['lasttag']) ) {
 			$lasttagfile = $driveby_eventdir.'/'.$_REQUEST['lasttag'] ;
-			if( vfile_exists( $lasttagfile ) ) {
+			if( file_exists( $lasttagfile ) ) {
 				$x = new SimpleXMLElement( vfile_get_contents( $lasttagfile ) );
+
+				if( !empty($_REQUEST['imgquality']) )
+					$x->imgquality = $_REQUEST['imgquality'] ;
+				else 
+					$x->imgquality = "Good" ;
+				
 				if( !empty($_REQUEST['plateofviolator']) )
 					$x->plateofviolator = $_REQUEST['plateofviolator'] ;
 				else 
@@ -33,11 +39,11 @@
 				else 
 					unset( $x->notes ) ;
 
-				vfile_put_contents( $lasttagfile, $x->asXML() );
+				file_put_contents( $lasttagfile, $x->asXML() );
 			}
 		}
 	
-		$v = vfile_get_contents( $driveby_eventdir.'/'.$_REQUEST['tag'] );
+		$v = file_get_contents( $driveby_eventdir.'/'.$_REQUEST['tag'] );
 		if( $v ) {
 			$x = new SimpleXMLElement( $v );
 			if( $x->busid ) {

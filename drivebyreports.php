@@ -18,7 +18,11 @@ require 'session.php';
 // start up
 
 $(document).ready(function(){
-		
+
+<?php if( strpos( $_SERVER["REQUEST_URI"], "deletedreports" )>0 ) { ?>	  
+$("input#btdrivebydeletedreports").prop( "checked", true );
+<?php } ?>		
+
 $("button").button();	
 $(".btset").buttonset();
 $(".btset input").change(function(){
@@ -27,54 +31,110 @@ $(".btset input").change(function(){
 
 var selectedtag = "" ;
 
+
 // Event Tag list
-$("#tag_list").jqGrid({        
-    scroll: true,
-	datatype: "local",
-	height: 400,
-	width: 720,
-	caption: 'Drive By Events',
-    colNames: [ 'Client ID', 'Bus ID', 'Event Time', 'Plate', 'Status' ],
-    colModel: [ 
-      {name:'clientid', index:'clientid', width:180, sortable: true }, 
-      {name:'vehicle', index:'vehicle', width:180, sortable: true }, 
-      {name:'datetime', index:'datetime', width:180, sortable: true }, 
-      {name:'plate', index:'plate', width:180, sortable: true }, 
-      {name:'status', index:'status', width:180, sortable: true } 
+$("#tag_list").jqGrid({
+//    scroll: true,
+	datatype: "json",
+	url:'drivebygrid.php',
+	height: 300,
+	width: 1092,
+	caption: 'Drive By Event Tags',
+    colNames:['Client ID', 'Bus ID', 'Date/Time', 'License Plate', 'Image Quality', 'Status', 
+<?php if( strpos( $_SERVER["REQUEST_URI"], "deletedreports" )>0 ) { ?>	  
+	'Deleted By', 'Deleted Time', 
+<?php } else { ?>
+	'Processed By', 'Processed Time', 
+<?php } ?>	  
+	'Sent To', 'State', 'City/Town' ],
+    colModel :[ 
+      {name:'Client_Id', index:'Client_Id', width:180, sortable: true }, 
+      {name:'Bus_Id', index:'Bus_Id', width:180, sortable: true }, 
+      {name:'Date_Time', index:'Date_Time', width:180, sortable: true },
+      {name:'Plateofviolator', index:'Plateofviolator', width:180, sortable: true },
+      {name:'imgquality', index:'imgquality', width:180, sortable: true },
+	  {name:'email_status', index:'email_status', width:180, sortable: true },
+<?php if( strpos( $_SERVER["REQUEST_URI"], "deletedreports" )>0 ) { ?>	  
+      {name:'report_deleteby', index:'report_deleteby', width:180, sortable: true },
+      {name:'report_deletetime', index:'report_deletetime', width:180, sortable: true },
+<?php } else { ?>
+      {name:'event_processedby', index:'event_processedby', width:180, sortable: true },
+      {name:'event_processedtime', index:'event_processedtime', width:180, sortable: true },
+<?php } ?>	  
+      {name:'sentto', index:'sentto', width:180, sortable: true },
+      {name:'State', index:'State', width:180, sortable: true,  editable: true},
+      {name:'City', index:'City', width:180, sortable: true,  editable: true },
     ],
-	
+   	sortname: 'Date_Time',
+    sortorder: "desc",
+	pager: '#tag_list_pager',
+    viewrecords: true,
+	rowNum: 20 ,
+    rowList:[20, 50, 100, 200],	
+//	gridComplete: display_summary,
 	onSelectRow: function(id){ 
-		selectedtag = id ;
+		if( id && id!==selectedtag ) {
+			selectedtag = id ;
+		}
 	}
 });
+//jQuery("#tag_list").jqGrid('filterToolbar',{searchOperators : true});
+jQuery("#tag_list").jqGrid('filterToolbar',{searchOnEnter : false});
 
-(function load_taglist()
-{
-	$.getJSON("drivebytaglist.php?process=1", function(resp){
-		if( resp.res == 1 ) {
-			$("#tag_list").jqGrid("clearGridData");
-			var griddata = [] ;
-			for(var i=0;i<resp.tags.length;i++) {
-				griddata[i] = { tagname: resp.tags[i].tagname,
-						  clientid: resp.tags[i].clientid,
-						  vehicle: resp.tags[i].vehicle,
-						  datetime: resp.tags[i].datetime,
-						  plate: resp.tags[i].plate,
-						  status: resp.tags[i].status
-						};
-			}
-			$("#tag_list").jqGrid('addRowData','tagname',griddata);		
-			$("#tag_list").jqGrid('setGridParam',{sortname:'datetime'}).trigger('reloadGrid');
-			 
-			if( resp.tags.length>0 ) {
-				// to select first tag
-				var ids = $("#tag_list").jqGrid('getDataIDs');
-				if( ids[0] ) 
-					$("#tag_list").jqGrid('setSelection',ids[0],true);		
-			}
+<?php if( !strpos( $_SERVER["REQUEST_URI"], "deleted" ) ) { ?>	  
+$.getJSON("drivebysummary.php", function(resp){
+	if( resp.res ) {
+		var html='' ;
+		// thead
+		html += "<thead><tr>" ;
+		html += "<th>Month</th>" ;
+		var m ;
+		for( m=0; m<resp.summary.length; m++ ) {
+			html += "<td>" + resp.summary[m].month + "</td>" ;
 		}
-	});	
-})();
+		html+="</tr></thead>" ;
+		
+		// total events
+		html+="<tr><th>Total Events</th>" ;
+		for( m=0; m<resp.summary.length; m++ ) {
+			html += "<td>" + resp.summary[m].total + "</td>" ;
+		}
+		html+="</tr>" ;
+		
+		// Bad Images
+		html+="<tr><th>Bad Images</th>" ;
+		for( m=0; m<resp.summary.length; m++ ) {
+			html += "<td>" + resp.summary[m].Bad + "</td>" ;
+		}
+		html+="</tr>" ;
+		
+		// Poor Images
+		html+="<tr><th>Poor Images</th>" ;
+		for( m=0; m<resp.summary.length; m++ ) {
+			html += "<td>" + resp.summary[m].Poor + "</td>" ;
+		}
+		html+="</tr>" ;
+		
+		// Good Images
+		html+="<tr><th>Good Images</th>" ;
+		for( m=0; m<resp.summary.length; m++ ) {
+			html += "<td>" + resp.summary[m].Good + "</td>" ;
+		}
+		html+="</tr>" ;
+
+		// Reprots sent
+		html+="<tr><th>Reprots Sent</th>" ;
+		for( m=0; m<resp.summary.length; m++ ) {
+			html += "<td>" + resp.summary[m].Sent + "</td>" ;
+		}
+		html+="</tr>" ;
+		
+		$("table#summary_table").html(html);
+		$("div#summary14m").css("display","");
+		
+	}
+}) ;
+<?php } ?>	  
 
 // initialize Notes dialog
 $( ".dialog#dialog_editcontacts" ).dialog({
@@ -106,17 +166,18 @@ $( ".dialog#dialog_reviewvideo" ).dialog({
 	modal: true,
 	open: function( event, ui ) {
 		var param = {} ;
-		param.tag = selectedtag ;
-		$.getJSON("drivebytag.php", param, function(resp){
+		param.id = selectedtag ;
+		$.getJSON("drivebytagload.php", param, function(resp){
 			if( resp.res == 1 ) {
 				// setup camera select
 				var camopts = [] ;
 				var camopt = "" ;
-				for( var ch = 0 ; ch < resp.tag.channel.length; ch++ ) {
+				if( resp.tag.channels.channel.length )
+				for( var ch = 0 ; ch < resp.tag.channels.channel.length; ch++ ) {
 					// set lpr1
 					var name = "camera"+(ch+1) ;
-					if( resp.tag.channel[ch].name ) {
-						name = resp.tag.channel[ch].name ;
+					if( resp.tag.channels.channel[ch].name ) {
+						name = resp.tag.channels.channel[ch].name ;
 					}
 					camopts[ch] = name ;
 					camopt += "<option>"+name+"</option>" ;
@@ -167,10 +228,10 @@ $( ".dialog#dialog_sendreport" ).dialog({
 	modal: true,
 	open: function( event, ui ) {
 		var tag = $("#tag_list").jqGrid('getRowData', selectedtag);	
-		$("span#sr_clientid").text( tag.clientid );
-		$("span#sr_busid").text( tag.vehicle );
-		$("span#sr_eventtime").text( tag.datetime );
-		$("span#sr_plate").text( tag.plate );
+		$("span#sr_clientid").text( tag.Client_Id );
+		$("span#sr_busid").text( tag.Bus_Id );
+		$("span#sr_eventtime").text( tag.Date_Time );
+		$("span#sr_plate").text( tag.Plateofviolator );
 		$("input[name='sendreportfrom']").val(email_from);
 		$("textarea[name='sendreportto']").val(email_to);
 		$("textarea[name='sendreportnotes']").val(email_notes);
@@ -178,7 +239,7 @@ $( ".dialog#dialog_sendreport" ).dialog({
 	close: function( event, ui ) {
 	},
 	buttons:{
-		"Send": function() {
+		"Send": function(e) {
 			var param = {} ;
 			param.tag = selectedtag ;
 			email_from = param.from = $("input[name='sendreportfrom']").val();
@@ -186,8 +247,16 @@ $( ".dialog#dialog_sendreport" ).dialog({
 			email_notes = param.notes = $("textarea[name='sendreportnotes']").val();
 			$.getJSON("drivebysendreport.php", param, function(resp){
 				if( resp.res == 1 ) {
+					var param = {} 
+					param.id = selectedtag ;
+					$.getJSON("drivebytagload.php", param, function(resp){
+						if( resp.res == 1 ) {
+							jQuery("#tag_list").jqGrid('setRowData', resp.id, resp.tag);
+						}
+					});
 					alert( "Email reports send out successfully!");
 					$( ".dialog#dialog_sendreport" ).dialog("close");
+					//load_taglist();
 				}
 				else {
 					alert( "Failed to send out all email reports!");
@@ -213,9 +282,9 @@ $( ".dialog#dialog_delreport" ).dialog({
 	modal: true,
 	open: function( event, ui ) {
 		var tag = $("#tag_list").jqGrid('getRowData', selectedtag);	
-		$("span#dr_clientid").text( tag.clientid );
-		$("span#dr_busid").text( tag.vehicle );
-		$("span#dr_eventtime").text( tag.datetime );
+		$("span#dr_clientid").text( tag.Client_Id );
+		$("span#dr_busid").text( tag.Bus_Id );
+		$("span#dr_eventtime").text( tag.Date_Time );
 	},
 	buttons:{
 		"Delete": function() {
@@ -241,6 +310,7 @@ $( ".dialog#dialog_delreport" ).dialog({
 
 
 $("button#deletereport").click( function() {
+	if( selectedtag )
 	$( ".dialog#dialog_delreport" ).dialog("open");
 } );
 
@@ -287,14 +357,17 @@ $("#rcontainer").show('slow');
 <div id="workarea" style="width:auto;">
 
 <p class="btset">
-<input name="btset" href="driveby.php" id="btdriveby" type="radio" /><label for="btdriveby">Drive By Event Process</label>
-<input name="btset" href="drivebyreview.php" id="btdrivebyreview" type="radio" checked="checked" /><label for="btdrivebyreview">Drive By Event Review</label> 
+<input name="btset" href="drivebyevents.php"         id="btdrivebyevents"         type="radio" /><label for="btdrivebyevents">New Events</label>
+<input name="btset" href="drivebyprocessed.php"      id="btdrivebyprocessed"      type="radio" /><label for="btdrivebyprocessed">Processed Events</label> 
+<input name="btset" href="drivebydeleted.php"        id="btdrivebydeleted"        type="radio" /><label for="btdrivebydeleted">Deleted Events</label>
+<input name="btset" href="drivebyreports.php"        id="btdrivebyreports"        type="radio" checked="checked" /><label for="btdrivebyreports">Reports</label> 
+<input name="btset" href="drivebydeletedreports.php" id="btdrivebydeletedreports" type="radio" /><label for="btdrivebydeletedreports">Deleted Reports</label> 
 </p>
 
 <!-- work area --->
-
 <div>
 <table id="tag_list"></table> 
+<div id="tag_list_pager"></div> 
 </div>
 <p>
 <button id="reviewreport" >Review Report</button>
@@ -341,6 +414,12 @@ $("#rcontainer").show('slow');
 	<tr><td>Bus Id:</td><td><span id="dr_busid"></span></td></tr>
 	<tr><td>Event Time:</td><td><span id="dr_eventtime"></span></td></tr>
 	</table>
+</div>
+
+<div style="margin-left:14px;display:none" id="summary14m" >
+<h4>14 Months Status Summary</h4>
+<table border="1" class="summarytable" id="summary_table">
+</table>
 </div>
 
 <!-- workarea --></div>

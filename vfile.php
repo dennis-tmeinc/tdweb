@@ -154,6 +154,41 @@ function vfile_glob( $filename )
 	return false ;
 }
 
+function vfile_exec($cmd, &$output, &$ret)
+{
+	if( $fileserver = vfile_remote() ) {
+		// remote file
+		$j = vfile_readhttp( $fileserver."?c=e&n=".rawurlencode($cmd) ) ;
+		@$jd = json_decode( $j, true );
+		if( !empty( $jd['res'] ) ) {
+			$ret = $st['ret'] ;
+			$output = $st['output'] ;
+			$c = count($output) ;
+			if( $c > 0 ) {
+				return $output[$c-1] ;
+			}
+		}
+		return null ;
+	}
+	else {
+		// local file
+		return exec( $cmd,$result,$ret);
+	}
+}	
+
+// return url link of remote file (for read)
+function vfile_url( $filename )
+{
+	if( $fileserver = vfile_remote() ) {
+		// remote file
+		return $fileserver."?c=r&n=".rawurlencode($filename) ;
+	}
+	else {
+		// local file
+		return $filename ;
+	}
+}
+
 function vfile_get_contents( $filename )
 {
 	if( $fileserver = vfile_remote() ) {

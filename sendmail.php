@@ -1,12 +1,13 @@
 <?php
 // sendmail.php - send email directly to receiver without smtp server
-// By Dennis Chen @ TME	 - 2014-06-15
+// By Dennis Chen @ TME	 - 2014-07-21
 // Copyright 2014 Toronto MicroElectronics Inc.
 //
 	// x-mailer
-	$x_mailer = "Touchdown sendmail 0.1 - 247 Security Inc" ;
+	$x_mailer = "Touchdown sendmail 0.2 - 247 Security Inc" ;
 
-	function sendmail($to, $sender, $subject, $message, $attachments )
+	// create mail body
+	function mail_body( &$to, &$sender, &$subject, &$message, &$attachments )
 	{
 		// all mime content type I may use
 		$mime_type = array( 
@@ -32,10 +33,8 @@
 			"aac"  => "audio/x-wav"  ,
 			"wav"  => "audio/x-aac"  ,
 			"xml"  => "application/xml"  );
-	
+		
 		// fix $to addressses
-		$to = str_replace("\r", "", $to );
-		$to = str_replace("\n", " ", $to );
 		$to = str_replace(";", ",", $to );
 
 		// fix $subject (no newlines)
@@ -48,8 +47,8 @@
 		// Main header
         $msg  = "From: " . $sender . "\r\n" ;
         $msg .= "To: " . $to . "\r\n" ;
-        $msg .= "Subject: " . $subject . "\r\n" ; 
         $msg .= "Date: " . date("D, d M Y H:i:s O") . "\r\n" ;
+        $msg .= "Subject: " . $subject . "\r\n" ; 
 		// Customize X-Mailer
 		if( !empty( $x_mailer ) ) {
 			$msg .= "X-Mailer: " .$x_mailer. "\r\n" ;
@@ -62,28 +61,45 @@
 		$msg .= "\r\n--".$bdy."\r\n";
 
 		// attachments
-		if( is_array( $attachments ) ) {
-			$aa = $attachments ;
-		}
-		else {
-			$aa = array( $attachments ) ;
-		}
-		foreach( $aa as $att ) {
-			if( is_file( $att ) )
-				$content = file_get_contents( $att ) ;
-			if( !empty($content) ) {
-				$ext = strtolower( substr( $att, strrpos( $att, '.' )+1 ) );
-				if( !empty( $mime_type[$ext] ) ) {
-					$content_type = $mime_type[$ext] ;
+		foreach( $attachments as $att ) {
+			if( !empty( $att['content'] ) ) {
+				$content = $att['content'] ;
+				if( empty( $att['name'] ) ) {
+					$name = "attachment" ;
 				}
 				else {
-					$content_type = "application/octet-stream" ;
+					$name = $att['name'] ;
 				}
-				$msg .= "Content-Type: " .$content_type. "; name=\"".basename($att)."\"\r\n";
+			}
+			else {
+				if( empty( $att['name'] ) ) {
+					$name = $att ;
+				}
+				else {
+					$name = $att['name'] ;
+				}
+				@$content = file_get_contents( $name ) ;
+			}
+			if( !empty($content) ) {
+				$name = basename($name);
+				if( !empty( $att['type'] ) ) {
+					$content_type = $att['type'] ;
+				}
+				else {
+					$ext = strtolower( substr( $name, strrpos( $name, '.' )+1 ) );
+					if( !empty( $mime_type[$ext] ) ) {
+						$content_type = $mime_type[$ext] ;
+					}
+					else {
+						$content_type = "application/octet-stream"  ;
+					}
+				}
+				$msg .= "Content-Type: $content_type; name=\"$name\"\r\n";
 				$msg .= "Content-Transfer-Encoding: base64\r\n";
-				$msg .= "Content-Disposition: attachment; filename=\"".basename($att)."\"\r\n\r\n";
+				$msg .= "Content-Disposition: attachment; filename=\"$name\"\r\n\r\n";
 				$msg .= chunk_split(base64_encode($content));
 				$msg .= "\r\n--".$bdy."\r\n";
+				unset( $content );
 			}
 		}
 		
@@ -92,14 +108,23 @@
 		$msg .= "Content-Transfer-Encoding: quoted-printable\r\n\r\n";
 		
 		// quoted printable
-		$message = quoted_printable_encode( $message );
-		if( !empty( $message ) ) {
-			$message = str_replace("\n.", "\n..", $message );
+		$qmessage = quoted_printable_encode( $message );
+		if( !empty( $qmessage ) ) {
+			$qmessage = str_replace("\n.", "\n..", $qmessage );
 		}
-		$msg .= $message;
+		$msg .= $qmessage;
 		
 		// end of last part and end of message
 		$msg .= "\r\n--".$bdy."--\r\n\r\n.\r\n";
+
+		return $msg ;
+	}
+	
+	function sendmail($to, $sender, $subject, &$message, &$attachments )
+	{
+
+		// build email message body
+		$body = mail_body( $to, $sender, $subject, $message, $attachments ) ;
 
 		$errors = 0 ;
 		
@@ -155,7 +180,7 @@
 				socket_set_timeout($mxcli, 5);
 				if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
 
-				fwrite($mxcli, "HELO [". $myip. "]\r\n" );
+				fwrite($mxcli, "EHLO [". $myip. "]\r\n" );
 				if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
 
 				fwrite($mxcli, "MAIL FROM:<".$from.">\r\n");
@@ -169,7 +194,7 @@
 				fwrite($mxcli, "DATA\r\n");
 				if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
 				// Send message data
-				fwrite($mxcli, $msg);
+				fwrite($mxcli, $body);
 				if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
 
 				// Quit connection
@@ -187,4 +212,127 @@
 		else return false ;
      }
 
+	// sending mail use ssl connection ( use gmail,yahoo... accounts) 
+	function sendmail_secure($to, $sender, $subject, &$message, &$attachments )
+	{
+		// get email settings from tdalert email settings
+		global $smart_server, $smart_user, $smart_password, $smart_database ;
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+		$sql = "SELECT smtpServer,smtpServerPort,security,authenticationUserName,authenticationPassword,senderAddr FROM tdconfig ;" ;
+		if( !empty($conn) && ($result=$conn->query($sql)) ) {
+			$mailer = $result->fetch_assoc() ;
+		}
+
+		if( empty($mailer) || empty($mailer['smtpServer']) || !function_exists("openssl_encrypt") ) {
+			// fall back to use sendmail
+			return sendmail($to, $sender, $subject, $message, $attachments );
+		}
+		
+		@$mail_account = $mailer['authenticationUserName'] ;
+		@$mail_password = $mailer['authenticationPassword'] ;
+		if( empty( $mailer['senderAddr'] ) )
+			$mail_from = $sender ;
+		else 
+			$mail_from = $mailer['senderAddr'] ;
+
+		if( $mailer['security']==2 )
+			$mail_protocol = "ssl://" ;
+		else if( $mailer['security']==1 )
+			$mail_protocol = "tls://" ;
+		else 
+			$mail_protocol = "tcp://" ;
+		$mail_url=$mail_protocol.$mailer['smtpServer'].':'.$mailer['smtpServerPort'] ;
+	
+		// mail body data
+		$body = mail_body( $to, $sender, $subject, $message, $attachments ) ;
+		if( $sender != $mail_from ) {
+			// add reply address
+			$body = "Reply-To: $sender \r\n" . $body ;
+		}
+
+		$myip = trim(file_get_contents("http://myip.dtdns.com/"));
+		
+		// get sender address inside "<>" brackets
+		$from = trim($sender);
+		if( strpos($from, "<")!==false )
+		{	
+			$from = substr( $from, strpos( $from, "<" )+1, -1 ) ;
+		}
+
+		// receive smpt response
+		function sm_resp( $cli )
+		{
+			while( $l=fgets( $cli ) ) {
+				if( $l[3]=='-' ) continue ;
+				else return $l[0] ;
+			}
+			return 5 ;	// error
+		}
+		
+		// assume error
+		$errors = 1 ;
+
+		// send out email
+		$mxcli = stream_socket_client($mail_url);
+		if($mxcli)
+		{
+			$errors = 0 ;
+			socket_set_timeout($mxcli, 10);
+			if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+
+			fwrite($mxcli, "EHLO [". $myip. "]\r\n" );
+			if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+
+			if( !empty($mail_account) ) {
+				// auth login
+				fwrite($mxcli, "AUTH LOGIN\r\n");
+				if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+				
+				fwrite($mxcli, base64_encode($mail_account)."\r\n");
+				if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+				
+				fwrite($mxcli, $mail_password."\r\n");
+				if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+			}
+
+			fwrite($mxcli, "MAIL FROM:<".$mail_from.">\r\n");
+			if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+
+			// extract recipients
+			$to = explode(",", $to);
+			foreach( $to as $toaddr ) {
+				// extract address inside brackets
+				$b = strpos($toaddr, '<' ) ;
+				if( $b!==false ) {
+					$toaddr = substr( $toaddr, $b+1 ) ;
+					$b = strpos($toaddr, '>' ) ;
+					if( $b!==false ) {
+						$toaddr = substr( $toaddr, 0, $b );
+					}
+				}
+				$toaddr = trim($toaddr);	
+				if( !empty( $toaddr ) ) {
+					fwrite($mxcli, "RCPT TO:<".$toaddr.">\r\n");
+					if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+				}
+			}
+
+			fwrite($mxcli, "DATA\r\n");
+			if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+			// Send message data
+			fwrite($mxcli, $body);
+			if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+
+			// Quit connection
+			fwrite($mxcli, "QUIT\r\n");
+			if( sm_resp( $mxcli ) > 3 ) { $errors++ ; }
+
+			fclose($mxcli);
+		}
+		else {
+			$errors++ ;
+		}
+		if( $errors==0 ) return true ;
+		else return false ;
+     }
 ?>

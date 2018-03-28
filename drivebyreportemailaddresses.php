@@ -8,9 +8,10 @@
 //
 
     require 'session.php' ;
+	require_once 'vfile.php' ;
 	header("Content-Type: application/json");
 	if( $logon ) {
-		$email = file_get_contents( $driveby_eventdir.'/email.conf' );
+		$email = vfile_get_contents( $driveby_eventdir.'/email.conf' );
 		if( $email ) {
 			$email = json_decode( $email, true ) ;
 			if( !empty( $email['to'] ) ) {

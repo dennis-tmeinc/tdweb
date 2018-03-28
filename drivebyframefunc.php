@@ -4,11 +4,11 @@
 // Copyright 2013 Toronto MicroElectronics Inc.
 //
 
-	require 'vfile.php' ;
-			
+	require_once 'vfile.php' ;
+
 	function drivebyframe_x($tagfile, $channel, $pos )
 	{
-		$v = vfile_get_contents( $tagfile );
+		$v = file_get_contents( $tagfile );
 		if( $v ) {
 			$x = new SimpleXMLElement( $v );
 			if( $x->busid ) {
@@ -74,9 +74,9 @@
 		return false ;
 	}
 
-	function drivebysframe($tagfile, $channel, $pos )
+	function drivebysframe_f($tagfile, $channel, $pos )
 	{
-		$v = vfile_get_contents( $tagfile );
+		$v = file_get_contents( $tagfile );
 		if( $v ) {
 			$x = new SimpleXMLElement( $v );
 			if( $x->busid ) {
@@ -113,4 +113,19 @@
 		return false ;
 	}
 	
+	function drivebysframe($videofile, $pos )
+	{
+		$imgfile = "videocache/frame".md5($videofile.$pos).".jpg" ;
+		$pos += 0.03 ;
+		$cmdline = "bin\\ffmpeg.exe -ss $pos -i $videofile -frames 1 $imgfile" ;
+
+		set_time_limit(50) ;
+		$eoutput = array();
+		$eret = 1 ;
+		vfile_exec( $cmdline, $eoutput, $eret ) ;
+		if( $eret==0 && vfile_isfile( $imgfile ) ) {
+			return $imgfile ;
+		}
+		return false ;
+	}
 ?>

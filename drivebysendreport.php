@@ -10,35 +10,33 @@
 // By Dennis Chen @ TME	 - 2014-05-26
 // Copyright 2013,2014 Toronto MicroElectronics Inc.
 //
-
     require 'session.php' ;
+	require_once 'vfile.php' ;
 	header("Content-Type: application/json");
+	require_once "sendmail.php" ;
+
+	header("Content-Type: application/json");
+	
 	if( $logon ) {
-		require 'vfile.php' ;
-		require "sendmail.php" ;
-		
 		// save to/from addresses
 		$email = array();
 		$email['to'] = $_REQUEST['to'] ;
 		$email['from'] = $_REQUEST['from'] ;
 		$email['notes'] = $_REQUEST['notes'] ;
-		file_put_contents( $driveby_eventdir.'/email.conf', json_encode($email) );
+		vfile_put_contents( $driveby_eventdir.'/email.conf', json_encode($email) );
 
-		$tagfile = $driveby_eventdir.'/'.$_REQUEST['tag'] ;
-		$x = vfile_get_contents( $tagfile ) ;
-		if( $x ) {
-			$x = new SimpleXMLElement( $x );
-			if( empty($x) ) {
-				return ;
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+		$sql = "SELECT * FROM Drive_By_Event WHERE `idx` = $_REQUEST[tag] " ;
+		if($result=$conn->query($sql)) {
+			if( $row=$result->fetch_array(MYSQLI_ASSOC) ) {
+				$report_file = $driveby_eventdir. '/' . $row['report_file'] ;
 			}
+			$result->free();
 		}
 		
-		$pdffile = substr( $tagfile, 0, strrpos($tagfile, '.') ).".pdf" ;
-		$reportname = str_replace( ' ', '_', "Report_". $x->busid. "_". $x->time . ".pdf" ) ;
-
-		$pdf_buffer = file_get_contents( $pdffile );
-		
-		if( is_file( $pdffile ) ) {
+		// output pdf
+		$pdf_buffer = vfile_get_contents( $report_file );
+		if( $pdf_buffer ) {
 			$subject = "Stop-Arm Drive-By Violation Report" ;
 			$message = "Stop-Arm Drive-By Violation Report\n\n" .
 					   "  Date-Time: ".$x->time . "\n" .
@@ -46,9 +44,17 @@
 			if( !empty( $email['notes'] ) ) {
 				$message .= "Notes:\n". $email['notes'] ; 
 			}
+			$attachment=array();
+			$attachment[0]['name'] = "DriveByReport.pdf" ;
+			$attachment[0]['content'] = $pdf_buffer ;
 			
-			if( sendmail( $_REQUEST['to'], $_REQUEST['from'], $subject, $message, $pdffile ) ) {
+			if( sendmail_secure( $_REQUEST['to'], $_REQUEST['from'], $subject, $message, $attachment ) ) {
 				$resp['res'] = 1 ;
+				
+				// update event status
+				$sql = "UPDATE Drive_By_Event SET `email_status` = 'Sent', `sentto` = '$_REQUEST[to]'  WHERE `idx` = $_REQUEST[tag] " ;
+				$conn->query($sql) ;
+
 			}
 		}
 
