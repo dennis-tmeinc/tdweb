@@ -12,11 +12,9 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
-		if( $_SESSION['user_type'] == "admin" ) {		// admin only
-		
+		if( $_SESSION['user_type'] == "admin" ) {		// admin (power user) only
 			// MySQL connection
 			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-
 			// secaped sql values
 			$esc_req=array();		
 			foreach( $_REQUEST as $key => $value ){
@@ -28,17 +26,26 @@
 
 					$result=array();
 					$ret=-1 ;
-					exec("reg query HKLM\\Software\\tme\\touchdown",$result,$ret);
+					
+					// double the last '\'
+					if( substr( $value, -1 ) == "\\" ) {
+						$value .= "\\" ;
+					}
+					
+					exec("reg query HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown", $result, $ret);
+					
 					if( $ret == 0 ) {
-						exec("reg ADD HKLM\\Software\\tme\\touchdown /v $key /d \"$value\" /f");
+						// 64bit OS?
+						exec( "reg ADD HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown /v $key /f /d " . escapeshellarg( $value ));
 					}
 					else {
-						// try 64bit OS?
-						exec("reg ADD HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown /v $key /d \"$value\" /f");
+						// 32bit OS?
+						exec( "reg ADD HKLM\\SOFTWARE\\tme\\touchdown /v $key /f /d " . escapeshellarg( $value ));
 					}
 					
 				}
 			}
+					
 			$sql="UPDATE tdconfig SET keepGpsLogDataForDays = $esc_req[keepGpsLogDataForDays], keepVideoDataForDays = $esc_req[keepVideoDataForDays] ;" ;
 			if( $conn->query($sql) ) {
 				$resp['res']=1 ;	// success

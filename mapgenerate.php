@@ -202,6 +202,14 @@
 			$filter_event .= "( vl_incident = 23 )" ;
 		}
 	
+		// Drive By Event
+		if( !empty($_REQUEST['bDriveby']) ) {
+			if( strlen( $filter_event )>0 ) {
+				$filter_event .= " OR " ;
+			}
+			$filter_event .= "( vl_incident = 40 )" ;
+		}
+	
 		// g-force filter
 		$filter_gforce = '';
 		

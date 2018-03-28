@@ -802,7 +802,7 @@ bus2 : fan alert
 			<td><input name="racing_start" size="5" type="text" />g</td>
 		</tr>
 		<tr>
-			<td style="text-align: right;">Des. Stops(s)</td>
+			<td style="text-align: right;">Bus Stops(s)</td>
 			<td><input name="bstop_duration" type="text" /></td>
 			<td style="text-align: right;">Rear Impact</td>
 			<td><input name="rear_impact" size="5" type="text" />g</td>

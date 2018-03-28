@@ -80,7 +80,7 @@ $("#videolist").jqGrid({
     url:'videogrid.php',
     datatype: 'json',
     mtype: 'GET',
-    colNames:['Vehcile Name','Date&Time', 'Duration','Filename','Description'],
+    colNames:['Vehicle Name','Date&Time', 'Duration','Filename','Description'],
     colModel :[ 
       {name:'vehicle_name', index:'vehicle_name', sortable: true, width:100}, 
       {name:'time_start', index:'time_start', width:110, sortable: true}, 
@@ -414,7 +414,7 @@ Vehicles &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="selectallvehicle">Select All<
 </form>
 <button id="deletevideo"><img src="res/button_delete.png" > Delete </button>
 <button  id="playvideo"><img src="res/button_play.png" > Play </button>
-<?php if( ! empty( $webplay_support ) ) { ?>
+<?php if( ! empty( $webplay_enable ) ) { ?>
 <button  id="webplay"> Preview Video Clip </button>
 <?php } ?>
 <a  id="playsync" href="mapview.php?sync=1" >Sync on Map View</a>

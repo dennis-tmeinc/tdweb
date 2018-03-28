@@ -78,7 +78,7 @@ $("#vllist").jqGrid({
 	datatype: "json",
 	height: 380,
 	width: 768,
-    colNames:['Vehcile','Driver', 'Activity','Date-Time','Duration', 'Speed', 'Coordinates'],
+    colNames:['Vehicle','Driver', 'Activity','Date-Time','Duration', 'Speed', 'Coordinates'],
     colModel :[ 
       {name:'vl_vehicle_name', index:'vl_vehicle_name', sortable: true, width:120}, 
       {name:'vl_driver_name', index:'vl_driver_name', width:100, sortable: true}, 
@@ -110,6 +110,7 @@ $("#vllist").jqGrid({
 			17:"res/map_icons_desstop.png",
 			18:"res/map_icons_park.png",
 			23:"res/map_icons_mevent.png" ,
+			40:"res/map_icons_driveby.png" ,
 			100:"speed_icon.php",
 			101:"res/map_icons_fi.png" ,
 			102:"res/map_icons_ri.png" ,
@@ -169,6 +170,19 @@ $( "#eventmapdialog" ).dialog({
 	height:450
 });
  
+$("button#reportexport").click(function(){
+	var xtd = $("table#reportsummary td");
+	var action = "reportexport.php" ;
+	var q = {} ;
+	for( var i=0; i<xtd.length; i+=2 ) {
+		if( xtd[i].innerText.length>2 ) {
+			q[xtd[i].innerText] = xtd[i+1].innerText ;
+		}
+	}
+	action  += "?" + $.param( q );
+	window.open(action);
+});
+
 $(window).unload(function() {
 	// just send it out
 	$.getJSON("vlgridclean.php");
@@ -269,7 +283,8 @@ function map_generate_x(mapevent, formdata)
 	 16:'res/map_icons_g.svg',
 	 17:'res/map_icons_desstop.png',
 	 18:'res/map_icons_park.png',
-	 23:'res/map_icons_mevent.png'
+	 23:'res/map_icons_mevent.png',
+	 40:'res/map_icons_driveby.png'
 	} ;
 
 	var html="";
@@ -422,7 +437,7 @@ function map_generate_x(mapevent, formdata)
 <div id="workarea" style="width:auto;">
 <h4>Events Summary</h4>
 
-<table cellpadding="1" cellspacing="0" class="summarytable" >
+<table id="reportsummary" cellpadding="1" cellspacing="0" class="summarytable" >
 	<colgroup>
 		<col style="white-space: nowrap; text-align: right;" />
 		<col class="altcol" style="min-width:100px" />
@@ -435,7 +450,7 @@ function map_generate_x(mapevent, formdata)
 	</colgroup>
 	<tbody>
 		<tr>
-			<td style="text-align: right;">Start Date-Time</td>
+			<td style="text-align: right;">Start Date-Time:</td>
 			<td id="starttime">&nbsp;</td>
 			<td style="text-align: right;">Stopping Total:</td>
 			<td id="stoptotal">&nbsp;</td>
@@ -467,7 +482,7 @@ function map_generate_x(mapevent, formdata)
 		<tr>
 			<td style="text-align: right;">Travel Distance:</td>
 			<td id="traveldistance">&nbsp;</td>
-			<td style="text-align: right;">Designated Stops:</td>
+			<td style="text-align: right;">Bus Stops:</td>
 			<td id="desstoptotal">&nbsp;</td>
 			<td style="text-align: right;">Bumpy rides:</td>
 			<td id="bumpyrides">&nbsp;</td>
@@ -499,6 +514,11 @@ function map_generate_x(mapevent, formdata)
 </div>
 
 </div>
+
+<form id="reportexport" enctype="application/x-www-form-urlencoded" method="get" action="reportexport.php"  >
+</form>
+<button id="reportexport">Export</button>
+
 </div>
 <!-- workarea --></div>
 <!-- mcontainer --></div>

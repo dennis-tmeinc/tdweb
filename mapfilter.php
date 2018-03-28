@@ -33,8 +33,8 @@
 </fieldset>
 <p/>
 
-<p><input checked="checked" name="vehicleType" type="radio" value="0" />Vehicle<input name="vehicleType" type="radio" value="1" />Group<select name="vehicleGroupName" style="width:150px" ></select></p>
-<p><input checked="checked" name="zoneType" type="radio" value="0" />Inside<input name="zoneType" type="radio" value="1" />Outside<select name="zoneName" style="width:150px">
+<p><input checked="checked" name="vehicleType" type="radio" value="0" />Vehicle<input name="vehicleType" type="radio" value="1" />Group <select name="vehicleGroupName" style="width:150px" ></select></p>
+<p><input checked="checked" name="zoneType" type="radio" value="0" />Inside<input name="zoneType" type="radio" value="1" />Outside <select name="zoneName" style="width:150px">
 <option>No Restriction</option>
 <?php
 	if( basename($_SERVER["REQUEST_URI"]) == "mapview.php" ) {
@@ -59,31 +59,35 @@
 <h3>Select Events</h3>
 <div>
 
-<table border="0" cellpadding="0" cellspacing="0" id="event" width="100%">
+<table border="0" cellpadding="0" cellspacing="1" id="event" width="100%">
 	<tbody>
 		<tr>
-			<td><input checked="checked" name="bStop" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_stop.png" /> Stopping</td>
-			<td><input name="stopDuration" size="6" type="text" />s</td>
+			<td><input checked="checked" name="bStop" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_stop.png" /> Stopping </td>
+			<td><input name="stopDuration" size="6" type="text" /> s </td>
 		</tr>
 		<tr>
-			<td><input checked="checked" name="bDesStop" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_desstop.png" /> Bus Stops</td>
-			<td><input name="desStopDuration" size="6" type="text" />s</td>
+			<td><input checked="checked" name="bDesStop" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_desstop.png" /> Bus Stops&nbsp;</td>
+			<td><input name="desStopDuration" size="6" type="text" /> s </td>
 		</tr>
 		<tr>
-			<td><input checked="checked" name="bIdling" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_idle.png" /> Idling</td>
-			<td><input name="idleDuration" size="6" type="text" />s</td>
+			<td><input checked="checked" name="bIdling" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_idle.png" /> Idling </td>
+			<td><input name="idleDuration" size="6" type="text" /> s </td>
 		</tr>
 		<tr>
-			<td><input checked="checked" name="bParking" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_park.png" /> Parking</td>
-			<td><input name="parkDuration" size="6" type="text" />s</td>
+			<td><input checked="checked" name="bParking" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_park.png" /> Parking </td>
+			<td><input name="parkDuration" size="6" type="text" /> s </td>
 		</tr>
 		<tr>
-			<td><input checked="checked" name="bSpeeding" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_speed.png" /> Speeding</td>
-			<td>Limit:<input maxlength="10" name="speedLimit" size="3" type="text" value="0" />mph</td>
+			<td colspan="2"><input checked="checked" name="bSpeeding" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_speed.png" /> Speeding Limit: <input maxlength="10" name="speedLimit" size="2" type="text" value="0" /> mph</td>
 		</tr>
 		<tr>
-			<td><input checked="checked" name="bRoute" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_route.png" /> Route</td>
-			<td><input checked="checked" name="bEvent" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_mevent.png" /> M.Events</td>
+			<td colspan="2"><input checked="checked" name="bRoute" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_route.png" /> Route </td>
+		</tr>
+		<tr>
+			<td colspan="2"><input checked="checked" name="bEvent" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_mevent.png" /> M.Events </td>
+		</tr>
+		<tr>
+			<td colspan="2"><input checked="checked" name="bDriveby" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_driveby.png" /> Drive By </td>
 		</tr>
 	</tbody>
 </table>
@@ -92,42 +96,42 @@
 
 <h3>G-Force Parameters</h3>
 <div>
-<table border="0" cellpadding="0" cellspacing="0" id="gforceparameters" style="width: 100%;">
+<table border="0" cellpadding="0" cellspacing="1" id="gforceparameters" style="width: 100%;">
 	<tbody>
 		<tr>
 			<td><input checked="checked" name="bRacingStart" type="checkbox" />
 			<img alt="" class="evicon" src="res/map_icons_rs.png" /></td><td>Racing Start</td>
-			<td><input name="gRacingStart" size="5" type="text" value="0.0" />g</td>
+			<td><input name="gRacingStart" size="5" type="text" value="0.0" /> g </td>
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bHardBrake" type="checkbox" />
 			<img alt="" class="evicon" src="res/map_icons_hb.png" /></td><td>Hard Brake</td>
-			<td><input name="gHardBrake" size="5" type="text" value="0.0" />g</td>
+			<td><input name="gHardBrake" size="5" type="text" value="0.0" /> g </td>
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bHardTurn" type="checkbox" />
 			<img alt="" class="evicon" src="res/map_icons_ht.png" /></td><td>Hard Turn</td>
-			<td><input name="gHardTurn" size="5" type="text" value="0.0" />g</td>
+			<td><input name="gHardTurn" size="5" type="text" value="0.0" /> g </td>
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bRearImpact" type="checkbox" />
 			<img alt="" class="evicon" src="res/map_icons_ri.png" /></td><td>Rear Impact</td>
-			<td><input name="gRearImpact" size="5" type="text" value="0.0" />g</td>
+			<td><input name="gRearImpact" size="5" type="text" value="0.0" /> g </td>
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bFrontImpact" type="checkbox" />
 			<img alt="" class="evicon" src="res/map_icons_fi.png" /></td><td>Front Impact</td>
-			<td><input name="gFrontImpact" size="5" type="text" value="0.0" />g</td>
+			<td><input name="gFrontImpact" size="5" type="text" value="0.0" /> g </td>
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bSideImpact" type="checkbox" />
 			<img alt="" class="evicon" src="res/map_icons_si.png" /></td><td>Side Impact</td>
-			<td><input name="gSideImpact" size="5" type="text" value="0.0" />g</td>
+			<td><input name="gSideImpact" size="5" type="text" value="0.0" /> g </td>
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bBumpyRide" type="checkbox" />
 			<img alt="" class="evicon" src="res/map_icons_br.png" /></td><td>Bumpy Ride</td>
-			<td><input name="gBumpyRide" size="5" type="text" value="0.0" />g</td>
+			<td><input name="gBumpyRide" size="5" type="text" value="0.0" /> g </td>
 		</tr>
 	</tbody>
 </table>

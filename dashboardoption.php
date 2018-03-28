@@ -178,7 +178,7 @@ $("#rcontainer").show(200);
 <form action="#" id="dashboardoption">
 <p>Morning Report / Start Of Day: (Cut-Off Time) <input maxlength="8" id="startofday" name="tmStartOfDay" type="text" value="3:00" /></p>
 
-<p>Number of Days to Calculate Average Form Data: <input name="nAverageDuration" type="text" value="90" /></p>
+<p>Calculate Average From: <input name="nAverageDuration" type="number" value="90" min="1" max="366" /> Days</p>
 
 <p style="display:none;">Status Summary: (Check Items To Display)</p>
 

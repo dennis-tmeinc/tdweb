@@ -1,9 +1,16 @@
 Touch Down Center 
 Release Notes
 
+V3.7 (2013-12-18)
+	Report View export to .csv file
+	Some typo corrected
+	Some adjusts on map filter options
+	Add support of "Drive By" events
+	Fix unable to save "Storage&Bacup" options, (Caused by trailing backslash in directory options)
+	
 V3.6 (2013-12-17)
 	Add target="_blank" to all file downloading links, to fix incompatibility between IE and other web browser
-	Fix date error on live track infofox
+	Fix date error on live track infobox
 	Fix normal user delete quick filter of other users
 	Change "user defined" zone name to "Current Map"
 	Add "Default Area" to zone list on "Map View" page
@@ -16,6 +23,7 @@ V3.6 (2013-12-17)
 	Prompt keep gps data warning
 	Add more space on map filter inputs
 	Use accordion to hide/show map filter events and g-force inputs
+	Search "button" on zone setup page
 	
 
 V3.5 (2013-12-05)

@@ -13,13 +13,10 @@
 	$map_icons=100;
 	
 	// MSS configure file
-	$mss_conf="/TouchDownCenter/external/mss.conf";
+	$mss_conf="C:\\SmartSvrApps\\mss.conf";
 	
 	// Dashboard Option file
-	$dashboard_conf="/TouchDownCenter/external/dashboardoption.config" ;
-	
-	// Not used anymore
-	// $mysql_util="\\TouchDownCenter\\mysql\\bin" ;
+	$dashboard_conf="C:\\SmartSvrApps\\dashboardoption.config" ;
 	
 	// backup file location, 
 	$backup_path="\\TouchDownCenter\\mysql\\backup" ;
@@ -44,7 +41,7 @@
 	
 	// bing map
 	$map_credentials="AnC6aHa2J8jWAluq14HQu6HDH1cDshGtPEPrYiotanIf-q6ZdoSiVGd96wzuDutw";
-	// Default map location, comment it for auto detect
+	// Default map location, comment it to auto detect
 	$map_area="New York" ;
 	
 	// session timeout (max half hour)
@@ -61,11 +58,9 @@
 	//              vader dot-luv mint-choc black-tie trontastic swanky-purse
 	$default_ui_theme = "start" ;
 	
-	// web video playback
-	$webplay_support = 1 ;
-	// Maximum videos cache size in Mega Bytes
-	$webplay_cache_size = 10000 ;
-	
+	// DVRViewer Installation File
+	$playerinstallfile = "player/player.msi" ;
+
 	// enable or disable live track
 	$enable_livetrack = 1 ;
 	// live track server (AVL Service)
@@ -75,6 +70,7 @@
 	
 	// setup time zone
 	date_default_timezone_set($timezone) ;	
+	// persistent database connection
 	if(	$database_persistent ) {
 		$smart_server = "p:".$smart_host ;
 	}
