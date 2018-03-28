@@ -1,0 +1,9 @@
+Event number used on table 'vl', 'quickfilter'
+
+1:  Stop
+2:  route
+4:  idling
+16: g-force event
+17: designated stop
+18: parking
+23: marked event 

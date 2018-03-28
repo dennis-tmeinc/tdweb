@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg id="svg2985" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="16" width="16" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+ <metadata id="metadata2990">
+  <rdf:RDF>
+   <cc:Work rdf:about="">
+    <dc:format>image/svg+xml</dc:format>
+    <dc:type rdf:resource="http://purl.org/dc/dcmitype/StillImage"/>
+    <dc:title/>
+   </cc:Work>
+  </rdf:RDF>
+ </metadata>
+ <g id="layer1">
+  <path id="circle3014" d="M15.183,7.7863c0.093,3.6097-3.078,6.9447-6.6953,7.0027-3.1205,0.156-6.232-1.998-7.0342-5.0466-0.81539-2.7961,0.2643-6.0749,2.7164-7.7008,2.3943-1.6795,5.8701-1.7016,8.1911,0.1297,1.7332,1.3032,2.8681,3.4289,2.822,5.615z" stroke="#000" stroke-width="1" fill="#FF0"/>
+  <text id="text3036" style="letter-spacing:0px;word-spacing:0px;" font-weight="normal" xml:space="preserve" font-size="9px" line-height="125%" font-style="normal" y="10.999505" x="2.0722773" font-family="Sans" fill="#000000"><tspan id="tspan3038" y="10.999505" x="2.0722773">RS</tspan></text>
+ </g>
+</svg>
