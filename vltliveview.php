@@ -18,28 +18,38 @@
 	if( $logon ){
 	
 		$server = array() ;
+		
+		if( !empty($_REQUEST['info']) ) {
+			$req = json_decode( $_REQUEST['info'], true ) ;
+			
+			$info = $req ;
+			$info['name'] = $req['dvrid'] ;
 
-		$server['protocol'] = "dvr" ;
-		$server['host'] = $_REQUEST['ip'] ;
-		if( !empty($_REQUEST['type']) ) {
-			$server['type'] = $_REQUEST['type'] ;
+			$server = array();
+			$server['protocol'] = "dvr" ;
+			$server['host'] = $req['ip'] ;
+			
+			if( !empty( $liveplay_protocol ) ) {
+				$server['protocol'] = $liveplay_protocol ;
+				if( !empty( $liveplay_host ) ) {
+					$server['host'] = $liveplay_host ;
+				}
+				if( !empty( $liveplay_port ) ) {
+					$server['port'] = $liveplay_port ;
+				}
+			}
+			
+			$dpl = array();
+			$dpl["server"] = $server ;
+			$dpl['info'] = $info ;
+			
+			echo "#DPL\r\n" ;
+			echo "# Content-Type: JSON\r\n" ;
+			echo "# Touch Down Center ". $_SESSION['release']."\r\n\r\n" ;
+			
+			echo json_encode( $dpl ) ;
 		}
-		
-		$info = array();
-		$info['name'] = $_REQUEST['dvrid'] ;
-		$info['phone'] = $_REQUEST['phone'] ;
-		$info['support_playback'] = 1 ;
-		$info['support_live'] = 1 ;
-		
-		$dpl = array();
-		$dpl["server"] = $server ;
-		$dpl['info'] = $info ;
-		
-		echo "#DPL\r\n" ;
-		echo "# Content-Type: JSON\r\n" ;
-		echo "# Touch Down Center ". $_SESSION['release']."\r\n\r\n" ;
-		
-		echo json_encode( $dpl ) ;
+
 	}
 	else {
 		echo json_encode( $resp );

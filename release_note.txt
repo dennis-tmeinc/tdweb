@@ -1,6 +1,19 @@
 Touch Down Center 
 Release Notes
 
+V3.7.7 (2014-02-19) (by Dennis)
+	Add ignition on event and icon on LiveTrack
+	Add temperature event and icon on LiveTrack
+	Add idling event on LiveTrack
+	Check on "Stop Arm On" sensor status and display "Bus stop" icon if the sensor is on
+	Live track auto-report unit changed to imperial
+	Do not reset live track auto-report dialog inputs when open/close the dialog
+	Fix save default bugs on blank input field
+	Get current position auto zoom in. Set parameter "$livetrack_autozoomin" for zoom in level.
+	Videos preview automaticall open next clip when current clip ended.
+	Video preview no stable issue may fixed. (add screen wait to prevent user repeatly click "Preview Video Clip" button too quick)
+	
+	(Many mods on supporting TD Server and video file server from the PC other than web server, every thing sould work fine if all servers are run in the same server, for now. )
 
 V3.7.6 (2014-01-23) (by Dennis)
 	Change Live Track igintion event icon, use sensor icon for ignition on event, use paring icon for ignition off event.

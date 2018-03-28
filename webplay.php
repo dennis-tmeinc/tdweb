@@ -8,11 +8,12 @@
 //      channel :
 // Return:
 //      json 
-// By Dennis Chen @ TME	 - 2013-10-30
+// By Dennis Chen @ TME	 - 2014-2-14
 // Copyright 2013 Toronto MicroElectronics Inc.
 //
 
     require 'session.php' ;
+	require_once 'vfile.php' ;
 	header("Content-Type: application/json");
 	
 	if( $logon && !empty($webplay_support) ) {
@@ -21,18 +22,16 @@
 
 		if( empty( $_REQUEST['index'] ) ) {
 			if( empty( $_REQUEST['dir'] ) ) {
-				$sql = "SELECT * FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = '$_REQUEST[channel]' AND (  `time_start` <= '$_REQUEST[time_start]' OR `time_end` >= '$_REQUEST[time_start]' );" ;
+				$sql = "SELECT * FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = '$_REQUEST[channel]' AND (  `time_start` <= '$_REQUEST[time_start]' OR `time_end` >= '$_REQUEST[time_start]' ) LIMIT 100" ;
 			}
 			else if( $_REQUEST['dir'] == 1 ) {
-				$sql = "SELECT * FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = '$_REQUEST[channel]' AND `time_start` > '$_REQUEST[time_start]' ORDER BY `time_start` LIMIT 1 ;" ;
+				$sql = "SELECT * FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = '$_REQUEST[channel]' AND `time_start` > '$_REQUEST[time_start]' ORDER BY `time_start` LIMIT 100 ;" ;
 			}
 			else if( $_REQUEST['dir'] == 2 ) {
-				$sql = "SELECT * FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = '$_REQUEST[channel]' AND `time_start` < '$_REQUEST[time_start]' ORDER BY `time_start` DESC LIMIT 1 ;" ;
+				$sql = "SELECT * FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = '$_REQUEST[channel]' AND `time_start` < '$_REQUEST[time_start]' ORDER BY `time_start` DESC LIMIT 100 ;" ;
 			}
 			else if( $_REQUEST['dir'] == 3 ) {
-				$sql = "SELECT *, ABS( TIMESTAMPDIFF(SECOND, `time_start`, '$_REQUEST[time_start]') ) AS sdiff FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = '$_REQUEST[channel]' ORDER BY sdiff LIMIT 1 ;" ;
-				
-				$resp['sql'] = $sql ;
+				$sql = "SELECT *, ABS( TIMESTAMPDIFF(SECOND, `time_start`, '$_REQUEST[time_start]') ) AS sdiff FROM videoclip WHERE `vehicle_name` = '$_REQUEST[vehicle_name]' AND `channel` = '$_REQUEST[channel]' ORDER BY sdiff LIMIT 100 ;" ;
 			}
 		}
 		else {
@@ -41,48 +40,15 @@
 		$resp['ser'] = $_REQUEST['ser'];
 				
 		if($result=$conn->query($sql)) {
-			if( $row=$result->fetch_array() ) {
+			while( $row=$result->fetch_array() ) {
 				$resp['vehicle_name'] = $row['vehicle_name'] ;
 				$resp['time_start'] = $row['time_start'] ;
 				$resp['channel'] = $row['channel'] ;
 				$resp['filename'] = basename($row['path']) ;
-						
-			    $cachemp4 = 'videocache/v'.md5($row['path']).'.mp4' ;
-				
-				$cachefn = dirname( $_SERVER["SCRIPT_FILENAME"] ).'/'.$cachemp4 ;
-				if( file_exists( $cachefn ) ) {
-					$resp['mp4'] = $cachemp4 ;
+				if( vfile_size( $row['path'] ) > 1000 ) {
+					$resp['mp4'] = "mp4preview.php?index=".$row['index'] ;
 					$resp['res'] = 1 ;
-				}
-				else {
-					// check directory size
-					$cachedir = dirname( $_SERVER["SCRIPT_FILENAME"] ).'/videocache' ;
-					$cachesize = 0 ;
-					if( empty( $$webplay_cache_size ) ) {
-						$webplay_cache_size = 10000 ;
-					}
-					$remaindays = 10 ;
-					do {
-						$cachesize = 0 ;
-						foreach (glob($cachedir."/*") as $filename) {
-							if (fileatime($filename) + ($remaindays*24*60*60) < $xt ) {
-								@unlink($filename);
-							}
-							else {
-								$cachesize += filesize( $filename )/1000000 ;
-							}
-						}
-					} while( $cachesizie > $webplay_cache_size && $remaindays-- > 1 ) ;
-				
-					$eoutput = array();
-					$eret = 1 ;
-					$cmdline = dirname( $_SERVER["SCRIPT_FILENAME"] )."/bin/ffmpeg.exe -i $row[path] -y -codec:v copy $cachefn" ;
-					$lline = exec( escapeshellcmd($cmdline), $eoutput, $eret ) ;
-					
-					if( $eret == 0 ) {
-						$resp['mp4'] = $cachemp4 ;
-						$resp['res'] = 1 ;
-					}
+					break ;
 				}
 			}
 			$result->free();

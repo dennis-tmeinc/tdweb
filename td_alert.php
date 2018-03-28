@@ -11,6 +11,7 @@
 
 
 require_once 'config.php' ;
+require_once 'vfile.php' ;
 
 session_save_path( $session_path );
 session_name( $session_idname );
@@ -45,7 +46,8 @@ else {
 	$resp['time']=$servertime->format('Y-m-d H:i') ;
 
 	// dashboard options
-	@$dashboard_option = parse_ini_file($dashboard_conf) ;
+	$dashboard_option = parse_ini_string( vfile_get_contents( $dashboard_conf ) ) ;
+
 	// default value
 	if( empty( $dashboard_option ) ) $dashboard_option =  array(
 		'tmStartOfDay' => '3:00'

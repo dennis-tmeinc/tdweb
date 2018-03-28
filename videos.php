@@ -16,7 +16,7 @@ session_save('videofilter','');
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">
 	<meta name="author" content="Dennis Chen @ TME, 2013-05-24">		
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.9.1.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.4/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.4/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
 	<link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
       #search {
@@ -205,13 +205,53 @@ $("#downloadplayer").button();
 
 var webplayser=1 ;
 var webplay_clip ;
+var webplay_playtime = 0;
+
+function webplay_settitle()
+{
+	var ptime = $( "video#webplay" )[0].currentTime ;
+	if( Math.abs( ptime - webplay_playtime ) < 1 ) {
+		return ;
+	}
+	webplay_playtime = ptime ;
+
+	var clipinfo = $( "video#webplay" ).data("clipinfo") ;
+	var dt = clipinfo.time_start.split(" "); 
+	var d = dt[0].split("-");
+	var t = dt[1].split(":");
+	var dt = new Date( d[0], d[1], d[2], t[0], t[1], t[2], 0 );
+	var start_time = dt.getTime() ;
+	
+	var dt = new Date( start_time + webplay_playtime * 1000 ) ;
+	var dyear = dt.getFullYear() ;
+	var dmon = dt.getMonth() + 1 ;
+	if( dmon<10 ) dmon = "0" + dmon ;
+	var ddate = dt.getDate() ;
+	if( ddate < 10 ) ddate = "0" + ddate ;
+	var dhour = dt.getHours() ;
+	if( dhour < 10 ) dhour = "0" + dhour ;
+	var dmin = dt.getMinutes() ;
+	if( dmin < 10 ) dmin = "0" + dmin ;
+	var dsec = dt.getSeconds() ;
+	if( dsec < 10 ) dsec = "0" + dsec ;
+	var dstr = dyear + "-" + dmon + "-" + ddate + ' ' + dhour + ":" + dmin + ":" + dsec ;
+
+	$( ".tdcdialog#dialog_webplay" ).dialog("option", "title", clipinfo.vehicle_name + " - " + clipinfo.camera_name[ clipinfo.channel ] + "   " + dstr );	
+}
 
 function webplay_play()
 {
 	var clipinfo = $( "video#webplay" ).data("clipinfo") ;
-	$( ".tdcdialog#dialog_webplay" ).dialog("option", "title", clipinfo.filename );
 	$( "video#webplay" )[0].src = clipinfo.mp4  ;
 	$( "video#webplay" )[0].autoplay=true;
+	$( "video#webplay" )[0].onended = function(){
+		if( $( "video#webplay" )[0].currentTime > 2 ) {
+			$("button#webplay_next").click();
+		}
+	}
+	webplay_playtime = -1 ;
+	webplay_settitle();
+	$( "video#webplay" )[0].ontimeupdate = webplay_settitle ;
 	$( "video#webplay" )[0].load();
 }
 
@@ -259,7 +299,9 @@ $( ".tdcdialog#dialog_webplay" ).dialog({
 			param.vehicle_name = clipinfo.vehicle_name ;
 			param.time_start = clipinfo.time_start ;
 			param.channel = $("select#webplay_camera")[0].selectedIndex ;
+			wait(1);
 			$.getJSON("webplay.php", param , function(resp){
+				wait(0);
 				if( resp.res == 1 ) {
 					$( "video#webplay" ).data("clipinfo", resp );
 					webplay_play();
@@ -273,7 +315,9 @@ $( ".tdcdialog#dialog_webplay" ).dialog({
 			param.vehicle_name = clipinfo.vehicle_name ;
 			param.time_start = clipinfo.time_start ;
 			param.channel = clipinfo.channel ;
+			wait(1);
 			$.getJSON("webplay.php", param , function(resp){
+				wait(0);
 				if( resp.res == 1 ) {
 					$( "video#webplay" ).data("clipinfo", resp );
 					webplay_play();
@@ -287,7 +331,9 @@ $( ".tdcdialog#dialog_webplay" ).dialog({
 			param.vehicle_name = clipinfo.vehicle_name ;
 			param.time_start = clipinfo.time_start ;
 			param.channel = clipinfo.channel ;
+			wait(1);
 			$.getJSON("webplay.php", param , function(resp){
+				wait(0);
 				if( resp.res == 1 ) {
 					$( "video#webplay" ).data("clipinfo", resp );
 					webplay_play();
@@ -304,6 +350,16 @@ $( ".tdcdialog#dialog_webplay" ).dialog({
 	}
 });
 
+function wait( w )
+{
+    if( w ) {
+		$("body").append('<div class="wait"></div>');
+	}
+	else {
+		$("div.wait").remove();
+	}
+}
+
 $("button#webplay").click(function(){
 	var id=$("#videolist").jqGrid('getGridParam','selrow') ;
 	if( id == null ) {
@@ -311,7 +367,9 @@ $("button#webplay").click(function(){
 		return ;
 	}
 	webplayser++ ;
+	wait(1);
 	$.getJSON("webplay.php?index="+id+"&ser="+webplayser, function(resp){
+		wait(0);
 		if( resp.res == 1 && resp.ser == webplayser ) {
 			$( "video#webplay" ).data("clipinfo", resp );
 			$( ".tdcdialog#dialog_webplay" ).dialog("open");
@@ -337,6 +395,9 @@ $("#rcontainer").show('slow' );
 	<li><a class="lmenu" href="reportview.php"><img onmouseout="this.src='res/side-reportview-logo-clear.png'" onmouseover="this.src='res/side-reportview-logo-fade.png'" src="res/side-reportview-logo-clear.png" /> </a></li>
 	<li><img src="res/side-videos-logo-green.png" /></li>
 	<?php if( !empty($enable_livetrack) ){ ?><li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li><?php } ?>
+	<?php if(  $_SESSION['user_type'] == "operator"  ){ ?>
+	<li><a class="lmenu" href="driveby.php"><img onmouseout="this.src='res/side-driveby-logo-clear.png'" onmouseover="this.src='res/side-driveby-logo-fade.png'" src="res/side-driveby-logo-clear.png" /> </a></li>
+	<?php } ?>	
 	<li><a class="lmenu" href="settings.php"><img onmouseout="this.src='res/side-settings-logo-clear.png'" onmouseover="this.src='res/side-settings-logo-fade.png'" src="res/side-settings-logo-clear.png" /> </a></li>
 </ul>
 </div>

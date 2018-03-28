@@ -8,6 +8,7 @@
 // Copyright 2013 Toronto MicroElectronics Inc.
 
     require 'session.php' ;
+	require_once 'vfile.php' ;
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
@@ -27,7 +28,12 @@
 		}
 
 		// dashboard options
-		@$dashboard_option = parse_ini_file($dashboard_conf) ;
+		if( $conf = vfile_open( $dashboard_conf ) ) {
+			$confstr = vfile_read( $conf, 32000 ) ;
+			$dashboard_option = parse_ini_string( $confstr );
+			vfile_close( $conf );
+		}
+		
 		// default value
 		if( empty( $dashboard_option ) ) $dashboard_option =  array(
 			'tmStartOfDay' => '3:00'

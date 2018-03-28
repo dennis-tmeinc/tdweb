@@ -9,6 +9,7 @@
 // Copyright 2013 Toronto MicroElectronics Inc.
 
     require 'session.php' ;
+	require_once 'vfile.php' ;
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
@@ -16,21 +17,18 @@
 			for($i=1;$i<=4;$i++) {
 				$_REQUEST["check_ap$i"]=empty($_REQUEST["check_ap$i"])?"0":"1";
 			}
-			$localmssfile=@fopen( $mss_conf, "w" );
-			if( $localmssfile ) {
-				foreach ( $_REQUEST as $key => $value) {
-					fwrite($localmssfile,$key."=".$value."\r\n");
-				}
-				fclose( $localmssfile );
-				$resp['res']=1;				// success
+			$confstr = '' ;
+			foreach ( $_REQUEST as $key => $value ) {
+				$confstr .= $key."=".$value."\r\n";
 			}
-			else {
-				$resp['errormsg']="Storage Error!";
+			if( vfile_put_contents( $mss_conf, $confstr )>0 ) {
+				$resp['res'] = 1 ;			// success ;
 			}
 		}
 		else {
 			$resp['errormsg']="Not allowed!";
 		}
 	}
+	
 	echo json_encode($resp);
 ?>

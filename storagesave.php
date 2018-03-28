@@ -9,12 +9,29 @@
 // Copyright 2013 Toronto MicroElectronics Inc.
 
     require 'session.php' ;
+	require_once 'vfile.php' ;
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
 		if( $_SESSION['user_type'] == "admin" ) {		// admin (power user) only
 			// MySQL connection
 			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+
+			function ex($cmd, &$result, &$ret)
+			{
+				if( $fsvr = vfile_remote() ) {
+					$j = vfile_readhttp( $fsvr."?c=e&n=".rawurlencode($cmd) ) ;
+					@$st = json_decode( $j, true );
+					if( !empty( $st['res'] ) ) {
+						$result = $st['output'] ;
+						$ret = $st['ret'] ;
+					}
+				}
+				else {
+					exec( $cmd,$result,$ret);
+				}
+			}
+		
 			// secaped sql values
 			$esc_req=array();		
 			foreach( $_REQUEST as $key => $value ){
@@ -32,15 +49,15 @@
 						$value .= "\\" ;
 					}
 					
-					exec("reg query HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown", $result, $ret);
+					ex("reg query HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown", $result, $ret);
 					
 					if( $ret == 0 ) {
 						// 64bit OS?
-						exec( "reg ADD HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown /v $key /f /d " . escapeshellarg( $value ));
+						ex( "reg ADD HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown /v $key /f /d " . escapeshellarg( $value ));
 					}
 					else {
 						// 32bit OS?
-						exec( "reg ADD HKLM\\SOFTWARE\\tme\\touchdown /v $key /f /d " . escapeshellarg( $value ));
+						ex( "reg ADD HKLM\\SOFTWARE\\tme\\touchdown /v $key /f /d " . escapeshellarg( $value ));
 					}
 					
 				}

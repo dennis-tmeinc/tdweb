@@ -42,8 +42,18 @@
 				$xml->avlp='' ;
 				if( !empty($_REQUEST['start']) ) {
 					$xml->avlp->time = $vdata['vlt_time_interval'] ;
-					$xml->avlp->dist = $vdata['vlt_dist_interval'];
-					$xml->avlp->speed = $vdata['vlt_speed'] ;
+					if( empty($vdata['vlt_dist_interval']) ) {
+						$xml->avlp->dist = 0 ;
+					}
+					else {
+						$xml->avlp->dist = $vdata['vlt_dist_interval'] * 0.3048 ;		// feet to meters
+					}
+					if( empty($vdata['vlt_speed']) ) {
+						$xml->avlp->speed = 0 ;
+					}
+					else {
+						$xml->avlp->speed = $vdata['vlt_speed'] * 1.609344 ;		// mph to km/h
+					}
 					$xml->avlp->maxc = $vdata['vlt_maxcount'] ;
 					$xml->avlp->maxkb = $vdata['vlt_maxbytes'] ;
 				}
@@ -75,8 +85,14 @@
 					}
 					$xml->avlp->lo = dechex($io_low);
 					$xml->avlp->hi = dechex($io_high) ;
-					$xml->avlp->temp = 0 ;
-					$xml->avlp->idle = 0 ;					
+					$xml->avlp->idle = $vdata['vlt_idling'] ;
+					$tempc = ( $vdata['vlt_temperature'] - 32 ) * 5/9 ;		// F to C
+					if( $tempc < 1 ) {
+						$xml->avlp->temp = 0 ;
+					}
+					else {
+						$xml->avlp->temp = $tempc ;
+					}
 				}
 				else {
 					$xml->avlp->lo = 0;
@@ -85,8 +101,6 @@
 					$xml->avlp->idle = 0 ;
 				}
 				@$avlxml = file_get_contents( $avlservice.'?xml='.rawurlencode($xml->asXML()) );	// don't care what is returned
-
-
 								
 				$xml->command='30' ; 		// AVL_GFORCE_CONF(30)
 				$xml->avlp='' ;

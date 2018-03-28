@@ -4,6 +4,7 @@
 // By Dennis Chen @ TME	 - 2013-07-12
 // Copyright 2013 Toronto MicroElectronics Inc.
 	
+	
 	require_once 'config.php' ;
 
 	session_save_path( $session_path );
@@ -31,26 +32,7 @@
 			$_SESSION['welcome_name'] = $savesess['welcome_name'];
 			$_SESSION['clientid']=$_SERVER['REMOTE_ADDR'] ;
 			$_SESSION['xtime'] = $_SERVER['REQUEST_TIME'] ;
-			$_SESSION['release']="V3.7.6" ;
-
-			// restore user theme
-			if( empty( $user_path ) ) {
-				$user_path = $session_path ;
-			}
-			$themefile=@fopen( $user_path."/theme", "r" );
-			if( $themefile ) {
-				flock($themefile, LOCK_EX ) ;
-				$uthemestr = fread( $themefile, 100000 );
-				$utheme = array();
-				if( strlen( $uthemestr ) > 2 ) {
-					@$utheme = json_decode($uthemestr, true) ;
-				}
-				if( !empty( $utheme[$_SESSION['user']] ) ) {
-					setcookie("ui", $utheme[$_SESSION['user']]);
-				}
-				flock($themefile, LOCK_UN ) ;
-				fclose( $themefile );
-			}
+			$_SESSION['release']="V3.7.7" ;
 	
 		    $resp['res']=1 ;
 			$resp['user']=$savesess['xuser'] ;

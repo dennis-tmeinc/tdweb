@@ -5,8 +5,21 @@
 
 require_once 'config.php' ;
 
+// setup time zone
+date_default_timezone_set($timezone) ;	
+// persistent database connection
+if(	$database_persistent ) {
+	$smart_server = "p:".$smart_host ;
+}
+else {
+	$smart_server = $smart_host ;
+}
+
 session_save_path( $session_path );
 session_name( $session_idname );
+if( !empty($_REQUEST[session_name()]) ) {
+	session_id ($_REQUEST[session_name()]);
+}
 session_start();
 
 // store $_SESSION variable after session_write_close()
@@ -59,16 +72,20 @@ if( empty($_SESSION['user']) ||
 	unset($_SESSION['user']) ;
 	session_write_close();
 	$resp['errormsg']="Session error!";
+	$resp['session'] = 0 ;
 	$logon=false ;
 	/* AJAX check */
 	if( empty($_SERVER['HTTP_X_REQUESTED_WITH']) ) {
 		header( 'Location: logon.php' ) ;
 	}	
+	$resp['session'] = 'e' ;		// session ended
 }
 else {
+	$oldsessiontime = $_SESSION['xtime'] ;
 	$_SESSION['xtime']=$xt ;
 	session_write_close();
 	$logon=true ;
+	$resp['session'] = 'l' ;		// session login
 	/* page ui */
 	if( !empty($_COOKIE['ui']))
 		$default_ui_theme = $_COOKIE['ui'] ;	

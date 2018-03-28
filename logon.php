@@ -3,6 +3,16 @@
 <head><?php 
 require_once 'config.php';
 
+// setup time zone
+date_default_timezone_set($timezone) ;	
+// persistent database connection
+if(	$database_persistent ) {
+	$smart_server = "p:".$smart_host ;
+}
+else {
+	$smart_server = $smart_host ;
+}
+
 // ui
 if( !empty($_COOKIE['ui']))
 	$default_ui_theme = $_COOKIE['ui'] ;
@@ -13,10 +23,8 @@ if( !empty($_COOKIE['ui']))
 	<meta name="description" content="Touch Down Center by TME V2.5">
 	<meta name="author" content="Dennis Chen @ TME, 2013-06-15">	
 	<link rel="shortcut icon" href="/favicon.ico" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-	<link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" /><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script>
-(window.jQuery || document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>'));</script>
-	<script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script><script src="md5min.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.4/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.4/jquery-ui.min.js"></script><script>(window.jQuery || document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>'));</script>
+	<script src="md5min.js"></script>
 	<style> body { display:none; } </style>
 	<script>
 // start up 
@@ -25,6 +33,13 @@ $(document).ready(function(){
 
 $("button").button();
 
+<?php if( !empty($_COOKIE['ui'])) { ?>
+// update cookie
+var d = new Date();
+d.setTime(d.getTime()+180*24*60*60*1000);
+document.cookie =  "ui=" + escape( "<?php echo $_COOKIE['ui'] ?>" )+"; expires="+d.toGMTString();
+<?php } ?>
+	
 function gencnonce(bits)
 {
   var hexch = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ " ;
@@ -62,6 +77,7 @@ function pwdEncode(pwd)
 $("form").submit(function(e){
 	e.preventDefault();
 	var userid=$("#userid").val();
+
 	wait(1);
 	var nonce = gencnonce(10);
 	$.getJSON('signuser.php', { user: userid, n: nonce }, function(data) {

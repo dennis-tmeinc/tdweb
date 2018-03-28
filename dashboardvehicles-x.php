@@ -8,6 +8,7 @@
 // Copyright 2013 Toronto MicroElectronics Inc.
 
     require 'session.php' ;
+	require_once 'vfile.php' ;
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
@@ -33,19 +34,9 @@
 		);
 
 		// dashboard options
-		@$dashboardoptfile=fopen( $dashboard_conf, "r" );
-		if( $dashboardoptfile ) {
-			while( $line=fgets($dashboardoptfile) ) {
-				$ar=explode ( "=", $line, 2 );
-				if( count($ar)==2 ) {
-					$dashboard_option[trim($ar[0])]=trim($ar[1]);
-				}
-			}
-			fclose($dashboardoptfile);
-		}
+		$dashboard_option = parse_ini_string( vfile_get_contents( $dashboard_conf ) ) ;
 				
 		if($dashboard_option['nAverageDuration']<2) $dashboard_option['nAverageDuration']=60 ;
-		
 				
 		// time ranges
 		@$date_begin = new DateTime( $dashboard_option['tmStartOfDay'] );

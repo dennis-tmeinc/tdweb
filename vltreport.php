@@ -12,6 +12,8 @@
 	header("Content-Type: application/json");
 
 	if( $logon ) {
+		// recover old session time, to let live track page time out
+		session_save( 'xtime', $oldsessiontime );
 
 		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 	
@@ -28,17 +30,11 @@
 		// wait for message from AVL service
 		$mtime = time();		
 		$starttime = $mtime ;
+		
+		$conn->query("UPDATE `_tmp_tdweb` SET `mtime` = '$mtime' WHERE `vname` = 'vltlistener' AND `session` = '$vltsession' ") ; 
+
 		while( ($mtime - $starttime)<600 ) {
 			// $conn->query("LOCK TABLES _tmp_tdweb WRITE;");
-
-			// update mtime for event listener
-			$listener = 0 ;
-			if( $conn->query("UPDATE `_tmp_tdweb` SET `mtime` = '$mtime' WHERE `vname` = 'vltlistener' AND `session` = '$vltsession' ") ) {
-				$listener = $conn->affected_rows;
-			}
-			if( empty($listener) ) {
-				break;
-			}
 
 			if( $result = $conn->query("SELECT * FROM `_tmp_tdweb` WHERE `vname` = 'vltevent' AND `session` = '$vltsession' " ) ) {
 				while( $row=$result->fetch_array() ) {

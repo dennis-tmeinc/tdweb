@@ -33,6 +33,19 @@
 				$row['vlt_impact_bumpy'] = $vlt_impact[3] ;
 				unset($row['vlt_impact']);
 				
+				// temperatry solution for 'max connt' and 'max bytes' 
+				$row['vlt_maxcount'] = $row['vlt_log_time'] ;
+				unset($row['vlt_log_time']);
+
+				$row['vlt_maxbytes'] = $row['vlt_log_distance'] ;
+				unset($row['vlt_log_distance']);
+				
+				foreach( $row as $key => $value )
+				{
+					if( empty($row[$key] ) ) 
+						$row[$key]='' ;				// make it empty string
+				}
+				
 				$resp['vltconfig'] = $row ;
 				$resp['res'] = 1 ;
 			}

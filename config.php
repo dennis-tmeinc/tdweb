@@ -46,7 +46,7 @@
 	
 	// session timeout (max half hour)
 	$session_timeout=900 ;	
-	$session_path= __DIR__ . "/session";
+	$session_path= __DIR__ . "\\session";
 	$session_idname = "touchdownid";
 	
 	// user
@@ -59,10 +59,12 @@
 	$default_ui_theme = "start" ;
 	
 	// DVRViewer Installation File
-	$playerinstallfile = "player/player.msi" ;
+	$playerinstallfile = "player\\player.msi" ;
 
-	// enable or disable live track
+	// enable live track
 	$enable_livetrack = 1 ;
+	$livetrack_autozoomin = 16 ;
+	
 	// live track server (AVL Service)
 	$avlservice = "http://localhost:40520/avlservice" ;
 	$avlcbserver = "http://localhost:80" ;
@@ -79,4 +81,4 @@
 	}
 	
 	return ;
-?>	
+?>

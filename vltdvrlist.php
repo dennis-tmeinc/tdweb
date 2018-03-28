@@ -80,6 +80,7 @@
 	
 		// wait for avl events
 		$mtime = time();
+
 		$sql = "INSERT INTO `_tmp_tdweb` ( `vname`, `mtime`, `user`, `session`, `vdata` ) VALUES ('vltlistener', '$mtime', '$_SESSION[user]', '$vltsession', '1' ); ";
 		$conn->query($sql) ;
 		

@@ -6,37 +6,12 @@ require 'session.php';
 // remember recent page
 session_save('settingpage', $_SERVER['REQUEST_URI'] );
 
-// save user theme
-if( empty( $user_path ) ) {
-	$user_path = $session_path ;
-}
-$themefile=@fopen( $user_path."/theme", "c+" );
-if( $themefile ) {
-	flock($themefile, LOCK_EX ) ;
-	$uthemestr = fread( $themefile, 100000 );
-	$utheme = array();
-	if( strlen( $uthemestr ) > 2 ) {
-		@$utheme = json_decode($uthemestr, true) ;
-	}
-	if( empty( $utheme[$_SESSION['user']]) || $utheme[$_SESSION['user']] != $default_ui_theme ) {
-		$utheme[$_SESSION['user']] = $default_ui_theme ;
-		$uthemestr = json_encode( $utheme );
-		rewind( $themefile );
-		fwrite( $themefile, $uthemestr );
-
-		ftruncate( $themefile, ftell($themefile) );
-		fflush( $themefile ) ;          // flush before releasing the lock
-	}
-	flock($themefile, LOCK_UN ) ;
-	fclose( $themefile );
-}
-	
 ?>
 	<title>Touch Down Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta content="Touch Down Center by TME" name="description" />
 	<meta content="Dennis Chen @ TME, 2013-05-15" name="author" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.9.1.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script>if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.4/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.4/jquery-ui.min.js"></script><script>if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script>
 	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none;}" ?>
 	</style>
@@ -46,9 +21,9 @@ if( $themefile ) {
 function setcookie(cname,value,expires) {
 	var ck=cname+"="+escape(value);
 	if( expires ) {
-		var exp = new Date();
-    	exp.setTime(exp.getTime()+expires*1000);
-        ck += ";expires="+exp.toGMTString();
+		var d = new Date();
+		d.setTime(d.getTime()+(expires*24*60*60*1000));
+        ck += "; expires="+d.toGMTString();
     }
    	document.cookie = ck ;
 }
@@ -147,7 +122,7 @@ $("button#storagesave").click(function(){
 
 $( "select[name='keepGpsLogDataForDays']").change(function(){
 	var i = $( "select[name='keepGpsLogDataForDays']")[0].selectedIndex ;
-	var t = $( "select[name='keepGpsLogDataForDays']")[0][i].innerText ;	
+	var t = $( $( "select[name='keepGpsLogDataForDays']")[0][i] ).text();
 	if( t != "Forever" ) {
 		var msg = "All the GPS data in the Database which older than " + t + " will be deleted." ;
 		alert( msg );
@@ -156,7 +131,7 @@ $( "select[name='keepGpsLogDataForDays']").change(function(){
 
 $( "select[name='keepVideoDataForDays']").change(function(){
 	var i = $( "select[name='keepVideoDataForDays']")[0].selectedIndex ;
-	var t = $( "select[name='keepVideoDataForDays']")[0][i].innerText ;
+	var t = $( $( "select[name='keepVideoDataForDays']")[0][i] ).text();
 	if( t != "Forever" ) {
 		var msg = "All the DVR Video clip files which older than " + t + " will be deleted." ;
 		alert( msg );
@@ -592,16 +567,19 @@ $("button#msshidemap").click(function(event){
 function localmss_reload()
 {
 	$("form#localmss")[0].reset();
-	$.getJSON("localmssload.php", function(localmss){
+	$.getJSON("localmssload.php", function(resp){
+		if( resp.res ) {
 		// fill form fields
-		for (var field in localmss) {
-			var elm=$("form#localmss input[name='"+field+"']");
-			if( elm.length>0 ) {
-				if( elm.prop("type")=="checkbox" ) {
-					elm.prop("checked", (localmss[field]=='1'));
-				}
-				else {
-					elm.val(localmss[field]);
+			var localmss = resp.mss ;
+			for (var field in localmss) {
+				var elm=$("form#localmss input[name='"+field+"']");
+				if( elm.length>0 ) {
+					if( elm.prop("type")=="checkbox" ) {
+						elm.prop("checked", (localmss[field]=='1'));
+					}
+					else {
+						elm.val(localmss[field]);
+					}
 				}
 			}
 		}
@@ -678,7 +656,7 @@ $("form#emailsetup input[name='tmSendDaily']").timepicker({
 // user theme
 $('#setting-ui input[type="image"]').click(function(){
 	// setcookie
-	setcookie("ui",$(this).attr("id"),0);
+	setcookie("ui",$(this).attr("id"),180);
 	location.reload();
 });
 
@@ -716,6 +694,9 @@ text-align: center;
 	<li><a class="lmenu" href="reportview.php"><img onmouseout="this.src='res/side-reportview-logo-clear.png'" onmouseover="this.src='res/side-reportview-logo-fade.png'" src="res/side-reportview-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="videos.php"><img onmouseout="this.src='res/side-videos-logo-clear.png'" onmouseover="this.src='res/side-videos-logo-fade.png'" src="res/side-videos-logo-clear.png" /> </a></li>
 	<?php if( !empty($enable_livetrack) ){ ?><li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li><?php } ?>
+	<?php if(  $_SESSION['user_type'] == "operator"  ){ ?>
+	<li><a class="lmenu" href="driveby.php"><img onmouseout="this.src='res/side-driveby-logo-clear.png'" onmouseover="this.src='res/side-driveby-logo-fade.png'" src="res/side-driveby-logo-clear.png" /> </a></li>
+	<?php } ?>	
 	<li><img src="res/side-settings-logo-green.png" /></li>
 </ul>
 </div>

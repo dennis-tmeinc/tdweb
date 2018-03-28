@@ -25,13 +25,6 @@ if( empty( $tdwebc->session ) ) {
 	goto done ;
 }
 
-
-//$log = fopen("session/eventlog.log", "a");
-//if( $log ) {
-//	fwrite( $log, "\nEvent: ".date("h:i:s ").$_REQUEST['xml'] );
-//	fclose( $log );
-//}
-
 $vltsession = $tdwebc->session ;
 $resp->session=$vltsession ;
 $ss = explode('-', $vltsession);
@@ -70,7 +63,7 @@ $mtime = time();
 @$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 
 // look for vlt event listener
-$ltime = $mtime - 300 ;
+$ltime = $mtime - 800 ;
 $sql = "SELECT * FROM `_tmp_tdweb` WHERE `vname` = 'vltlistener' AND `session` = '$vltsession' AND `mtime` > $ltime ;" ;
 
 $listener = array();

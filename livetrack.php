@@ -12,7 +12,8 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">
 	<meta name="author" content="Dennis Chen @ TME, 2013-05-15">		
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.9.1.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?> <script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script><script src="picker.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.4/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.4/jquery-ui.min.js"></script><script>(window.jQuery || document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>'));</script>
+	<script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script><script src="picker.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	</style>
 	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
@@ -129,8 +130,8 @@ $( "button#btavlserver").click(function(){
 	$( ".tdcdialog#dialog_avlserver" ).dialog("open");
 });
 
-// d: ip data, cd: current pos, 
-var vltlist = {"d":{}} ;
+// dvr list
+var vltlist = {} ;
 
 // avl detail dialog
 $( ".tdcdialog#dialog_vehicle_detail" ).dialog({
@@ -149,13 +150,15 @@ $( ".tdcdialog#dialog_vehicle_detail" ).dialog({
 // display vlt vehicle detail
 $("select[name='vltvehicle']").dblclick(function(){
 	var v = $("select[name='vltvehicle']").val();
-	var dvrdetail = vltlist.d[v] ;
+	var dvrdetail = vltlist[v] ;
 	if( dvrdetail ) {
-		$(".tdcdialog#dialog_vehicle_detail td#dvrid").text( dvrdetail.dvrid );
-		$(".tdcdialog#dialog_vehicle_detail td#phone").text( dvrdetail.phone );
-		$(".tdcdialog#dialog_vehicle_detail td#ip").text( dvrdetail.ip );
-		$(".tdcdialog#dialog_vehicle_detail td#type").text( dvrdetail.type );
-		$(".tdcdialog#dialog_vehicle_detail td#evt").text( dvrdetail.evt );
+		var dvrhtml = "" ;
+		var person={fname:"John",lname:"Doe",age:25}; 
+		for ( var x in dvrdetail )
+		{
+			dvrhtml += "<tr><td style=\"text-align: right;\">" + x + " : </td><td>" + dvrdetail[x] + "</td></tr>" ;
+		}
+		$("#dvrinfo").html( dvrhtml );
 		$( ".tdcdialog#dialog_vehicle_detail" ).dialog("open");
 	}
 });
@@ -172,30 +175,38 @@ for( var i=0; i<6; i++ ) {
 
 // saved sensor names, to be used by sensor pop-up balloon
 var vltsensor = [] ;
+var vltsensor_reload = 0 ;
 function load_sensors()
 {
 	$.getJSON("vltsensorload.php", function(resp){
 		if( resp.res==1 ) {
 			vltsensor = resp.vltsensor ; 
+			vltsensor_reload = 1 ;
 		}
 	});
 }
 load_sensors();
+
+var vlt_pins = [] ;
+var vlt_pidx = 0 ;
 
 // avlp : position message, clean: clean same type of pushpin
 function showpin( avlp, id, iconimg, clean ) 
 {
 	if( avlp.pos.length ) {
 		
-		var e ;
-		vltlist[id] = avlp ;
+		var e,i ;
 		
 		if( clean ) {
-			// remove old pushpin for this vehicle
+			// remove old pushpins for this vehicle
 			for( e=map.entities.getLength()-1;e>=0;e--) {
 				var pushpin = map.entities.get(e); 		
-				if (pushpin instanceof Microsoft.Maps.Pushpin && pushpin.getText() == id ) { 
-					map.entities.removeAt(e);  
+				if (pushpin instanceof Microsoft.Maps.Pushpin ) {
+					i = parseInt( pushpin.getText() );
+					if( vlt_pins[i] && vlt_pins[i].vid == id ) {
+						map.entities.removeAt(e);
+						delete vlt_pins[i] ;
+					}
 				}
 			}			
 		}		
@@ -215,7 +226,7 @@ function showpin( avlp, id, iconimg, clean )
 		var sp_di = pvlp_pos[1].substr(21).split('D') ;
 		pos.speed = parseFloat( sp_di[0] );
 		if( iconimg == "route_icon.php" ) {
-			if( pos.speed>1 ) {
+			if( pos.speed > 0.5 ) {
 				pos.heading = parseFloat( sp_di[1] );
 				var direction = ((parseInt( pos.heading )+5)/10).toFixed()*10;
 				iconimg = "route_icon.php?deg="+direction ;
@@ -225,22 +236,48 @@ function showpin( avlp, id, iconimg, clean )
 			}
 		}
 		
-		var pushpinOptions = {icon:iconimg, width: 24, height: 24, anchor: new Microsoft.Maps.Point(12,12), text: id, textOffset: new Microsoft.Maps.Point(50, 50) }; 
+		var pushpinOptions = {icon:iconimg, width: 24, height: 24, anchor: new Microsoft.Maps.Point(12,12), text: vlt_pidx.toString(), textOffset: new Microsoft.Maps.Point(50, 50) }; 
+		
+		vlt_pins[vlt_pidx++] = { vid: id, vavlp: avlp, vicon: iconimg };
+		
 		var pinlocation = new Microsoft.Maps.Location( pos.lat, pos.lon );
 		var pushpin= new Microsoft.Maps.Pushpin(pinlocation, pushpinOptions);
-		
-		var bounds=map.getBounds(); 
-		bounds.width = bounds.width * 0.9 ;
-		bounds.height = bounds.height * 0.9 ;
-		if( !bounds.contains( pinlocation ) ) {
-			map.setView({ center: pinlocation });
+
+		var newview = false ;
+		var view = new Object ;
+
+<?php if( !empty($livetrack_autozoomin) ) { ?>
+		var xzoom = map.getZoom();
+		var nzoom = <?php echo $livetrack_autozoomin; ?> ;
+		if( avlp.cmd == 27 && nzoom > xzoom ) {
+			view.zoom = nzoom ;
+			view.center = pinlocation ;		
+			newview = true ;			
 		}
+<?php  } ?>	
+		if( !newview ) {
+			var bounds=map.getBounds(); 
+			bounds.width = bounds.width * 0.95 ;
+			bounds.height = bounds.height * 0.95 ;
+			if( !bounds.contains( pinlocation ) ) {
+				view.center = pinlocation ;
+				newview = true ;
+			}
+		}
+		if( newview )
+			map.setView( view );
 		map.entities.push(pushpin);
 
 		Microsoft.Maps.Events.addThrottledHandler(pushpin, 'mouseover', function(e){
-			var pin_id = e.target.getText(); 
-			var avlp = vltlist[pin_id] ;
-			var dvrid = pin_id.substr(4);
+			var pidx = parseInt( e.target.getText() ); 
+			var avlp ;
+			if( vlt_pins[pidx] ) {
+				avlp = vlt_pins[pidx].vavlp ;
+			}
+			else {
+				return ;
+			}
+			var dvrid = vlt_pins[pidx].vid.substr(4) ;
 			
 			// remove old infobox
 			for( var i=map.entities.getLength()-1;i>=0;i--) {
@@ -250,10 +287,22 @@ function showpin( avlp, id, iconimg, clean )
 				}
 			}
 			
+			// date & time
 			var dstr = '20'+avlp.pos.substr(0,2)+'-'+avlp.pos.substr(2,2)+'-'+avlp.pos.substr(4,2)+'T'+avlp.pos.substr(6,2)+':'+avlp.pos.substr(8,2)+':'+avlp.pos.substr(10,2)+'Z' ;
-			var d = new Date(dstr);
-			var desc = d.toString();
-			var lines = 2 ;
+			var dt = new Date(dstr);
+			var dyear = dt.getFullYear() ;
+			var dmon = dt.getMonth() + 1 ;
+			if( dmon<10 ) dmon = "0" + dmon ;
+			var ddate = dt.getDate() ;
+			if( ddate < 10 ) ddate = "0" + ddate ;
+			var dhour = dt.getHours() ;
+			if( dhour < 10 ) dhour = "0" + dhour ;
+			var dmin = dt.getMinutes() ;
+			if( dmin < 10 ) dmin = "0" + dmin ;
+			var dsec = dt.getSeconds() ;
+			if( dsec < 10 ) dsec = "0" + dsec ;
+			var desc = dyear + "-" + dmon + "-" + ddate + ' ' + dhour + ":" + dmin + ":" + dsec ;
+			var lines = 1 ;
 			
 			var speed = parseFloat( avlp.pos.substr(34) ) ;
 			if( speed > 0.5 ) {
@@ -288,7 +337,7 @@ function showpin( avlp, id, iconimg, clean )
 				desc += "<br/>Temperature: "+avlp.temp;
 				lines ++ ;
 			}
-		
+
 			if( avlp.idle ) {
 				desc += "<br/>Idle: "+avlp.idle+" Seconds" ;
 				lines ++ ;
@@ -300,15 +349,30 @@ function showpin( avlp, id, iconimg, clean )
 			}
 
 			if( typeof avlp.ign != 'undefined' ) {
-				desc += "<br/>Ignition: "+ ( avlp.ign?"ON":"OFF") ;
+				desc += "<br/>Ignition: " + ( (avlp.ign==1)?"ON":"OFF") ;
 				lines ++ ;
 			}
 			
-			var iheight=50+18*lines ;
+			var iheight=80+18*lines  ;
+			
+			function removepin()
+			{ 
+				// remove infobox and this pushpin
+				for( var i=map.entities.getLength()-1;i>=0;i--) {
+					var en = map.entities.get(i);
+					if ( en instanceof Microsoft.Maps.Infobox ) { 
+						map.entities.removeAt(i);  
+					}
+					if( pushpin == en ) {
+						map.entities.removeAt(i);  
+					}
+				}
+			}
+			var iaction = [{label: 'Remove', eventHandler: removepin}] ;
 			
 			map.entities.push(new Microsoft.Maps.Infobox(e.target.getLocation(), {
 				showPointer:true,showCloseButton:true,
-				title:dvrid, description: desc, height: iheight,  zIndex: 10
+				title:dvrid, description: desc, height: iheight,  zIndex: 10, actions: iaction
 				}));
 		}, 100 );  
 	}
@@ -321,86 +385,107 @@ function tdwebc_message( tdwebc )
 	if( tdwebc[i].avlp && tdwebc[i].command ) {
 		var cmd = tdwebc[i].command ;
 		var avlp = tdwebc[i].avlp ;
+		avlp.cmd = cmd ;
 		if( cmd == "23" ) {	//AVL_DVR_LIST(23)
 			if( avlp.list && avlp.list.item ) {
+				vltlist = {} ;
 				var dvrlist = avlp.list.item ;
 				if( dvrlist instanceof Array  ) {
 					for( var i=0; i<dvrlist.length; i++ ) {
 						if( dvrlist[i].dvrid ) {
-							vltlist.d[dvrlist[i].dvrid] = dvrlist[i] ;
+							vltlist[dvrlist[i].dvrid] = dvrlist[i] ;
 						}
-					}		
+					}
 				}
 				else if( dvrlist.dvrid ) {
-					vltlist.d[dvrlist.dvrid] = dvrlist ;
+					vltlist[dvrlist.dvrid] = dvrlist ;
 				}
 			}
 			// update vlt list
 			var options='';
-			for( var id in vltlist.d ) {
+			for( var id in vltlist ) {
 				options += "<option>"+id+"</option>" ;
 			}
 			$("select[name='vltvehicle']").html( options );					
 		}
 		else if( cmd == '20' ) {	// AVL_IP_REPORT(20)
 			if( !avlp.ip || avlp.ip == '0.0.0.0' ) {
-				delete vltlist.d[ avlp.dvrid ] ;
+				delete vltlist[ avlp.dvrid ] ;
 			}
 			else {
-				vltlist.d[ avlp.dvrid ] = avlp ;
+				vltlist[ avlp.dvrid ] = avlp ;
 			}
 			// update vlt list
 			var options='';
-			for( var id in vltlist.d ) {
+			for( var id in vltlist ) {
 				options += "<option>"+id+"</option>" ;
 			}
 			$("select[name='vltvehicle']").html( options );			
 		}
 		else if( cmd == '27' || cmd == '28' ) {	//AVL_CURRENT_DATA_QUERY(27) AVL_CURRENT_DATA_REPORT(28)
-			if( tdwebc[i].source.dvrs.dvr ) {
-				showpin( avlp, "CD__"+tdwebc[i].source.dvrs.dvr	, "route_icon.php", true );
+			if( tdwebc[i].source.dvrs && tdwebc[i].source.dvrs.dvr ) {
+				var stop_arm = 0 ;
+				if( avlp.di ) {
+					var di = parseInt( avlp.di, 16 ) ;
+					var bm = 1 ;
+					for( var idx = 0 ; idx < 32; idx++ ) {
+						if( bm & di ) {
+							if( vltsensor[idx].sensor_name.toUpperCase() == "STOP ARM ON" ) {
+								stop_arm = 1 ;
+								break;
+							}
+						}
+						bm <<= 1 ;
+					}
+				}
+				if( stop_arm ) {
+					showpin( avlp, "CD__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_desstop.png", true );
+				}
+				else {
+					showpin( avlp, "CD__"+tdwebc[i].source.dvrs.dvr	, "route_icon.php", true );
+				}
 			}
 		}
 		else if( cmd == "32" ) {      // AVL_DI_EVENT(32)
-			if( tdwebc[i].source.dvrs.dvr ) {
+			if( tdwebc[i].source.dvrs && tdwebc[i].source.dvrs.dvr ) {
 				showpin( avlp, "DI__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_sensor.png", false );
 			}
 		}
 		else if( cmd == "22" ) {      // AVL_EVENT_REPORT(22)
-			if( tdwebc[i].source.dvrs.dvr ) {
+			if( tdwebc[i].source.dvrs && tdwebc[i].source.dvrs.dvr ) {
 				showpin( avlp, "EV__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_mevent.png", false );
 			}		
 		}	
-		else if( cmd == "33" ) {      // AVL_SYSTEMP_EVENT(33) , icon missing, use sensor icon instead
-			if( tdwebc[i].source.dvrs.dvr ) {
-				showpin( avlp, "TM__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_sensor.png", false );
-			}		
-		}		
+		else if( cmd == "33" ) {      // AVL_SYSTEMP_EVENT(33) 
+			if( tdwebc[i].source.dvrs && tdwebc[i].source.dvrs.dvr ) {
+				showpin( avlp, "TM__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_temperature.png", false );
+			}
+		}
 		else if( cmd == "34" ) {      // AVL_IDLE_EVENT(34)
-			if( tdwebc[i].source.dvrs.dvr ) {
+			if( tdwebc[i].source.dvrs && tdwebc[i].source.dvrs.dvr ) {
 				showpin( avlp, "ID__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_idle.png", true );
-			}			
-		}		
+			}
+		}
 		else if( cmd == "39" ) { 	// AVL_IGNITION_EVENT(39), icon missing, use sensor icon and park icon instead
-			if( avlp.ign ) {
-				showpin( avlp, "IG__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_sensor.png", false );
+			if( avlp.ign == 1 ) {
+				showpin( avlp, "IG__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_ignon.png", false );
 			}
 			else {
 				showpin( avlp, "IG__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_park.png", false );
 			}		
 		}
 		else if( cmd == "43" ) { 	// DRIVEBY(43)
-			if( tdwebc[i].source.dvrs.dvr ) {
-				showpin( avlp, "PB__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_driveby.png", true );
+			if( tdwebc[i].source.dvrs && tdwebc[i].source.dvrs.dvr ) {
+				showpin( avlp, "DB__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_driveby.png", false );
 			}		
 		}		
 		else if( cmd == "31" ) {      // AVL_GFORCE_EVENT(31)
-			if( tdwebc[i].source.dvrs.dvr ) {
+			if( tdwebc[i].source.dvrs && tdwebc[i].source.dvrs.dvr ) {
 				showpin( avlp, "PB__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_gforce.png", false );
 			}
 		}
 		else if( cmd == "38" ) {      // AAVL_GEOFENCE_RECT_EVENT(38)
-			if( tdwebc[i].source.dvrs.dvr ) {
+			if( tdwebc[i].source.dvrs && tdwebc[i].source.dvrs.dvr ) {
 				showpin( avlp, "GO__"+tdwebc[i].source.dvrs.dvr	, "route_icon.php", false );
 
 				// to draw a rectangle also
@@ -442,7 +527,13 @@ function pquery()
 		if( resp.res && resp.tdwebc ) {
 			tdwebc_message( resp.tdwebc );
 		}		
-		pquery();
+		if( resp.session && resp.session == 'e' ) {	// session ended
+			// logout
+			window.location.assign("logout.php");
+		}
+		else {
+			pquery();
+		}
 	}});
 }
 			
@@ -479,6 +570,8 @@ $( "button[name='getcurrentpos']" ).click(function(e){
 // Clear All Icons button
 $( "button[name='clearallicons']" ).click(function(e){
 	map.entities.clear();
+	vlt_pins = [] ;
+	vlt_pidx = 0 ;
 });
 
 // Sensor Config Dialog
@@ -487,23 +580,18 @@ $( ".tdcdialog#dialog_sensorconfig" ).dialog({
 	width:"auto",
 	modal: true,
 	open: function( event, ui ) {
-		$.getJSON("vltsensorload.php", function(resp){
-			if( resp.res==1 ) {
-				vltsensor = resp.vltsensor ; 
-				var tb = "";
-				for( var i=0 ; i<resp.vltsensor.length ; i++ ) {
-					tb += '<tr><td>'+resp.vltsensor[i].sensor_index+'</td><td><input name="' + resp.vltsensor[i].sensor_index + '" value="' + resp.vltsensor[i].sensor_name + '" type="text"/></td></tr>' ;
-				}
-				$("table#vltsensortable").html(tb);
-			}
-		});
+		var tb = "";
+		for( var i=0 ; i<vltsensor.length ; i++ ) {
+			tb += '<tr><td>'+vltsensor[i].sensor_index+'</td><td><input name="' + vltsensor[i].sensor_index + '" value="' + vltsensor[i].sensor_name + '" type="text"/></td></tr>' ;
+		}
+		$("table#vltsensortable").html(tb);
 	},	
 	buttons:{
 		"OK": function() {
 			$.getJSON("vltsensorsave.php", $( "form[name='sensorconfig']" ).serializeArray(), function(resp){
 				if( resp.res==1 ) {
-					$( ".tdcdialog#dialog_sensorconfig" ).dialog( "close" );			
-					load_sensors();					
+					$( ".tdcdialog#dialog_sensorconfig" ).dialog( "close" );				
+					load_sensors();	
 				}
 				else {
 					$( ".tdcdialog#dialog_sensorconfig" ).dialog( "close" );				
@@ -518,6 +606,10 @@ $( ".tdcdialog#dialog_sensorconfig" ).dialog({
 
 $( "button[name='sensorconfig']" ).click(function(){
 	$( ".tdcdialog#dialog_sensorconfig" ).dialog("open");
+});
+
+$( "form#vltreportconfig input[name='vlt_geo']" ).change(function() {
+alert( "Handler for .change() called." );
 });
 
 // Report Configuration Dialog
@@ -561,15 +653,14 @@ $( ".tdcdialog#dialog_reportconfig" ).dialog({
 		// load default button
 		$(".tdcdialog#dialog_reportconfig button[name='vltloaddefault']").click(function(){
 			$.getJSON("vltdefaultload.php?default="+$(this).val(), function(resp){
+				// save veh selection
+				var vg = $("form#vltreportconfig input#vlt_select_type2").prop("checked");
+				var vs = $("form#vltreportconfig select#vlt_vehicle_list").val();
+				$("form#vltreportconfig")[0].reset();
+				// restore veh selection
+				$("form#vltreportconfig input#vlt_select_type2").prop("checked",vg);
+				$("form#vltreportconfig select#vlt_vehicle_list").val(vs);
 				if( resp.res == 1 ) {
-					// save veh selection
-					var vg = $("form#vltreportconfig input#vlt_select_type2").prop("checked");
-					var vs = $("form#vltreportconfig select#vlt_vehicle_list").val();
-					$("form#vltreportconfig")[0].reset();
-					// restore veh selection
-					$("form#vltreportconfig input#vlt_select_type2").prop("checked",vg);
-					$("form#vltreportconfig select#vlt_vehicle_list").val(vs);
-					
 					for (var field in resp.vltconfig ) {
 						var elm=$("form#vltreportconfig [name='"+field+"']");
 						if( elm.length>0 ) {
@@ -617,25 +708,24 @@ $( ".tdcdialog#dialog_reportconfig" ).dialog({
 		
 	},
 	open: function( event, ui ) {
-		$("form#vltreportconfig")[0].reset();
-		$("form#vltreportconfig input[name='vlt_geo']").val("");
+//		$("form#vltreportconfig")[0].reset();
+//		$("form#vltreportconfig input[name='vlt_geo']").val("");
 
 		// vehicle , copy from live page
 		$("form#vltreportconfig select#vlt_vehicle_list").html(
 			$("select[name='vltvehicle']").html() );
 		
 		// load Alarm (sensor) list
-		$.getJSON("vltsensorload.php", function(resp){
-			if( resp.res==1 ) {
-				var selectalarm = "";
-				for( var i=0 ; i<resp.vltsensor.length ; i++ ) {
-					if( resp.vltsensor[i].sensor_name.length > 0 ) {
-						selectalarm += '<input name="vlt_gpio_' + i + '" type="checkbox" /> ' + resp.vltsensor[i].sensor_name + ' <br />' ;
-					}
+		if( vltsensor_reload ) {
+			var selectalarm = "";
+			for( var i=0 ; i<vltsensor.length ; i++ ) {
+				if( vltsensor[i].sensor_name.length > 0 ) {
+					selectalarm += '<input name="vlt_gpio_' + i + '" type="checkbox" /> ' + vltsensor[i].sensor_name + ' <br />' ;
 				}
-				$("div#selectalarm").html(selectalarm);
 			}
-		});
+			$("div#selectalarm").html(selectalarm);
+			vltsensor_reload = 0 ;
+		}
 	},
 	buttons:{
 		"Geo Fence Define...": function() {
@@ -799,8 +889,7 @@ function geofence_select( area )
 	}
 }
 
-
-function showgeofence(zone)
+function addgeofence(zone, select)
 {
 	var a = zone.split(",");
 	if( a[0] == a[2] || a[1] == a[3] ) {
@@ -825,8 +914,7 @@ function showgeofence(zone)
 	Microsoft.Maps.Events.addHandler(polygon, 'click', function(e){
 		geofence_select( e.target ) ;
 	});  
-	if( geofence_toparea == null ) {
-		// first geo fence area
+	if( select ) {
 		geofence_toparea = polygon ;
 		geofence_select( polygon ) ;
 	}	
@@ -876,7 +964,7 @@ function geofence_load()
 	var geo = $("form#vltreportconfig input[name='vlt_geo']").val();
 	var geo_a = geo.split(";");
 	for( var i=0; i<geo_a.length; i++ ) {
-		showgeofence( geo_a[i] );
+		addgeofence( geo_a[i], i==0?1:0 );
 	}
 
 	// set map location
@@ -909,9 +997,7 @@ $( ".tdcdialog#dialog_geofence" ).dialog({
 				if( resp.res ) {
 					if( resp.zonelist.length>0) {
 						var zone=""+resp.zonelist[0].top+","+resp.zonelist[0].left+","+resp.zonelist[0].bottom+","+resp.zonelist[0].right+",In";
-						var area = showgeofence(zone);
-						if( area ) 
-							geofence_select( area ) ;
+						addgeofence(zone, 1);
 					}
 				}
 			});	
@@ -932,9 +1018,7 @@ $( ".tdcdialog#dialog_geofence" ).dialog({
 			lrect.height *= 0.75 ;
 			lrect.width *= 0.75 ;
 			var zone=""+lrect.getNorth()+","+lrect.getWest()+","+lrect.getSouth()+","+lrect.getEast()+",In";
-			var area = showgeofence(zone);
-			if( area ) 
-				geofence_select( area ) ;
+			addgeofence(zone, 1);
 		});
 
 		// Button Delete
@@ -971,8 +1055,8 @@ $( ".tdcdialog#dialog_geofence" ).dialog({
 		if( geofencemap==null) {
 			geofencemap = new Microsoft.Maps.Map(document.getElementById("geofencemap"),
 			{credentials: <?php echo "'$map_credentials'"; ?> ,
-			center: mapcenter,
-			zoom: 5,
+			center: map.getCenter(),
+			zoom: map.getZoom(),
 			enableSearchLogo: false,
 			enableClickableLogo: false,
 			mapTypeId : Microsoft.Maps.MapTypeId.road
@@ -998,8 +1082,10 @@ $( ".tdcdialog#dialog_geofence" ).dialog({
 			$( "div#geofencemaparea" ).data("wdif", wdif );
 			$( "div#geofencemaparea" ).data("hdif", hdif );
 		}
-
 		geofence_load();
+	},	
+	close: function( event, ui ) {
+		geofencemap = null;
 	},	
 	resize: function( event, ui ) {
 		$( "div#geofencemaparea" ).width($( "div#dialog_geofence" ).width()-$( "div#geofencemaparea" ).data("wdif"));
@@ -1058,11 +1144,13 @@ $( "button[name='liveview']" ).click(function(e){
 		if( vehicle instanceof Array) {
 			vehicle = vehicle[0] ;
 		}
-		var dvrdetail = vltlist.d[vehicle] ;
-		$("form#liveviewform input[name='dvrid']").val(dvrdetail.dvrid);
-		$("form#liveviewform input[name='phone']").val(dvrdetail.phone);
-		$("form#liveviewform input[name='ip']").val(dvrdetail.ip);
-		$("form#liveviewform input[name='type']").val(dvrdetail.type);
+		var dvrdetail = vltlist[vehicle] ;
+		
+		// for live view button:
+		dvrdetail['support_playback'] = 0 ;
+		dvrdetail['support_live'] = 1 ;
+			
+		$("form#liveviewform input[name='info']").val( JSON.stringify( dvrdetail ) );
 		$('form#liveviewform').submit();
 	}
 });
@@ -1075,7 +1163,7 @@ $( "button[name='setupdvr']" ).click(function(e){
 		if( vehicle instanceof Array) {
 			vehicle = vehicle[0] ;
 		}
-		var dvrdetail = vltlist.d[vehicle] ;
+		var dvrdetail = vltlist[vehicle] ;
 		var win=window.open("http://"+dvrdetail.ip+"/", '_blank');
 		win.focus();
 	}
@@ -1179,6 +1267,9 @@ $('#rcontainer').show('slow', trigger_resize );
 	<li><a class="lmenu" href="reportview.php"><img onmouseout="this.src='res/side-reportview-logo-clear.png'" onmouseover="this.src='res/side-reportview-logo-fade.png'" src="res/side-reportview-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="videos.php"><img onmouseout="this.src='res/side-videos-logo-clear.png'" onmouseover="this.src='res/side-videos-logo-fade.png'" src="res/side-videos-logo-clear.png" /> </a></li>
 	<li><img src="res/side-livetrack-logo-green.png" /></li>
+	<?php if(  $_SESSION['user_type'] == "operator"  ){ ?>
+	<li><a class="lmenu" href="driveby.php"><img onmouseout="this.src='res/side-driveby-logo-clear.png'" onmouseover="this.src='res/side-driveby-logo-fade.png'" src="res/side-driveby-logo-clear.png" /> </a></li>
+	<?php } ?>	
 	<li><a class="lmenu" href="settings.php"><img onmouseout="this.src='res/side-settings-logo-clear.png'" onmouseover="this.src='res/side-settings-logo-fade.png'" src="res/side-settings-logo-clear.png" /> </a></li>
 </ul>
 </div>
@@ -1220,10 +1311,7 @@ $('#rcontainer').show('slow', trigger_resize );
 <div style="text-align: center;"><button style="min-width:14em;" name="setupdvr">Setup DVR</button></div>
 
 <form id="liveviewform" action="vltliveview.php" target="_blank" >
-<input type="hidden" name="dvrid"/>
-<input type="hidden" name="phone"/>
-<input type="hidden" name="ip"/>
-<input type="hidden" name="type"/>
+<input type="hidden" name="info"/>
 </form>
 
 </div>
@@ -1236,22 +1324,7 @@ $('#rcontainer').show('slow', trigger_resize );
 
 <!-- AVL vehicle detail -->
 <div class="tdcdialog" title="Live Vehicle Detail" id="dialog_vehicle_detail">
-<table>
-		<tr>
-		<td style="text-align: right;">DVR id:</td><td id="dvrid" >BUS001</td>
-		</tr>
-		<tr>
-		<td style="text-align: right;">Phone Number:</td><td id="phone">16479653203</td>
-		</tr>
-		<tr>
-		<td style="text-align: right;">IP:</td><td id="ip">74.198.192.56</td>
-		</tr>
-		<tr>
-		<td style="text-align: right;">Type:</td><td id="type">5.11</td>
-		</tr>
-		<tr>
-		<td style="text-align: right;">Event:</td><td id="evt">1:</td>
-		</tr>
+<table id="dvrinfo" >
 </table>
 </div>
 
@@ -1317,13 +1390,13 @@ $('#rcontainer').show('slow', trigger_resize );
 
 	<table>
 		<tr>
-		<td style="text-align: right;">Report On Over Speed:</td><td><input style="width:5em;" name="vlt_speed"/> KM/hr</td>
+		<td style="text-align: right;">Report On Over Speed:</td><td><input style="width:5em;" name="vlt_speed"/> mph</td>
 		</tr>
 		<tr>
 		<td style="text-align: right;">Report On Time Interval:</td><td><input style="width:5em;" name="vlt_time_interval"/> s</td>
 		</tr>
 		<tr>
-		<td style="text-align: right;">Report On Distance Interval:</td><td><input style="width:5em;" name="vlt_dist_interval"/> m</td>
+		<td style="text-align: right;">Report On Distance Interval:</td><td><input style="width:5em;" name="vlt_dist_interval"/> ft</td>
 		</tr>
 		<tr>
 		<td style="text-align: right;">Max Count:</td><td><input style="width:5em;" name="vlt_maxcount"/> </td>
@@ -1332,7 +1405,7 @@ $('#rcontainer').show('slow', trigger_resize );
 		<td style="text-align: right;">Max Bytes:</td><td><input style="width:5em;" name="vlt_maxbytes"/> KB</td>
 		</tr>
 		<tr>
-		<td style="text-align: right;">Temperature:</td><td><input style="width:5em;" name="vlt_temperature"/> C</td>
+		<td style="text-align: right;">Temperature:</td><td><input style="width:5em;" name="vlt_temperature"/> &deg;F</td>
 		</tr>
 		<tr>  
 		<td style="text-align: right;">Idling:</td><td><input style="width:5em;" name="vlt_idling" /> s</td>

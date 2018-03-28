@@ -7,6 +7,8 @@
 // By Dennis Chen @ TME	 - 2013-05-15
 // Copyright 2013 Toronto MicroElectronics Inc.
 
+require_once 'vfile.php' ;
+
 if( !$logon || empty($conn) || empty($_SESSION) ) die ;	// has to be included
 
 if( !empty($_REQUEST['reqdate'])) {
@@ -20,18 +22,14 @@ $dashboard_option = array(
 );
 
 // dashboard options
-@$dashboardoptfile=fopen( $dashboard_conf, "r" );
-if( $dashboardoptfile ) {
-	while( $line=fgets($dashboardoptfile) ) {
-		$ar=explode ( "=", $line, 2 );
-		if( count($ar)==2 ) {
-			$dashboard_option[trim($ar[0])]=trim($ar[1]);
-		}
-	}
-	fclose($dashboardoptfile);
+if( $conf = vfile_open( $dashboard_conf ) ) {
+	$confstr = vfile_read( $conf, 32000 ) ;
+	$dashboard_option = parse_ini_string( $confstr );
+	vfile_close( $conf );
 }
 		
-if($dashboard_option['nAverageDuration']<2) $dashboard_option['nAverageDuration']=60 ;
+if( empty($dashboard_option['nAverageDuration']) || $dashboard_option['nAverageDuration']<2) 
+	$dashboard_option['nAverageDuration']=60 ;
 
 // time ranges
 @$date_begin = new DateTime( $dashboard_option['tmStartOfDay'] );
