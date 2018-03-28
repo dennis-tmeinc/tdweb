@@ -13,6 +13,8 @@
 //
 
     require 'session.php' ;
+	include_once 'vfile.php' ;
+	
 	header("Content-Type: application/json");
 	
 	if( $logon && !empty($webplay_support) ) {
@@ -63,7 +65,7 @@
 					do {
 						$cachesize = 0 ;
 						foreach (glob($cachedir."/*") as $filename) {
-							if (fileatime($filename) + ($remaindays*24*60*60) < $xt ) {
+							if (fileatime($filename) + ($remaindays*24*60*60) < $_SESSION['xtime'] ) {
 								@unlink($filename);
 							}
 							else {
@@ -103,19 +105,16 @@
 					
 					$resp['xpath'] = $xpath ;
 					
-//					if( file_exists( $path ) ) {
-						
-						$cmdline = dirname( $_SERVER["SCRIPT_FILENAME"] )."/bin/ffmpeg.exe -i $xpath -y -codec:v copy $cachefn" ;
-						
-						set_time_limit(300) ;
-						
-						$lline = exec( escapeshellcmd($cmdline), $eoutput, $eret ) ;
-						
-						if( $eret == 0 ) {
-							$resp['mp4'] = $cachemp4 ;
-							$resp['res'] = 1 ;
-						}
-//					}
+					$cmdline = "bin/ffmpeg.exe -i $xpath -y -codec:v copy $cachefn" ;
+					
+					set_time_limit(300) ;
+					
+					$lline = vfile_exec( escapeshellcmd($cmdline), $eoutput, $eret ) ;
+					
+					if( $eret == 0 ) {
+						$resp['mp4'] = $cachemp4 ;
+						$resp['res'] = 1 ;
+					}
 				}
 			}
 			$result->free();

@@ -26,6 +26,13 @@
 				$info['name'] = $info['dvrid'] ;
 			}
 			
+			if( !isset($info['support_live']) )
+				$info['support_live'] = 1 ;
+			if( !isset($info['support_playback']) )
+				$info['support_playback'] = 0 ;
+			if( !isset($info['playmode']) )
+				$info['playmode'] = "live" ;
+			
 			// assing info['encoder']
 			if( empty( $info['type'] ) || (int)$info['type'] == 5 ) {
 				$info['encoder'] = "266" ;		// support 266 only now
@@ -48,7 +55,7 @@
 				if( $server['protocol'] == "relay" ) {
 					$info['support_relay'] = 1 ;
 					if( empty( $server['host'] ) ) {
-						$server['host'] = file_get_contents("http://myip.dtdns.com/");
+						$server['host'] = file_get_contents("http://tdlive.darktech.org/vlt/myip.php");
 					}
 				}
 			}
@@ -61,7 +68,7 @@
 			echo "# Content-Type: JSON\r\n" ;
 			echo "# Touch Down Center ". $_SESSION['release']."\r\n\r\n" ;
 			
-			echo json_encode( $dpl ) ;
+			echo json_encode( $dpl, JSON_PRETTY_PRINT ) ;
 		}
 
 	}

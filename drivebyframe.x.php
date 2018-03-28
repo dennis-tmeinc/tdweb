@@ -50,35 +50,13 @@
 					
 					if( vfile_size( $imgfile ) < 10 ) {
 					header("x-img-file: ".$imgfile );
-						function ex($cmd, &$result, &$ret)
-						{
-							if( $fsvr = vfile_remote() ) {
-								header( "x-ex-url: ".$fsvr."?c=e&n=".rawurlencode($cmd) ) ;
-							
-								$j = vfile_readhttp( $fsvr."?c=e&n=".rawurlencode($cmd) ) ;
-								@$st = json_decode( $j, true );
-								if( !empty( $st['res'] ) ) {
-									$result = $st['output'] ;
-									$ret = $st['ret'] ;
-								}
-							}
-							else {
-								exec( $cmd,$result,$ret);
-							}
-						}
-						
 						$cachefn = "videocache\\".$namehash.'_'.$time.'_%d.jpg' ;  
-						
 						$cmdline = "bin\\ffmpeg.exe -i $vid -ss $time -t 1.02 -y $cachefn" ;
-						
-						header("x-ex-cmd: ".$cmdline );
 						
 						set_time_limit(60) ;
 						$eoutput = array();
 						$eret = 1 ;
-						$lline = ex( $cmdline, $eoutput, $eret ) ;
-						
-						header("x-ex-1: ".$eret );
+						$lline = vfile_exec( $cmdline, $eoutput, $eret ) ;
 						
 					}
 					$fs = vfile_glob(  'videocache/'.$namehash.'_'.$time.'_*.jpg' ) ;

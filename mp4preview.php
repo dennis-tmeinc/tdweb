@@ -8,6 +8,7 @@
 // Copyright 2013 Toronto MicroElectronics Inc.
 //
 
+	$noredir=1 ;
     require 'session.php' ;
 	require_once 'vfile.php' ;
 
@@ -51,6 +52,8 @@
 	
 	if( $logon ) {
 
+		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+
 		$sql = "SELECT `path` FROM videoclip WHERE `index` = $_REQUEST[index] ;" ;
 
 		if($result=$conn->query($sql)) {
@@ -85,12 +88,8 @@
 							// convert
 							set_time_limit(200) ;
 							$cmdline = "bin\\ffmpeg.exe -i ".$row['path']." -y -codec:v copy ".$preview_tmpfile ;
-							if( $fsvr = vfile_remote() ) {
-								vfile_readhttp( $fsvr."?c=e&n=".rawurlencode($cmdline) ) ;
-							}
-							else {
-								exec( escapeshellcmd($cmdline) ) ;
-							}
+						
+							vfile_exec( $cmdline );
 							vfile_rename( $preview_tmpfile, $preview_file );
 						}
 
@@ -190,5 +189,6 @@
 			}
 			$result->free();
 		}
+		$conn->close();
 	}
 ?>

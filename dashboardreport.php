@@ -145,8 +145,9 @@
 			"ignition off",
 			"panic"			
 			);
+		$system_alert_type = "2,3,4,5,7,8" ;
 		
-		$sql = "SELECT count(*) FROM `td_alert` WHERE  alert_code in (2,3,4,5,7) AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
+		$sql = "SELECT count(*) FROM `td_alert` WHERE  alert_code in ($system_alert_type) AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
 		$result=$conn->query($sql);
 		if( $result ){
 			if( $row = $result->fetch_array(MYSQLI_NUM) ){
@@ -155,7 +156,7 @@
 			$result->free();
 		}
 			
-		$sql = "SELECT dvr_name, description, alert_code, date_time FROM `td_alert` WHERE  alert_code in (2,3,4,5,7) AND date_time BETWEEN '$date_begin' AND '$date_end' ORDER BY `date_time` DESC ";
+		$sql = "SELECT dvr_name, description, alert_code, date_time FROM `td_alert` WHERE  alert_code in ($system_alert_type) AND date_time BETWEEN '$date_begin' AND '$date_end' ORDER BY `date_time` DESC ";
 		$resp['report']['list_system_alerts'] = array() ;
 		$result=$conn->query($sql);
 		if( $result ){

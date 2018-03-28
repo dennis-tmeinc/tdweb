@@ -7,6 +7,8 @@
 // By Dennis Chen @ TME	 - 2014-04-08
 // Copyright 2013 Toronto MicroElectronics Inc.
 
+include 'config.php' ;
+
 header("Content-Type: application/xml");
 
 $xmlresp = new SimpleXMLElement('<tdwebc><status>Error</status></tdwebc>') ;
@@ -29,9 +31,13 @@ $vltsession = $tdwebc->session ;
 $xmlresp->session=$vltsession ;
 $ss = explode('-', $vltsession);
 
-$session_id = $ss[0] ;
+// setup session
+if( empty($session_idname) ) {
+	$session_idname = "touchdownid";
+}
+$_REQUEST[$session_idname] = $ss[0] ;
 $noredir = 1 ;
-require_once 'session.php' ;
+include 'session.php' ;
 
 if( !$logon ) {
 	// session wrong

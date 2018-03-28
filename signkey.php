@@ -15,7 +15,9 @@
 	$savesess=$_SESSION ;
 	$_SESSION = array();
 	$_SESSION['xtime']=time() ;	
-	$_SESSION['release']="V3.7.22" ;	
+	$_SESSION['release']=file_get_contents("release") ;
+	if( empty($_SESSION['release']) )
+		$_SESSION['release'] = "V3.7.23" ;	// known last release
 	$_SESSION['remote']=$_SERVER['REMOTE_ADDR'] ;
 	
 	if( $savesess['xuser'] == 'SuperAdmin' ) {

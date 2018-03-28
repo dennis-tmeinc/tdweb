@@ -12,7 +12,6 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
-
 		// td_alert codes
 		/*
 			1: video_uploaded, 
@@ -27,6 +26,23 @@
 			10: ignition off
 			11: panic alert
 		*/
+		
+		// System Alerts list
+		$alert_types=array(
+			"unknown",
+			"video uploaded",		
+			"High Temperature",
+			"Connection",
+			"Camera",
+			"Recording",
+			"rtc error",
+			"partial storage failure",
+			"system reset",
+			"ignition on",
+			"ignition off",
+			"panic"			
+			);
+		$system_alert_type = "2,3,4,5,7,8" ;
 
 		$reqdate = new DateTime() ;
 		if( strstr($_SESSION['dashboardpage'], 'dashboardmorning') ) {		// dashboard morning?

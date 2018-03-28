@@ -3,7 +3,7 @@
 // By Dennis Chen @ TME	 - 2013-06-15
 // Copyright 2013 Toronto MicroElectronics Inc.
 
-include 'config.php' ;
+include_once 'config.php' ;
 
 if( empty($session_path) ) {
 	$session_path= "session";
@@ -15,9 +15,6 @@ if( empty($session_idname) ) {
 session_save_path( $session_path );
 session_name( $session_idname );
 
-if( !empty( $session_id ) ) {
-	session_id ($session_id);
-}
 if( !empty($_REQUEST[session_name()]) ) {
 	session_id ($_REQUEST[session_name()]);
 }
@@ -59,66 +56,61 @@ if( !empty($_COOKIE['ui']))
 	$default_ui_theme = $_COOKIE['ui'] ;	
 
 $resp=array('res' => 0);	
-$xt = time() ;
+$request_time = time() ;
+$logon=false ;
 if( empty($_SESSION['user']) ||
 	empty($_SESSION['xtime']) || 
-	$xt>$_SESSION['xtime']+$session_timeout )
+	$request_time>$_SESSION['xtime']+$session_timeout )
 {
 	// logout
 	unset($_SESSION['user']) ;
 	unset($_SESSION['user_type']);
 	$resp['errormsg']="Session error!";
-	$resp['session'] = 0 ;
-	$logon=false ;
 	/* AJAX check */
 	if( empty($noredir) && empty($_SERVER['HTTP_X_REQUESTED_WITH']) ) {
 		header( 'Location: logon.php' ) ;
 	}	
-	$resp['session'] = 'e' ;		// session ended
 }
 else {
-	$oldsessiontime = $_SESSION['xtime'] ;
 	if( empty( $noupdatetime ) )
-		$_SESSION['xtime']=$xt ;
-	$logon=true ;
-	$resp['session'] = 'l' ;		// session login
+		$_SESSION['xtime']=$request_time ;
 
 	// move sql connection here, in case for general session's settings (etc. timezone)
-	@$conn = new mysqli("p:".$smart_host, $smart_user, $smart_password, $smart_database );
+	if( empty( $nodb ) ) {
+		@$conn = new mysqli("p:".$smart_host, $smart_user, $smart_password, $smart_database );
+	}
 	
+	$logon=true ;
 }
 
-session_write_close();
-
-// store $_SESSION variable after session_write_close()
+// save $_SESSION variable after session_write_close()
 function session_write()
 {
-//	file_put_contents( session_save_path().'/sess_'.session_id(), session_encode() );	
-	$fsess = fopen( session_save_path().'/sess_'.session_id(), 'c+' );
-	if( $fsess ) {
-		flock( $fsess, LOCK_EX ) ;		// exclusive lock
-		$sess_str = session_encode() ;
-		fwrite( $fsess, $sess_str );
-		ftruncate( $fsess, ftell($fsess));
-		fflush( $fsess ) ;              // flush before releasing the lock
-		flock( $fsess, LOCK_UN ) ;		// unlock ;
-		fclose( $fsess );
+	if( session_status() !== PHP_SESSION_ACTIVE ) {
+		$savesess = $_SESSION ;
+		session_start();
+		$_SESSION = $savesess ;
+	}
+	session_write_close();
+	if( empty($_SESSION) ) {
+		// remove this session file
+		@unlink( session_save_path().'/sess_'.session_id() );
 	}
 }
 
 // store one variable to session
 function session_save( $vname, $value )
 {
-	if( !empty($_SESSION) ) {
-		if( empty($value) ) {
-			unset($_SESSION[$vname]);
-		} 
-		else {
-			$_SESSION[$vname] = $value ;		
-		}
-		session_write();
+	if( empty( $value ) ) {
+		unset( $_SESSION[$vname] );
 	}
+	else {
+		$_SESSION[$vname] = $value ;		
+	}
+	session_write();
 }
+
+session_write();
 
 return ;
 ?>

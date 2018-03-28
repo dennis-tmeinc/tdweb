@@ -14,21 +14,6 @@
 	
 	if( $logon ) {
 		if( $_SESSION['user_type'] == "admin" ) {		// admin (power user) only
-
-			function ex($cmd, &$result, &$ret)
-			{
-				if( $fsvr = vfile_remote() ) {
-					$j = vfile_readhttp( $fsvr."?c=e&n=".rawurlencode($cmd) ) ;
-					@$st = json_decode( $j, true );
-					if( !empty( $st['res'] ) ) {
-						$result = $st['output'] ;
-						$ret = $st['ret'] ;
-					}
-				}
-				else {
-					exec( $cmd,$result,$ret);
-				}
-			}
 		
 			// secaped sql values
 			$esc_req=array();		
@@ -48,7 +33,7 @@
 					}
 					
 					if( empty($stroage_regkey) ) {
-						ex("reg query HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown", $result, $ret);
+						vfile_exec("reg query HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown", $result, $ret);
 						if( $ret == 0 ) {
 							// 64bit OS
 							$stroage_regkey = "HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown" ;
@@ -59,7 +44,7 @@
 						}
 					}
 					
-					ex( "reg ADD $stroage_regkey /v $key /f /d " . escapeshellarg( $value ));
+					vfile_exec( "reg ADD $stroage_regkey /v $key /f /d " . escapeshellarg( $value ));
 					
 				}
 			}

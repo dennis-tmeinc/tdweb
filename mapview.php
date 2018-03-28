@@ -226,78 +226,233 @@ else {
 	$("button#playsync").hide();
 }
 
-function showup()
-{
-trigger_resize();
 
-var mapcenter = new Microsoft.Maps.Location(35, -100);
-var mapzoom = 4 ;
-var mapinit=false ;
-if( sessionStorage ) {
-	var tdsess = sessionStorage.getItem('tdsess');
-	var localsession ;
-	if( tdsess ) {
-		localsession = JSON.parse(tdsess);
+function wait( w )
+{
+    if( w ) {
+		$("body").append('<div class="wait"></div>');
 	}
-	if( localsession && localsession.tdcmap ) {
-		if( localsession.tdcmap.zoom ) {
-			mapcenter = new Microsoft.Maps.Location(localsession.tdcmap.lat, localsession.tdcmap.lon);
-			mapzoom = localsession.tdcmap.zoom ;
-			mapinit=true ;
-		}
+	else {
+		$("div.wait").remove();
 	}
 }
 
-map = new Microsoft.Maps.Map(document.getElementById("tdcmap"),
-{credentials: <?php echo "'$map_credentials'"; ?> ,
-center: mapcenter,
-zoom: mapzoom,
-enableSearchLogo: false,
-enableClickableLogo: false,
-mapTypeId : Microsoft.Maps.MapTypeId.road
+var webplay_clip ;
+var webplay_playtime = 0;
+
+function webplay_settitle()
+{
+	var ptime = $( "video#webplay" )[0].currentTime ;
+	if( Math.abs( ptime - webplay_playtime ) < 1 ) {
+		return ;
+	}
+	webplay_playtime = ptime ;
+
+	var clipinfo = $( "video#webplay" ).data("clipinfo") ;
+	var dt = clipinfo.time_start.split(" "); 
+	var d = dt[0].split("-");
+	var t = dt[1].split(":");
+	var dt = new Date( d[0], d[1]-1, d[2], t[0], t[1], t[2], 0 );
+	var start_time = dt.getTime() ;
+	
+	var dt = new Date( start_time + webplay_playtime * 1000 ) ;
+	var dyear = dt.getFullYear() ;
+	var dmon = dt.getMonth() + 1 ;
+	if( dmon<10 ) dmon = "0" + dmon ;
+	var ddate = dt.getDate() ;
+	if( ddate < 10 ) ddate = "0" + ddate ;
+	var dhour = dt.getHours() ;
+	if( dhour < 10 ) dhour = "0" + dhour ;
+	var dmin = dt.getMinutes() ;
+	if( dmin < 10 ) dmin = "0" + dmin ;
+	var dsec = dt.getSeconds() ;
+	if( dsec < 10 ) dsec = "0" + dsec ;
+	var dstr = dyear + "-" + dmon + "-" + ddate + ' ' + dhour + ":" + dmin + ":" + dsec ;
+
+	$( ".tdcdialog#dialog_webplay" ).dialog("option", "title", clipinfo.vehicle_name + " - " + clipinfo.camera_name[ clipinfo.channel ] + "   " + dstr );	
+}
+
+function webplay_play()
+{
+	var clipinfo = $( "video#webplay" ).data("clipinfo") ;
+	$( "video#webplay" )[0].onended = function(){
+		if( $( "video#webplay" )[0].currentTime > 2 ) {
+			$("button#webplay_next").click();
+		}
+	}
+	webplay_playtime = -1 ;
+	webplay_settitle();
+	$( "video#webplay" )[0].ontimeupdate = webplay_settitle ;
+	$( "video#webplay" )[0].src = clipinfo.mp4  ;
+	$( "video#webplay" )[0].play();
+//	$( "video#webplay" )[0].load();
+}
+
+var webplay_1open=0 ;
+
+$( ".tdcdialog#dialog_webplay" ).dialog({
+	autoOpen: false,
+	width:"auto",
+	modal: true,
+	beforeClose: function( event, ui ) {
+		// $( "video#webplay" )[0].src = "" ;
+		$( "video#webplay" )[0].autoplay=false;
+		$( "video#webplay" )[0].pause();	
+	},
+	resize: function( event, ui ) {
+		$( "video#webplay" )[0].width=$( "div#dialog_webplay" ).width() - $( ".tdcdialog#dialog_webplay" ).data("wdif");
+		$( "video#webplay" )[0].height=$( "div#dialog_webplay" ).height() - $( ".tdcdialog#dialog_webplay" ).data("hdif");
+	},
+	open: function( event, ui ) {
+		if( !webplay_1open ) {
+			var wdif = $( "div#dialog_webplay" ).width() - $( "video#webplay" )[0].width ;
+			var hdif = $( "div#dialog_webplay" ).height() - $( "video#webplay" )[0].height ;
+			$( ".tdcdialog#dialog_webplay" ).data("wdif", wdif );
+			$( ".tdcdialog#dialog_webplay" ).data("hdif", hdif );
+			webplay_1open = 1 ;
+		}
+		else {
+			$( "video#webplay" )[0].width=$( "div#dialog_webplay" ).width() - $( ".tdcdialog#dialog_webplay" ).data("wdif");
+			$( "video#webplay" )[0].height=$( "div#dialog_webplay" ).height() - $( ".tdcdialog#dialog_webplay" ).data("hdif");
+		}
+		var clipinfo = $( "video#webplay" ).data("clipinfo") ;
+		var options = "" ;
+		for( var ci=0; ci<clipinfo.camera_number; ci++ ) {
+			options += "<option>"+clipinfo.camera_name[ci]+"</option>" ;
+		}
+		$("select#webplay_camera").html(options);
+		$("select#webplay_camera")[0].selectedIndex=clipinfo.channel ;
+		webplay_play();
+	},
+	create: function( event, ui ) {
+		$("select#webplay_camera").change( function(){
+			var clipinfo = $( "video#webplay" ).data("clipinfo") ;
+			var param=new Object ;
+			param.dir = 3 ;
+			param.vehicle_name = clipinfo.vehicle_name ;
+			param.time_start = clipinfo.time_start ;
+			param.channel = $("select#webplay_camera")[0].selectedIndex ;
+			wait(1);
+			$.getJSON("webplay.php", param , function(resp){
+				wait(0);
+				if( resp.res == 1 ) {
+					$( "video#webplay" ).data("clipinfo", resp );
+					webplay_play();
+				}
+			});
+		});	
+		$("button#webplay_prev").click(function(){
+			var clipinfo = $( "video#webplay" ).data("clipinfo") ;
+			var param=new Object ;
+			param.dir = 2 ;
+			param.vehicle_name = clipinfo.vehicle_name ;
+			param.time_start = clipinfo.time_start ;
+			param.channel = clipinfo.channel ;
+			wait(1);
+			$.getJSON("webplay.php", param , function(resp){
+				wait(0);
+				if( resp.res == 1 ) {
+					$( "video#webplay" ).data("clipinfo", resp );
+					webplay_play();
+				}
+			});		
+		});
+		$("button#webplay_next").click(function(){
+			var clipinfo = $( "video#webplay" ).data("clipinfo") ;
+			var param=new Object ;
+			param.dir = 1 ;
+			param.vehicle_name = clipinfo.vehicle_name ;
+			param.time_start = clipinfo.time_start ;
+			param.channel = clipinfo.channel ;
+			wait(1);
+			$.getJSON("webplay.php", param , function(resp){
+				wait(0);
+				if( resp.res == 1 ) {
+					$( "video#webplay" ).data("clipinfo", resp );
+					webplay_play();
+				}
+			});		
+		});
+
+		$("button#webplay_reload").click(function(){
+			webplay_play();	
+		});
+		$("button#webplay_close").click(function(){
+			$( ".tdcdialog#dialog_webplay" ).dialog( "close" );
+		});
+	}
 });
 
-Microsoft.Maps.Events.addThrottledHandler( map, "viewchangeend", function(){
-	loadvlmap();
-	mapmove=false ;
-}, 100 ) ;
+function showup()
+{
+	trigger_resize();
 
-Microsoft.Maps.Events.addHandler( map, "viewchangestart", function(){
-	mapmove=true ;
-}) ;
+	var mapcenter = new Microsoft.Maps.Location(35, -100);
+	var mapzoom = 4 ;
+	var mapinit=false ;
+	if( sessionStorage ) {
+		var tdsess = sessionStorage.getItem('tdsess');
+		var localsession ;
+		if( tdsess ) {
+			localsession = JSON.parse(tdsess);
+		}
+		if( localsession && localsession.tdcmap ) {
+			if( localsession.tdcmap.zoom ) {
+				mapcenter = new Microsoft.Maps.Location(localsession.tdcmap.lat, localsession.tdcmap.lon);
+				mapzoom = localsession.tdcmap.zoom ;
+				mapinit=true ;
+			}
+		}
+	}
 
-Microsoft.Maps.Events.addHandler( map, "rightclick", function(e){
-	if( e.target == map ) {
-		var point = new Microsoft.Maps.Point(e.getX(), e.getY());
-		var loc = map.tryPixelToLocation(point);
-		$.getJSON("mapquery.php?p="+loc.latitude + "," + loc.longitude, function(resp){
-			if( resp.res && resp.map && resp.map.name && resp.map.point && resp.map.name ) {
-				var dy = resp.map.point.coordinates[0] - loc.latitude ;
-				var dx = resp.map.point.coordinates[1] - loc.longitude ;
-				var dist = Math.sqrt( dx*dx + dy*dy) ;
-				if( dist < 0.01 ) {
-					map_showaddress( resp.map.point.coordinates[0], resp.map.point.coordinates[1], resp.map.name );
+	map = new Microsoft.Maps.Map(document.getElementById("tdcmap"),
+	{credentials: <?php echo "'$map_credentials'"; ?> ,
+	center: mapcenter,
+	zoom: mapzoom,
+	enableSearchLogo: false,
+	enableClickableLogo: false,
+	mapTypeId : Microsoft.Maps.MapTypeId.road
+	});
+
+	Microsoft.Maps.Events.addThrottledHandler( map, "viewchangeend", function(){
+		loadvlmap();
+		mapmove=false ;
+	}, 100 ) ;
+
+	Microsoft.Maps.Events.addHandler( map, "viewchangestart", function(){
+		mapmove=true ;
+	}) ;
+
+	Microsoft.Maps.Events.addHandler( map, "rightclick", function(e){
+		if( e.target == map ) {
+			var point = new Microsoft.Maps.Point(e.getX(), e.getY());
+			var loc = map.tryPixelToLocation(point);
+			$.getJSON("mapquery.php?p="+loc.latitude + "," + loc.longitude, function(resp){
+				if( resp.res && resp.map && resp.map.name && resp.map.point && resp.map.name ) {
+					var dy = resp.map.point.coordinates[0] - loc.latitude ;
+					var dx = resp.map.point.coordinates[1] - loc.longitude ;
+					var dist = Math.sqrt( dx*dx + dy*dy) ;
+					if( dist < 0.01 ) {
+						map_showaddress( resp.map.point.coordinates[0], resp.map.point.coordinates[1], resp.map.name );
+					}
 				}
+			});
+		}
+	}) ;
+
+	if( !mapinit ) {
+		$.getJSON("mapquery.php", function(resp){
+			if( resp.res && resp.map && resp.map.bbox && resp.map.bbox.length>=4) {
+				setTimeout( function(){
+					var nbounds = Microsoft.Maps.LocationRect.fromLocations( [
+						new Microsoft.Maps.Location( resp.map.bbox[0], resp.map.bbox[1] ),
+						new Microsoft.Maps.Location( resp.map.bbox[2], resp.map.bbox[3] )
+						] );
+					map.setView({bounds:nbounds});
+				}, 1000 ) ;
 			}
 		});
 	}
-}) ;
-
-if( !mapinit ) {
-	$.getJSON("mapquery.php", function(resp){
-		if( resp.res && resp.map && resp.map.bbox && resp.map.bbox.length>=4) {
-			setTimeout( function(){
-				var nbounds = Microsoft.Maps.LocationRect.fromLocations( [
-					new Microsoft.Maps.Location( resp.map.bbox[0], resp.map.bbox[1] ),
-					new Microsoft.Maps.Location( resp.map.bbox[2], resp.map.bbox[3] )
-					] );
-				map.setView({bounds:nbounds});
-			}, 1000 ) ;
-		}
-	});
-}
-
-
 
 }
 
@@ -305,6 +460,19 @@ if( !mapinit ) {
 $('#rcontainer').show('slow', showup );
 
 });
+
+var webplayser=1 ;
+function webplay_open(videoid)
+{
+	webplayser++ ;
+	$.getJSON("webplay.php?index="+videoid+"&ser="+webplayser, function(resp){
+		if( resp.res == 1 && resp.ser == webplayser ) {
+			$( "video#webplay" ).data("clipinfo", resp );
+			$( ".tdcdialog#dialog_webplay" ).dialog("open");
+		}
+	});
+	return ;
+}
 
 // player sync variable
 var playerinsync=0 ;
@@ -359,6 +527,18 @@ function map_infobox()
 	var ibox = new Microsoft.Maps.Infobox(map.getCenter(), {visible:false, showPointer:true, showCloseButton:true} );    
 	map.entities.push(ibox);	
 	return ibox ;
+}
+
+// remove map entitiy
+function map_remove( entity )
+{
+	for( var i=map.entities.getLength()-1; i>=0; i--) {
+		var e = map.entities.get(i);
+		if( e == entity ) {
+			map.entities.removeAt(i);
+			break;
+		}
+	}
 }
 
 var mapmove = false ;
@@ -459,6 +639,8 @@ function loadvlmap()
 					if( eventInfobox.getVisible() && eventInfobox.getId() == vl_id ) {
 						return ;
 					}
+					map_remove(eventInfobox) ;
+					eventInfobox = map_infobox() ;
 					// e.target.setOptions( {zIndex: 10 } );		// to prevent Infobox flashing
 					var loc=e.target.getLocation() ;
 			
@@ -500,9 +682,18 @@ function loadvlmap()
 								$('#formplayvideo').submit();
 								$("button#playsync").show();	
 							} 
+							
+							function ipreviewvideo() 
+							{ 
+								webplay_open(v.vl.videoid);
+							} 
+							
 							var iaction = [] ;
-							if( v.vl.video == 1 && (navigator.platform == 'Win32' || navigator.platform == 'Win64') ) {
-								iaction = [{label: 'Play Video', eventHandler: iplayvideo}] ;
+							if( v.vl.video > 0 ) {
+								if(navigator.platform == 'Win32' || navigator.platform == 'Win64') {
+									iaction = [{label: 'Play Video', eventHandler: iplayvideo}] ;
+								}
+								iaction[iaction.length] = {label: 'Preview Video', eventHandler: ipreviewvideo} ;
 							}
 							var ibox = map_infobox() ;
 							if( ibox )
@@ -511,8 +702,8 @@ function loadvlmap()
 					});				
 				}
 				
-				Microsoft.Maps.Events.addThrottledHandler(pushpin, 'mouseover', pin_info, 200 );  
-				Microsoft.Maps.Events.addThrottledHandler(pushpin, 'click', pin_info, 200 );  
+				Microsoft.Maps.Events.addThrottledHandler(pushpin, 'mouseover', pin_info, 500 );  
+				Microsoft.Maps.Events.addThrottledHandler(pushpin, 'click', pin_info, 100 );  
 
 				map.entities.push(pushpin);
 			}
@@ -565,6 +756,18 @@ function loadvlmap()
 
 <div id="workarea">
 <div id="tdcmap">Maps</div>
+
+<!-- Video Clip Preview Dialog -->
+<div class="tdcdialog" id="dialog_webplay">
+<video id="webplay" width="480" height="360" src="" type="video/mp4" controls>
+Your browser does not support the video tag.
+</video> 
+<hr />
+<p style="text-align: right;">
+<select id="webplay_camera"></select>
+&nbsp;&nbsp;&nbsp;<button id="webplay_prev">Prev</button> <button id="webplay_next">Next</button> <button id="webplay_reload">Reload</button> <button id="webplay_close">Close</button></p>
+</div>
+
 </div>
 
 <form id="formplayvideo" enctype="application/x-www-form-urlencoded" method="get" action="playvideo.php" target="_blank" >

@@ -3,12 +3,14 @@
 // Requests:
 //      vltserial : serial number for request
 //      vltpage : page number
+//      timeout : timeout in seconds (default 600)
 // Return:
 //      JSON
-// By Dennis Chen @ TME	 - 2014-07-29
+// By Dennis Chen @ TME	 - 2016-09-13
 // Copyright 2013 Toronto MicroElectronics Inc.
 
 	$noupdatetime = 1 ;
+	$noredir = 1 ;
     require 'session.php' ;
 	header("Content-Type: application/json");
 	
@@ -26,15 +28,23 @@
 
 		$mtime = time();
 		$starttime = $mtime ;
+		
+		if( !empty($_REQUEST['vltpage']) ) {
+			$timeout = $_REQUEST['vltpage'] ;
+		}
+		else {
+			$timeout = 600 ;
+		}
 
-		$fvlt = fopen( session_save_path().'/sess_vlt_'.$vltsession, "r+" );
+		$fvltname = session_save_path().'/sess_vlt_'.$vltsession ;
+		$fvlt = fopen( $fvltname, "r+" );
 		if( $fvlt ) {
 			// wait for message from AVL service
-			while( ($mtime - $starttime)<300 ) {
+			while( ($mtime - $starttime)<$timeout ) {
 				flock( $fvlt, LOCK_EX ) ;		// exclusive lock
 		
 				fseek( $fvlt, 0, SEEK_SET );
-				@$vlt = json_decode( fread( $fvlt, 256000 ), true );
+				@$vlt = json_decode( fread( $fvlt, filesize($fvltname) ), true );
 
 				if( !empty( $vlt['events'] ) ) {
 					for( $i=0; $i<count($vlt['events']); $i++ ) {
@@ -72,7 +82,6 @@
 								$phonereg = $phone."&u=".rawurlencode(dirname($_SERVER['SCRIPT_NAME']). "/livetun.php"  );
 								@file_get_contents("http://tdlive.darktech.org/vlt/vltreg.php?$phonereg", false, $ctx ) ;
 							}
-							
 						}
 					}
 					unset( $vlt['events'] );	// remove events ;

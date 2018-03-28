@@ -24,23 +24,59 @@ function vfile_remote()
 	}
 }
 
+function vfile_http_get( $data )
+{
+    global $remote_fileserver ;
+
+    return file_get_contents( $remote_fileserver."?".http_build_query($data));
+}
+
+function vfile_http_post( $data )
+{
+    global $remote_fileserver ;
+
+    $opts = array('http' =>
+        array(
+            'method'  => 'POST',
+            'header'  => 'Content-type: application/x-www-form-urlencoded',
+            'content' => http_build_query($data)
+        )
+    );
+
+    return file_get_contents( $remote_fileserver, false, stream_context_create($opts));
+}
+
 function vfile_readhttp( $url )
 {
-	$opts = array( 'http'=>
-		array(
-			'method'=>"GET",
-			'header'=>"Connection: close\r\n"
-		)
-	);
-	$context = stream_context_create($opts);
-	return file_get_contents( $url, false, $context );
+	return file_get_contents( $url );
+}
+
+// return url link of remote file (for read)
+function vfile_url( $filename )
+{
+	global $remote_fileserver ;
+	if( vfile_remote() ) {
+		// remote file
+		$data = array(
+		    'c' => "r",
+			'n' => $filename
+			);
+		return $remote_fileserver."?".http_build_query($data) ;
+	}
+	else {
+		// local file
+		return $filename ;
+	}
 }
 
 function vfile_stat( $filename )
 {
-	if( $fileserver = vfile_remote() ) {
+	if( vfile_remote() ) {
 		// remote file
-		$j = vfile_readhttp( $fileserver."?c=i&n=".rawurlencode($filename) ) ;
+		$j = vfile_http_post( array(
+			'c' => "i",
+			'n' => $filename 
+		));
 		@$st = json_decode( $j, true );
 		if( !empty( $st['res'] ) ) {
 			unset( $st['res'] );
@@ -93,9 +129,12 @@ function vfile_size( $filename )
 
 function vfile_unlink( $filename )
 {
-	if( $fileserver = vfile_remote() ) {
+	if( vfile_remote() ) {
 		// remote file
-		$j = vfile_readhttp( $fileserver."?c=d&n=".rawurlencode($filename) ) ;
+		$j = vfile_http_post( array( 
+			'c' => "d",
+			'n' => $filename 
+		));
 		@$jd = json_decode( $j, true );
 		return !empty( $jd['res'] ) ; 
 	}
@@ -107,8 +146,11 @@ function vfile_unlink( $filename )
 
 function vfile_mkdir( $dirname )
 {
-	if( $fileserver = vfile_remote() ) {
-		$j = vfile_readhttp( $fileserver."?c=mkdir&n=".rawurlencode($dirname) ) ;
+	if( vfile_remote() ) {
+		$j = vfile_http_post( array( 
+			'c' => "mkdir",
+			'n' => $dirname 
+		));
 		@$jd = json_decode( $j, true );
 		return !empty( $jd['res'] ) ; 
 	}
@@ -120,8 +162,11 @@ function vfile_mkdir( $dirname )
 
 function vfile_rmdir( $dirname )
 {
-	if( $fileserver = vfile_remote() ) {
-		$j = vfile_readhttp( $fileserver."?c=rmdir&n=".rawurlencode($dirname) ) ;
+	if( vfile_remote() ) {
+		$j = vfile_http_post( array( 
+			'c' => "rmdir",
+			'n' => $dirname
+		));
 		@$jd = json_decode( $j, true );
 		return !empty( $jd['res'] ) ; 
 	}
@@ -133,9 +178,13 @@ function vfile_rmdir( $dirname )
 
 function vfile_rename( $filename, $nfilename )
 {
-	if( $fileserver = vfile_remote() ) {
+	if( vfile_remote() ) {
 		// remote file
-		$j = vfile_readhttp( $fileserver."?c=n&n=".rawurlencode($filename)."&l=".rawurlencode($nfilename) ) ;
+		$j = vfile_http_post( array( 
+			'c' => "n",
+			'n' => $filename,
+			'l' => $nfilename
+		));
 		@$jd = json_decode( $j, true );
 		return !empty( $jd['res'] ) ;
 	}
@@ -148,9 +197,12 @@ function vfile_rename( $filename, $nfilename )
 // get realpath of the filename
 function vfile_realpath( $filename )
 {
-	if( $fileserver = vfile_remote() ) {
+	if( vfile_remote() ) {
 		// remote file
-		$j = vfile_readhttp( $fileserver."?c=i&n=".rawurlencode($filename) ) ;
+		$j = vfile_http_get( array( 
+			'c' => "i",
+			'n' => $filename 
+		));
 		@$jd = json_decode( $j, true );
 		if( !empty( $jd['realpath'] ) ) {
 			return $jd['realpath'] ;
@@ -165,9 +217,12 @@ function vfile_realpath( $filename )
 
 function vfile_glob( $filename )
 {
-	if( $fileserver = vfile_remote() ) {
+	if( vfile_remote() ) {
 		// remote file
-		$j = vfile_readhttp( $fileserver."?c=dir&n=".rawurlencode($filename) ) ;
+		$j = vfile_http_post( array( 
+			'c' => "dir",
+			'n' => $filename 
+		));
 		@$jd = json_decode( $j, true );
 		if( !empty( $jd['res'] ) ) {
 			return $jd['list'] ;
@@ -182,44 +237,35 @@ function vfile_glob( $filename )
 
 function vfile_exec($cmd, &$output, &$ret)
 {
-	if( $fileserver = vfile_remote() ) {
+	if( vfile_remote() ) {
 		// remote file
-		$j = vfile_readhttp( $fileserver."?c=e&n=".rawurlencode($cmd) ) ;
+		$j = vfile_http_post( array( 
+			'c' => "e",
+			'n' => $cmd
+		));
 		@$jd = json_decode( $j, true );
-		if( !empty( $jd['res'] ) ) {
-			$ret = $st['ret'] ;
-			$output = $st['output'] ;
-			$c = count($output) ;
-			if( $c > 0 ) {
-				return $output[$c-1] ;
-			}
+		if( !empty($jd['res']) ) {
+			$ret = $jd['ret'] ;
+			$output = $jd['output'] ;
+			if( !empty($jd['rvalue']) )
+				return $jd['rvalue'] ;
 		}
 		return null ;
 	}
 	else {
 		// local file
-		return exec( $cmd,$result,$ret);
-	}
-}	
-
-// return url link of remote file (for read)
-function vfile_url( $filename )
-{
-	if( $fileserver = vfile_remote() ) {
-		// remote file
-		return $fileserver."?c=r&n=".rawurlencode($filename) ;
-	}
-	else {
-		// local file
-		return $filename ;
+		return exec( $cmd,$output,$ret );
 	}
 }
 
 function vfile_get_contents( $filename )
 {
-	if( $fileserver = vfile_remote() ) {
+	if( vfile_remote() ) {
 		// remote file
-		return vfile_readhttp( $fileserver."?c=r&n=".rawurlencode($filename) ) ;
+		return vfile_http_get( array( 
+			'c' => "r",
+			'n' => $filename
+		));
 	}
 	else {
 		// local file
@@ -229,17 +275,14 @@ function vfile_get_contents( $filename )
 
 function vfile_put_contents( $filename, $data )
 {
-	if( $fileserver = vfile_remote() ) {
+	if( vfile_remote() ) {
 		// remote file
-		// to use post 
-		$opts = array( 'http'=>
-					array(
-			        'method' => 'POST',
-					'header'=>"Content-Type: application/x-www-form-urlencoded; charset=UTF-8\r\nConnection: close\r\n",
-					'content' => "c=w&n=".rawurlencode($filename)."&l=".rawurlencode($data)
-					) );
-		$context = stream_context_create($opts);
-		$j = file_get_contents( $fileserver, false, $context );
+		// use post 
+		$j = vfile_http_post( array( 
+			'c' => "w",
+			'n' => $filename,
+			'l' => $data
+		));
 		@$jd = json_decode( $j, true );
 		if( !empty( $jd['res'] ) ) {
 			return $jd['ret'] ;
@@ -258,36 +301,26 @@ function vfile_open( $filename , $mode = "rb" )
 	// file context
 	$fctx = false ;
 
-	if( $fileserver = vfile_remote() ) {
+	if( vfile_remote() ) {
 		// remote file
-		if( $mode[0] == 'w' ) {
-			$fctx = array();
-			$fctx['type'] = 2 ;			// file type, 1: local file handle, 2: remote
-			$fctx['fn'] =  $filename ;	// filename
-			$fctx['p'] = 0 ;			// file pointer
-			$fctx['mode'] = $mode ;
-			$fctx['svr'] = $fileserver ;
-		}
-		else {
-			$st = vfile_stat( $filename ) ;
-			if( $st ) {
-				$fctx = array();
-				$fctx['type'] = 2 ;			// file type, 1: local file handle, 2: remote
-				$fctx['fn'] =  $filename ;	// filename
-				$fctx['p'] = 0 ;			// file pointer
-				$fctx['mode'] = $mode ;
-				$fctx['svr'] = $fileserver ;
-				$fctx['stat'] = $st ;	
-			}
+		$fctx = array(
+			'type'	=> 2 ,			// file type, 1: local file handle, 2: remote
+			'fn'	=> $filename ,	// filename
+			'p'		=> 0 ,			// file pointer
+			'mode'	=> $mode 
+		);
+		if( $mode[0] != 'w' ) {
+			$fctx['stat'] = vfile_stat( $filename ) ; 	
 		}
 	}
 	else {
 		// local file
 		$f = fopen( $filename, $mode ) ;
 		if( $f ) {
-			$fctx = array();
-			$fctx['type'] = 1 ;			// file type, 1: local file handle, 2: remote
-			$fctx['handle'] = $f ;
+			$fctx = array(
+				'type'		=> 1, 			// file type, 1: local file handle, 2: remote
+				'handle'	=> $f 
+			);
 		}
 	}
 
@@ -342,7 +375,12 @@ function vfile_read( &$fctx, $length )
 			return fread( $fctx['handle'], $length ) ;
 		}
 		else if( $fctx['type'] == 2 ) {
-			$d = vfile_readhttp( $fctx['svr'].'?c=r&o='.$fctx['p'].'&l='.$length.'&n='.rawurlencode($fctx['fn']) ) ;
+			$d = vfile_http_post( array( 
+				'c' => "r" ,
+				'n' => $fctx['fn'] ,
+				'o' => $fctx['p'] ,
+				'l' => $length
+			));
 			$l = strlen( $d );
 			if( $l>0 ) {
 				$fctx['p'] += $l ;
@@ -353,18 +391,19 @@ function vfile_read( &$fctx, $length )
 	return false ;
 }
 
-function vfile_write( &$fctx, $string ) 
+function vfile_write( &$fctx, $wdata ) 
 {
 	if( !empty( $fctx['type'] )) {
 		if( $fctx['type'] == 1 ) {
-			return fwrite( $fctx['handle'], $string ) ;
+			return fwrite( $fctx['handle'], $wdata ) ;
 		}
 		else if( $fctx['type'] == 2 && $fctx['mode'][0] == 'w' ) {
-			$url = $fctx['svr'].'?c=w&n='.rawurlencode($fctx['fn'])."&l=".rawurlencode($string) ;
-			if( $fctx['p'] > 0 ) {
-				$url .= "&o=".$fctx['p'] ;
-			}
-			$j = vfile_readhttp($url) ;
+			$j = vfile_http_post( array( 
+				'c' => "w" ,
+				'n' => $fctx['fn'] ,
+				'o' => $fctx['p'] ,
+				'l' => $wdata
+			));
 			@$jd = json_decode( $j, true );
 			if( !empty( $jd['res'] ) ) {
 				$fctx['p'] = $jd['pos'] ;
@@ -382,7 +421,12 @@ function vfile_gets( &$fctx, $length = 8192 )
 			return fgets( $fctx['handle'], $length ) ;
 		}
 		else if( $fctx['type'] == 2 ) {
-			$d = vfile_readhttp( $fctx['svr'].'?c=rl&o='.$fctx['p'].'&l='.$length.'&n='.rawurlencode($fctx['fn']) ) ;
+			$d = vfile_http_post( array( 
+				'c' => "rl" ,
+				'n' => $fctx['fn'] ,
+				'o' => $fctx['p'] ,
+				'l' => $length
+			));
 			$l = strlen( $d );
 			if( $l>0 ) {
 				$fctx['p'] += $l ;
@@ -411,8 +455,13 @@ function vfile_readlines( &$fctx, $nol )
 			return $lines ;
 		}
 		else if( $fctx['type'] == 2 ) {
-			$lines = vfile_readhttp( $fctx['svr'].'?c=rm&o='.$fctx['p'].'&l='.$nol.'&n='.rawurlencode($fctx['fn']) ) ;
-			$lines = json_decode( $lines, true );
+			$j = vfile_http_post( array( 
+				'c' => "rm" ,
+				'n' => $fctx['fn'] ,
+				'o' => $fctx['p'] ,
+				'l' => $nol
+			));
+			$lines = json_decode( $j, true );
 			if( !empty($lines['lines']) ) {
 				$fctx['p'] = (int)$lines['pos'] ;
 				return $lines['lines'] ;
@@ -421,7 +470,6 @@ function vfile_readlines( &$fctx, $nol )
 	}
 	return false ;
 }
-
 
 function vfile_close( &$fctx ) 
 {

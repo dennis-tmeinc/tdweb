@@ -8,6 +8,8 @@
 // By Dennis Chen @ TME	 - 2014-02-21
 // Copyright 2013 Toronto MicroElectronics Inc.
 
+	$noupdatetime = 1 ;
+	$noredir = 1 ;
     require 'session.php' ;
 	header("Content-Type: application/json");
 
@@ -64,7 +66,13 @@
 			}
 		}
 		
-		@$avlxml = file_get_contents( $avlservice.'?xml='.rawurlencode($xml->asXML()) );
+		$ctx = stream_context_create(array( 
+			'http' => array( 
+				'timeout' => 10
+				) 
+			) 
+		); 
+		@$avlxml = file_get_contents( $avlservice.'?xml='.rawurlencode($xml->asXML()), false, $ctx );
 		if( empty($avlxml) ) {
 			$resp['errormsg'] = "AVL Service error, no contents!" ;
 			goto done ;

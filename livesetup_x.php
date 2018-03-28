@@ -77,8 +77,7 @@ if( $wsvrfile ) {
 	fclose( $wsvrfile );
 }
 
-//$rtime = time();
-$rtime = $xt ;			// current time
+$rtime = time();			// current time
 
 $flvc = fopen( $session_path.'/sess_lvc_'.$phone, "r+" );
 if( $flvc ) {

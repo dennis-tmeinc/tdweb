@@ -128,7 +128,6 @@ $("select[name='vltvehicle']").dblclick(function(){
 	var dvrdetail = vltlist[v] ;
 	if( dvrdetail ) {
 		var dvrhtml = "" ;
-		var person={fname:"John",lname:"Doe",age:25}; 
 		for ( var x in dvrdetail )
 		{
 			dvrhtml += "<tr><td style=\"text-align: right;\">" + x + " : </td><td>" + dvrdetail[x] + "</td></tr>" ;

@@ -22,7 +22,6 @@
 			
 			$sql="INSERT INTO vmq (`vmq_vehicle_name`,`vmq_ins_user_name`,`vmq_start_time`,`vmq_end_time`,`vmq_description`) VALUES (
 			'$_REQUEST[vmq_vehicle_name]','$_SESSION[user]','$_REQUEST[vmq_start_time]','$vmq_end_time','$_REQUEST[vmq_description]');" ;
-			$resp['sql']=$sql ;
 			if( $conn->query($sql) ) {
 				$resp['res']=1 ;	// success
 			}

@@ -1,5 +1,5 @@
 <?php
-// fread.php - read file over http
+// fileservice.php - read file over http
 // Request:
 //      c :  command, r=read, rl=readline(gets), rm=read multiple lines, f=http range file read, i=get file information, dir=list directory, mkdir=mkdir
 //      n :  filename
@@ -259,15 +259,11 @@ switch ( $_REQUEST['c'] ) {
 		break;
 				
 	case 'e' :
-		$output=array();
-		$ret=-1 ;
-		exec( $_REQUEST['n'], $output, $ret);
-		if( $ret==0 ) 
-			$resp['res'] = 1 ;
-		$resp['ret'] = $ret ;
-		$resp['output'] = $output ;
+		$resp['output']=array();
+		$resp['ret']=-1 ;
+		$resp['rvalue'] = exec( $_REQUEST['n'], $resp['output'], $resp['ret']);
+		$resp['res'] = 1 ;
 		break;
-
 }
 header("Content-Type: application/json");
 echo json_encode($resp);

@@ -16,27 +16,12 @@
 		
 		$resp['store']=array();
 		
-		function ex($cmd, &$result, &$ret)
-		{
-			if( $fsvr = vfile_remote() ) {
-				$j = vfile_readhttp( $fsvr."?c=e&n=".rawurlencode($cmd) ) ;
-				@$st = json_decode( $j, true );
-				if( !empty( $st['res'] ) ) {
-					$result = $st['output'] ;
-					$ret = $st['ret'] ;
-				}
-			}
-			else {
-				exec( $cmd,$result,$ret);
-			}
-		}
-		
 		$result=array();
 		$ret=-1 ;
 		
 		if(empty($company_root)) {		// only works on single company site
 			if( empty($stroage_regkey) ) {
-				ex("reg query HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown", $result, $ret);
+				vfile_exec("reg query HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown", $result, $ret);
 				if( $ret == 0 ) {
 					// 64bit OS
 					$stroage_regkey = "HKLM\\SOFTWARE\\Wow6432Node\\tme\\touchdown" ;
@@ -48,7 +33,7 @@
 			}
 			
 			if( $ret!=0 )
-				ex("reg query $stroage_regkey",$result,$ret);
+				vfile_exec("reg query $stroage_regkey",$result,$ret);
 				
 			if( $ret == 0 ) {	// success
 				for($i=0; $i<count($result); $i++) {

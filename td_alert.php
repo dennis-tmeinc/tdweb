@@ -11,13 +11,12 @@
 
 $noredir=1 ;
 $noupdatetime=1 ;
-require 'session.php' ;
-require 'vfile.php' ;
+include 'session.php' ;
+include 'vfile.php' ;
 
 header("Content-Type: application/json");
-
 if( $logon ) {
-			
+		
 	$servertime = new DateTime() ;
 	$resp['time']=$servertime->format('Y-m-d H:i') ;
 
@@ -54,7 +53,6 @@ if( $logon ) {
 		$result->free();
 		$resp['res']=1 ;	// success
 	}
-
 }
 
 echo json_encode($resp);

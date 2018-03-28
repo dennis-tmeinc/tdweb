@@ -16,6 +16,7 @@
 			$resp['errormsg']="No id specified" ;
 		}
 		else {
+			@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			$sql = "SELECT * FROM vl WHERE `vl_id` = $_REQUEST[vl_id] ;" ;
 			$result=$conn->query($sql);
 			if( !empty($result)) {
@@ -24,12 +25,14 @@
 				
 				// check if video available
 				$resp['vl']['video'] = 0 ;
+				$resp['vl']['videoid'] = 0 ;
 				$vlname = $resp['vl']['vl_vehicle_name'] ;
 				$vltime = $resp['vl']['vl_datetime'] ;
-				$sql = "SELECT COUNT(*) FROM videoclip WHERE vehicle_name = '$vlname' AND time_start <= '$vltime' AND time_end >= '$vltime' ;" ;
+				$sql = "SELECT * FROM videoclip WHERE vehicle_name = '$vlname' AND time_start <= '$vltime' AND time_end >= '$vltime' ;" ;
 				if( $result=$conn->query($sql) ) {
 					if( $raw = $result->fetch_array() ) {
 						$resp['vl']['video'] = 1 ;
+						$resp['vl']['videoid'] = $raw[0]  ;
 					}
 				}
 				
