@@ -105,6 +105,32 @@ function vfile_unlink( $filename )
 	}
 }
 
+function vfile_mkdir( $dirname )
+{
+	if( $fileserver = vfile_remote() ) {
+		$j = vfile_readhttp( $fileserver."?c=mkdir&n=".rawurlencode($dirname) ) ;
+		@$jd = json_decode( $j, true );
+		return !empty( $jd['res'] ) ; 
+	}
+	else {
+		// local file
+		return mkdir( $filename, 0777, true ) ;
+	}
+}
+
+function vfile_rmdir( $filename )
+{
+	if( $fileserver = vfile_remote() ) {
+		$j = vfile_readhttp( $fileserver."?c=rmdir&n=".rawurlencode($filename) ) ;
+		@$jd = json_decode( $j, true );
+		return !empty( $jd['res'] ) ; 
+	}
+	else {
+		// local file
+		return rmdir( $filename ) ;
+	}
+}
+
 function vfile_rename( $filename, $nfilename )
 {
 	if( $fileserver = vfile_remote() ) {

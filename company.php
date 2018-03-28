@@ -31,10 +31,10 @@ $("#companygrid").jqGrid({
 	height: 280,
     colNames:['Company ID','Company Name', 'Contact Name', 'Email'],
     colModel :[ 
-      {name:'com_id', index:'com_id', width:100}, 
-      {name:'com_name', index:'com_name', width:300}, 
-      {name:'com_contact', index:'com_contact', width:300}, 
-      {name:'com_email', index:'com_email', width:200 } 
+      {name:'com_id', index:'com_id', width:100, sortable:false}, 
+      {name:'com_name', index:'com_name', width:300, sortable:false}, 
+      {name:'com_contact', index:'com_contact', width:300, sortable:false}, 
+      {name:'com_email', index:'com_email', width:200, sortable:false } 
     ],
    	rowNum:1000,
    	mtype: "GET",
@@ -248,25 +248,25 @@ $("button#btchangepasswd").click(function(e){
 		<tr>
 			<td style="text-align:right">Company ID:</td>
 			<td><input maxlength="20" name="CompanyId" type="text" /></td>
-			<td>&nbsp;</td>
+			<td>*</td>
 			<td>&nbsp;</td>
 		</tr>
 		<tr>
 			<td style="text-align:right">Company Root Folder:</td>
 			<td><input name="RootFolder" size="40" type="text" /></td>
-			<td>&nbsp;</td>
+			<td>*</td>
 			<td>&nbsp;</td>
 		</tr>
 		<tr>
 			<td style="text-align:right">Database:</td>
 			<td><input name="Database" type="text" /></td>
-			<td>&nbsp;</td>
+			<td>*</td>
 			<td>&nbsp;</td>
 		</tr>		
 		<tr>
 			<td style="text-align:right">Company Name:</td>
 			<td><input name="CompanyName" type="text" /></td>
-			<td>&nbsp;</td>
+			<td>*</td>
 			<td>&nbsp;</td>
 		</tr>
 		<tr>

@@ -78,8 +78,8 @@
 	// multi company support
 	$support_multicompany = 0 ;
 	// script/excutable to create/remove com
-	$td_new    = "C:\\\\SmartSvrApps\\tdnew.exe" ;
-	$td_clean  = "C:\\\\SmartSvrApps\\tdclean.exe" ;
+	$td_new    = "C:\\SmartSvrApps\\tdnew.exe create " ;
+	$td_clean  = "C:\\SmartSvrApps\\tdnew.exe remove " ;
 	
 	// drive by demo
 	$support_driveby = 1 ;

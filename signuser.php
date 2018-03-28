@@ -8,6 +8,11 @@
 
 $noredir = 1 ;
 require 'session.php' ;
+require 'vfile.php' ;
+
+header("Content-Type: application/json");
+$resp=array();
+$resp['res']=0 ;
 
 if( !empty($_REQUEST['c']) ) {
 	$_SESSION['clientid'] = $_REQUEST['c'];
@@ -15,20 +20,18 @@ if( !empty($_REQUEST['c']) ) {
 	$clientcfg = 'client/'.$_SESSION['clientid'].'/config.php' ;
 	if( file_exists ( $clientcfg ) ) {
 		include $clientcfg ;
-	}
-	
-	if(	$database_persistent ) {
-		$smart_server = "p:".$smart_host ;
+		if(	$database_persistent ) {
+			$smart_server = "p:".$smart_host ;
+		}
+		else {
+			$smart_server = $smart_host ;
+		}
 	}
 	else {
-		$smart_server = $smart_host ;
+		$resp['errormsg'] = "Client ID error!" ;
+		goto done;		
 	}
 }
-
-header("Content-Type: application/json");
-
-$resp=array();
-$resp['res']=0 ;
 	
 // MySQL connection
 @$conn = new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
@@ -90,6 +93,18 @@ else {
 			$_SESSION['user_type'] = $row['user_type'] ;
 			$_SESSION['welcome_name'] = $row['first_name'].' '.$row['last_name'] ;
 			if($_SESSION['welcome_name']==' ') $_SESSION['welcome_name']=$_SESSION['xuser'] ;
+			
+			// Add company name
+			if( !empty($company_root) && vfile_exists($company_root."/companyinfo.xml") ) {
+				@$xmlcontents = vfile_get_contents( $company_root."/companyinfo.xml" ) ;
+				if( !empty($xmlcontents) ) {
+					@$companyinfo = new SimpleXMLElement( $xmlcontents ) ;
+					if( !empty( $companyinfo ) && !empty( $companyinfo->CompanyName ) ) {
+						$_SESSION['welcome_name'] = $_SESSION['welcome_name']."  -  ".$companyinfo->CompanyName  ;
+					}
+				}
+			}
+			
 			$nonce=' ' ;
 			$hexchar="0123456789abcdefghijklmnopqrstuvwxyz" ;
 			for( $i=0; $i<64; $i++) {
@@ -132,13 +147,13 @@ done:
 	ob_flush();
 	flush();
 	
-// clean old session files
-$xt = time() ;
-// clean old session files
-foreach (glob($session_path.'/sess_*') as $filename) {
-	if( filemtime($filename) + 86400 < $xt ) {
-		@unlink($filename);
+	// clean old session files
+	$xt = time() ;
+	// clean old session files
+	foreach (glob($session_path.'/sess_*') as $filename) {
+		if( filemtime($filename) + 86400 < $xt ) {
+			@unlink($filename);
+		}
 	}
-}
 
 ?>

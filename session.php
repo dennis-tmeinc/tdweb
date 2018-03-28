@@ -37,7 +37,7 @@ if( !empty( $_SESSION['clientid'] )) {
 			$dashboard_conf=$company_root."\\dashboardoption.config" ;
 			// database backup file location, 
 			$backup_path=$company_root."\\smartbackup" ;
-		}		
+		}
 	}
 	else {
 		unset($_SESSION['clientid']);

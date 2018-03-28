@@ -37,20 +37,30 @@
 		}		
 		$start = $_REQUEST['rows'] * ($grid['page']-1) ;
 
-		$sql="SELECT  vmq_id, vmq_vehicle_name, vmq_start_time, TIMEDIFF( `vmq_end_time`, `vmq_start_time`) AS duration, vmq_comp, vmq_ins_user_name, vmq_description, vmq_end_time FROM vmq ORDER BY $_REQUEST[sidx] $_REQUEST[sord] LIMIT $start, $_REQUEST[rows] ;";
+		$sql="SELECT  vmq_id, vmq_vehicle_name, vmq_start_time, TIMEDIFF( `vmq_end_time`, `vmq_start_time`) AS duration, vmq_comp, vmq_ins_user_name, vmq_description, vmq_end_time, vmq_ins_time FROM vmq ORDER BY $_REQUEST[sidx] $_REQUEST[sord] LIMIT $start, $_REQUEST[rows] ;";
 		if( $result=$conn->query($sql) )
 		while( $row=$result->fetch_array() ) {
 			$rstatus = "Pending" ;
 			if( $row[4] != 0 ) {
 				$rstatus = "Requested" ;
 				// check if video available
-				$xsql = "SELECT count(*) FROM `videoclip` WHERE `vehicle_name`='$row[1]' AND `time_start` <= '$row[7]' AND `time_end` >= '$row[2]' ;" ;
-				if( $xresult=$conn->query($xsql) ) {
+				$sql = "SELECT count(*) FROM `videoclip` WHERE `vehicle_name`='$row[1]' AND `time_start` <= '$row[7]' AND `time_end` >= '$row[2]' ;" ;
+				if( $xresult=$conn->query($sql) ) {
 					$xrow = $xresult->fetch_array( MYSQLI_NUM ) ;
+					$xresult->free();
 					if( $xrow && $xrow[0] > 0 ) {
 						$rstatus = "Completed" ;
 					}
-					$xresult->free();
+					else {
+						$sql = "SELECT count(*) FROM dvr_event WHERE `de_vehicle_name`='$row[1]' AND `de_datetime` > '$row[8]' AND `de_event` = 1 ;" ;
+						if( $xresult=$conn->query($sql) ) {
+							$xrow = $xresult->fetch_array( MYSQLI_NUM ) ;
+							$xresult->free();		
+							if( $xrow && $xrow[0] > 0 ) {
+								$rstatus = "Not Available" ;
+							}
+						}
+					}
 				}
 			}
 			$grid['rows'][] = array(

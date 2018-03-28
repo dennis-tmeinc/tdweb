@@ -70,6 +70,11 @@ $("form").submit(function(e){
 	var userid=$("#userid").val();
 	var clientid=$("#clientid").val();
 
+	if (typeof(Storage) !== "undefined") {
+		localStorage.setItem("ClientID", clientid);
+		localStorage.setItem("UserId", userid);
+	} 
+	
 	wait(1);
 	var nonce = gencnonce(10);
 	
@@ -105,7 +110,12 @@ $("form").submit(function(e){
 		  }, "json" );
 		}
 		else {
-		  alert("User name error!") ;
+			if( data.errormsg ){
+				alert(data.errormsg);
+			}
+			else {
+				alert("User name error!") ;
+			}
 		}
 	}, "json" );
 });
@@ -121,6 +131,12 @@ $(window).resize(function(){
 setTimeout( '$(window).resize();' , 200);
 
 $("body").show();
+
+if (typeof(Storage) !== "undefined") {
+	$("input#clientid").val(localStorage.getItem("ClientID"));
+	$("input#userid").val(localStorage.getItem("UserId"));
+} 
+
 
 });
  

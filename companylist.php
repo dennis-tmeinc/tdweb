@@ -8,6 +8,8 @@
 // Copyright 2014 Toronto MicroElectronics Inc.
 
     include_once 'session.php' ;
+	include_once 'vfile.php' ;
+	
 	header("Content-Type: application/json");
 	
 	function get_var( $cfg, $key )
@@ -35,7 +37,7 @@
 		if( $company_root ) {
 			$resp['webset'] = array();
 
-			@$xmlcontents = file_get_contents( $company_root."/companyinfo.xml" ) ;
+			@$xmlcontents = vfile_get_contents( $company_root."/companyinfo.xml" ) ;
 			if( $xmlcontents ) {
 				@$companyinfo = new SimpleXMLElement( $xmlcontents ) ;
 				if( !empty( $companyinfo ) ) {

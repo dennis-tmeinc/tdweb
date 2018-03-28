@@ -206,10 +206,16 @@ switch ( $_REQUEST['c'] ) {
 		break;
 		
 	case 'mkdir' :
-		if( mkdir( $_REQUEST['n'] ) ) {
+		if( mkdir( $_REQUEST['n'], 0777, true ) ) {
 			$resp['res'] = 1 ;
 		}
 		break;
+		
+	case 'rmdir' :
+		if( rmdir( $_REQUEST['n'] ) ) {
+			$resp['res'] = 1 ;
+		}
+		break;		
 		
 	case 'w' :
 		if( isset( $_REQUEST['o'] ) ) {

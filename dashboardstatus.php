@@ -27,13 +27,15 @@ else {
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 .sum_circle
 {
-background-image:url('res/big_dashboard_circles.png');
-background-repeat:no-repeat;
-background-position:center;
-height: 72px;
-font-size:36px;
-text-align: center;
-min-width:150px;
+	margin-top: 3px;
+	background-image:url('res/big_dashboard_circles.png');
+	background-size: 100px 100px;
+	background-repeat:no-repeat;
+	background-position:center center;
+	height: 104px;
+	font-size:36px;
+	text-align: center;
+	min-width:150px;
 }
 
 .sum_circle_green

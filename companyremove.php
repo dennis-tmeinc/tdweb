@@ -8,6 +8,8 @@
 // Copyright 2014 Toronto MicroElectronics Inc.
 
     include_once 'session.php' ;
+	include_once 'vfile.php' ;
+	
 	header("Content-Type: application/json");
 	
 	function get_var( $cfg, $key )
@@ -30,6 +32,9 @@
 	}
 	
 	if( $_SESSION['superadmin'] && !empty($_REQUEST['id']) ) {
+		
+		$output = array();
+		$ret = 1;
 
 		$cfgfile = "client/".$_REQUEST['id']."/config.php" ;
 
@@ -38,9 +43,11 @@
 		if( $company_root && $database && !empty( $td_clean ) ) {
 			// script execution : <script> <company id> <company root directory> <database name>
 			$cmd = $td_clean." $_REQUEST[id] \"$company_root\" $database" ;
-			exec( $cmd );
-			@unlink( $company_root."/companyinfo.xml" ) ;
-			@rmdir( $company_root ) ;
+			vfile_exec($cmd, $output, $ret) ;
+			// exec( $cmd );
+			
+			@vfile_unlink( $company_root."/companyinfo.xml" ) ;
+			@vfile_rmdir( $company_root ) ;
 
 			@unlink( $cfgfile ) ;
 			@rmdir( "client/".$_REQUEST['id'] );

@@ -9,6 +9,8 @@
 // Copyright 2014 Toronto MicroElectronics Inc.
 	
     include_once 'session.php' ;
+	include_once 'vfile.php' ;
+	
 	header("Content-Type: application/json");
 	
 	function get_var( $cfg, $key )
@@ -64,6 +66,26 @@
 		}
 		return true ;
 	}
+
+	if( empty($_REQUEST['CompanyId']) ) {
+		$resp['errormsg'] = "Company ID can not be empty!" ;
+		goto done ;
+	}
+
+	if( empty($_REQUEST['RootFolder']) ) {
+		$resp['errormsg'] = "Root folder can not be empty!" ;
+		goto done ;
+	}
+
+	if( empty($_REQUEST['Database']) ) {
+		$resp['errormsg'] = "Database name can not be empty!" ;
+		goto done ;
+	}
+
+	if( empty($_REQUEST['CompanyName']) ) {
+		$resp['errormsg'] = "Company name can not be empty!" ;
+		goto done ;
+	}
 	
 	if( $_SESSION['superadmin'] && $_SESSION['superadmin'] == "--SuperAdmin--" && !empty($_REQUEST['CompanyId']) ) {
 	
@@ -87,6 +109,7 @@
 			fclose( $cfile );
 
 			$company_root = $_REQUEST['RootFolder']  ;
+			
 			set_var( $cfgfile, "\$company_root", $company_root );
 			set_var( $cfgfile, "\$smart_database", $_REQUEST['Database'] );		
 
@@ -104,7 +127,6 @@
 		$companyinfo = new SimpleXMLElement( "<companyinfo></companyinfo>" );
 
 		$companyinfo->CompanyName = $_REQUEST['CompanyName'] ;
-		
 		$companyinfo->CompanyId = $_REQUEST['CompanyId'] ;
 		$companyinfo->Database = $_REQUEST['Database'] ;
 		$companyinfo->Address = $_REQUEST['Address'] ;
@@ -117,24 +139,49 @@
 		$companyinfo->ContactName = $_REQUEST['ContactName'] ;
 		$companyinfo->ContactEmail = $_REQUEST['ContactEmail'] ;
 		
-		if( file_put_contents( $company_root."/companyinfo.xml", $companyinfo->asXML() ) ) {
-			// may need to do more cleaning on company root directory and database
-			
-			if( !empty($_REQUEST['NewCompany']) ) {
-				// create new company instance
-				if( !empty( $td_new ) ) {
-					// script execution : <script> <company id> <company root directory> <database name>
-					$cmd = $td_new." $_REQUEST[CompanyId] \"$company_root\" $_REQUEST[Database]" ;
-					@chdir( $company_root );
-					exec( $cmd );
-				}
+		if( empty($_REQUEST['NewCompany']) ) {
+			// edit, save the companyinfo
+			if( vfile_put_contents( $company_root."/companyinfo.xml", $companyinfo->asXML() ) ) {
+				$resp['res'] = 1 ;
 			}
-			
-			$resp['errormsg']='success' ;
-			$resp['res'] = 1 ;
+			else {
+				$resp['errormsg']='Saving configure file failed!' ;
+			}
 		}
 		else {
-			$resp['errormsg']='Failed to create configuration file.' ;
+			if( !vfile_exists( $company_root ) ) {
+				vfile_mkdir( $company_root );
+				if( vfile_put_contents( $company_root."/companyinfo.xml", $companyinfo->asXML() ) ) {
+					// may need to do more cleaning on company root directory and database
+
+					$output = array();
+					$ret = 1;
+						
+					// create new company instance
+					if( !empty( $td_new ) ) {
+						//@chdir( $company_root );
+						// script execution : <script> <company id> <company root directory> <database name>
+						$cmd = $td_new." $_REQUEST[CompanyId] \"$company_root\" $_REQUEST[Database]" ;
+						vfile_exec($cmd, $output, $ret) ;
+					}
+					
+					$resp['tdnewoutput']=$output ;
+					if( $ret != 0 ) {
+						$resp['errormsg']='Creating database failed' ;
+						$resp['res'] = 0 ;
+					}
+					else {
+						$resp['errormsg']='success' ;
+						$resp['res'] = 1 ;
+					}
+				}
+				else {
+					$resp['errormsg']='Failed to create configuration file.' ;
+				}
+			}
+			else {
+				$resp['errormsg']='Root directory exists!' ;
+			}
 		}
 	}
 	else {
