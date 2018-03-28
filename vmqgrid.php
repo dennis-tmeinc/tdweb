@@ -30,6 +30,9 @@
 			"total" => ceil($records/$_REQUEST['rows']),
 			"page" => $_REQUEST['page'] ,
 			"rows" => array()  );
+		if( $grid['page'] <= 0 ) {
+			$grid['page'] = 1 ;
+		}
 		if( $grid['page'] > $grid['total'] ) {
 			$grid['page']=$grid['total'] ;
 		}		

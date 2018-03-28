@@ -39,10 +39,10 @@
 		
 		// read report cfg from vlt file
 		$fvlt = fopen( session_save_path().'/sess_vlt_'.$vltsession, "r" );
-		if( $fvlt )
+		if( $fvlt ) {
 			flock( $fvlt, LOCK_SH ) ;		// read lock
 	
-			@$vlt = json_decode( fread( $fvlt, 256000 ), true );
+			@$vlt = json_decode( fread( $fvlt, 500000 ), true );
 			
 			flock( $fvlt, LOCK_UN ) ;
 			fclose( $fvlt );

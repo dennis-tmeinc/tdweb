@@ -8,15 +8,22 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 // session_save('mapfilter', array() );
 
 ?>
-	<title>Touch Down Center</title>
-	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-	<meta name="description" content="Touch Down Center by TME">
-	<meta name="author" content="Dennis Chen @ TME, 2013-05-15">		
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"https://code.jquery.com/ui/1.11.0/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?> <script src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type="text/javascript" src="https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0&s=1"></script><script src="picker.js"></script>
-	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
-	</style>
-	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
-	<script src="td_alert.js"></script><script>
+<title>Touch Down Center</title>
+<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
+<meta name="description" content="Touch Down Center by TME">
+<meta name="author" content="Dennis Chen @ TME, 2013-05-15">		
+<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><?php echo "<link href=\"https://code.jquery.com/ui/1.11.0/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?> <script src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type="text/javascript" src="https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0&s=1"></script><script src="picker.js"></script>
+<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
+	select#webplay_camera {
+	min-width: 100px ;
+    border-radius: 4px;
+    box-shadow: 1px 1px 5px #cfcfcf inset;
+    border: 1px solid #cfcfcf;
+    vertical-align: middle;
+	}
+</style>
+<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script><script src="jq/live.js"></script>
+<script src="td_alert.js"></script><script>
 // start up 
 var map  ;
 
@@ -145,7 +152,6 @@ for( var i=0; i<6; i++ ) {
   vltparam.vltpage += hexch.charAt(Math.random()*36);
 }
 
-
 // saved sensor names, to be used by sensor pop-up balloon
 var vltsensor = [] ;
 var vltsensor_reload = 0 ;
@@ -160,8 +166,7 @@ function load_sensors()
 }
 load_sensors();
 
-var vlt_pins = [] ;
-var vlt_pidx = 0 ;
+var vlt_pins = {} ;
 
 // avlp : position message, clean: clean same type of pushpin
 function showpin( avlp, id, iconimg, clean ) 
@@ -170,23 +175,23 @@ function showpin( avlp, id, iconimg, clean )
 		avlp.pos = avlp.pos2;
 		avlp.utc = true ;
 	}
-	if( avlp.pos.length ) {
+	if( avlp.pos.length>3 ) {
+
+		var did = id.substring(4);	// dvrid
 		
-		var e,i ;
-		
-		if( clean ) {
-			// remove old pushpins for this vehicle
-			for( e=map.entities.getLength()-1;e>=0;e--) {
-				var pushpin = map.entities.get(e); 		
-				if (pushpin instanceof Microsoft.Maps.Pushpin ) {
-					i = parseInt( pushpin.getText() );
-					if( vlt_pins[i] && vlt_pins[i].vid == id ) {
-						map.entities.removeAt(e);
-						delete vlt_pins[i] ;
-					}
-				}
+		// remove old pin/infobox
+		if( vlt_pins[did] ) {
+			if( vlt_pins[did].vpushpin ) {
+				map.entities.remove(vlt_pins[did].vpushpin);
+				delete vlt_pins[did].vpushpin ;
+			}
+			if( vlt_pins[did].vinfobox ) {
+				map.entities.remove(vlt_pins[did].vinfobox);
+				delete vlt_pins[did].vinfobox ;
 			}
 		}
+			
+		var e,i ;
 		
 		// insert gps location to map
 		// resp.avlp.pos format: YYMMDDhhmmss,43.641988N079.672085W0.0D134.05
@@ -212,7 +217,7 @@ function showpin( avlp, id, iconimg, clean )
 				iconimg = "res/map_icons_stop.png" ;
 				if( avlp.di ) {
 					for( var idx = 0 ; idx < vltsensor.length; idx++ ) {
-						if( vltsensor[idx].sensor_name.toUpperCase() == "STOP ARM ON" ) {
+						if( vltsensor[idx].sensor_name && vltsensor[idx].sensor_name.toUpperCase() == "STOP ARM ON" ) {
 							var di = parseInt( avlp.di, 16 )  & (1<<(idx/2)) ;
 							var h = idx%2 ;
 							if( ( di && h ) || ( di==0 && h==0 ) ) {
@@ -225,13 +230,7 @@ function showpin( avlp, id, iconimg, clean )
 			}
 		}
 		
-		var pushpinOptions = {icon:iconimg, width: 24, height: 24, anchor: new Microsoft.Maps.Point(12,12), text: vlt_pidx.toString(), textOffset: new Microsoft.Maps.Point(50, 50) }; 
-		
-		vlt_pins[vlt_pidx++] = { vid: id, vavlp: avlp, vicon: iconimg };
-		
 		var pinlocation = new Microsoft.Maps.Location( pos.lat, pos.lon );
-		var pushpin= new Microsoft.Maps.Pushpin(pinlocation, pushpinOptions);
-
 		var newview = false ;
 		var view = new Object ;
 
@@ -246,8 +245,8 @@ function showpin( avlp, id, iconimg, clean )
 <?php  } ?>	
 		if( !newview ) {
 			var bounds=map.getBounds(); 
-			bounds.width = bounds.width * 0.95 ;
-			bounds.height = bounds.height * 0.95 ;
+			bounds.width = bounds.width * 0.9 ;
+			bounds.height = bounds.height * 0.9 ;
 			if( !bounds.contains( pinlocation ) ) {
 				view.center = pinlocation ;
 				newview = true ;
@@ -255,30 +254,47 @@ function showpin( avlp, id, iconimg, clean )
 		}
 		if( newview )
 			map.setView( view );
+
+		var pushpin= new Microsoft.Maps.Pushpin( pinlocation,
+			{	icon:iconimg, width: 24, height: 24, 
+				anchor: new Microsoft.Maps.Point(12,12)
+			});
 		map.entities.push(pushpin);
 		
+		var infobox = new Microsoft.Maps.Infobox( pushpin.getLocation(), 
+			{ id: did, 
+			showCloseButton: false, 
+			title: did, 
+			height: 30,
+			width: 14 * (did.length) + 8  
+			}
+		);
+		map.entities.push( infobox );
+		
+		vlt_pins[did] = { vavlp: avlp, vicon: iconimg, vpushpin: pushpin, vinfobox: infobox };
+		
 		function pushpin_info(e){
-			var pidx = parseInt( e.target.getText() ); 
 			var avlp ;
-			if( vlt_pins[pidx] ) {
-				avlp = vlt_pins[pidx].vavlp ;
+			if( vlt_pins[did] ) {
+				avlp = vlt_pins[did].vavlp ;
 			}
 			else {
 				return ;
 			}
 
 			// remove old infobox
-			for( var i=map.entities.getLength()-1;i>=0;i--) {
-				var en = map.entities.get(i);
-				if ( en instanceof Microsoft.Maps.Infobox ) { 
-					if( en.getVisible() && en.getId() == pidx ) {
-						return ;
+			if( vlt_pins[did].vinfobox ) {
+				if( vlt_pins[did].vinfobox.getHeight()>90 ) {		// full info already shown
+				    if( !vlt_pins[did].vinfobox.getVisible() ) {
+						vlt_pins[did].vinfobox.setOptions( {visible:true} );
 					}
-					map.entities.removeAt(i);  
+					return ;
 				}
+				map.entities.remove(vlt_pins[did].vinfobox);  
+				delete vlt_pins[did].vinfobox ;
 			}
 
-			var infotitle =   '<img src="'+e.target.getIcon()+'" /> ' + vlt_pins[pidx].vid.substr(4) ;
+			var infotitle =   '<img src="'+e.target.getIcon()+'" /> ' + did ;
 			
 			// date & time
 			var dstr = '20'+avlp.pos.substr(0,2)+'-'+avlp.pos.substr(2,2)+'-'+avlp.pos.substr(4,2)+'T'+avlp.pos.substr(6,2)+':'+avlp.pos.substr(8,2)+':'+avlp.pos.substr(10,2)+'Z' ;
@@ -362,26 +378,30 @@ function showpin( avlp, id, iconimg, clean )
 			function removepin()
 			{ 
 				// remove infobox and this pushpin
-				for( var i=map.entities.getLength()-1;i>=0;i--) {
-					var en = map.entities.get(i);
-					if ( en instanceof Microsoft.Maps.Infobox ) { 
-						map.entities.removeAt(i);  
+				if( vlt_pins[did] ) {
+					if( vlt_pins[did].vinfobox ) {
+						map.entities.remove( vlt_pins[did].vinfobox );  
 					}
-					if( pushpin == en ) {
-						map.entities.removeAt(i);  
+					if( vlt_pins[did].vpushpin ) {
+						map.entities.remove( vlt_pins[did].vpushpin );  
 					}
+					delete vlt_pins[did] ;
 				}
 			}
 			var iaction = [{label: 'Remove', eventHandler: removepin}] ;
+			vlt_pins[did].vinfobox = new Microsoft.Maps.Infobox(e.target.getLocation(), {
+				showPointer:true,
+				showCloseButton:true,
+				id: did,
+				title:infotitle, description: desc, height: iheight,  zIndex: 10, actions: iaction
+				}) ;
 			
-			map.entities.push(new Microsoft.Maps.Infobox(e.target.getLocation(), {
-				showPointer:true,showCloseButton:true,
-				title:infotitle, description: desc, height: iheight,  zIndex: 10, id: pidx,  actions: iaction
-				}));
+			map.entities.push( vlt_pins[did].vinfobox );
 		}		
 
 		Microsoft.Maps.Events.addThrottledHandler(pushpin, 'mouseover', pushpin_info, 100 );  
 		Microsoft.Maps.Events.addHandler(pushpin, 'click', pushpin_info);  
+		
 	}
 }
 
@@ -551,7 +571,7 @@ $( "button[name='getcurrentpos']" ).click(function(e){
 	if( v ) {
 		var dvrdetail = vltlist[v] ;
 		if( dvrdetail && dvrdetail.status == 'standby' ) {
-			alert( "Vehicle " + dvrdetail.name + " is in standby mode." );
+			alert( "Vehicle " + dvrdetail.dvrid + " is in standby mode." );
 			return ;
 		}
 		
@@ -569,8 +589,7 @@ $( "button[name='getcurrentpos']" ).click(function(e){
 // Clear All Icons button
 $( "button[name='clearallicons']" ).click(function(e){
 	map.entities.clear();
-	vlt_pins = [] ;
-	vlt_pidx = 0 ;
+	vlt_pins = {} ;
 });
 
 // Sensor Config Dialog
@@ -1188,7 +1207,7 @@ $( "button[name='playback']" ).click(function(e){
 });
 
 
-// live view button
+// live setup button
 $( "button[name='setupdvr']" ).click(function(e){
 	e.preventDefault();
 	var vehicle = $("select[name='vltvehicle']").val();
@@ -1208,6 +1227,79 @@ $( "button[name='setupdvr']" ).click(function(e){
 	}
 });
 
+var live_vehicle = "";
+var live_phone = "" ;
+// live testing
+var livetest=0 ;
+
+// live preview dialog
+$( ".tdcdialog#dialog_webplay" ).dialog({
+	autoOpen: false,
+	width:"auto",
+	modal: true,
+	beforeClose: function( event, ui ) {
+		dashstop( $( "video#webplay" )[0] );		
+	},
+	resize: function( event, ui ) {
+		$( "video#webplay" )[0].width=$( "div#dialog_webplay" ).width() - $( ".tdcdialog#dialog_webplay" ).data("wdif") - 4;
+		$( "video#webplay" )[0].height=$( "div#dialog_webplay" ).height() - $( ".tdcdialog#dialog_webplay" ).data("hdif") - 4;
+	},	
+	open: function( event, ui ) {
+		var wdif = $( "div#dialog_webplay" ).width() - $( "video#webplay" )[0].width ;
+		var hdif = $( "div#dialog_webplay" ).height() - $( "video#webplay" )[0].height ;
+		$( ".tdcdialog#dialog_webplay" ).data("wdif", wdif );
+		$( ".tdcdialog#dialog_webplay" ).data("hdif", hdif );
+		$( ".tdcdialog#dialog_webplay" ).dialog("option", "title", "Live Preview - " + live_vehicle );
+		$("select#webplay_camera").change();
+	},
+	create: function( event, ui ) {
+		$("button#webplay_reload").click(function(){
+			$("select#webplay_camera").change();
+		});
+		$("button#webplay_close").click(function(){
+			$( ".tdcdialog#dialog_webplay" ).dialog( "close" );
+		});
+		$("select#webplay_camera").change(function(){
+			var camera = $("select#webplay_camera").val();
+			dashplay( $( "video#webplay" )[0], live_phone, camera ) ;
+		});
+	}
+});
+
+if( window.MediaSource && MediaSource.isTypeSupported("video/mp4; codecs=\"avc3.640028,mp4a.40.2\"") )  {
+	// live preview button
+	$( "button[name='livepreview']" ).click(function(e){
+		e.preventDefault();
+		var vehicle = $("select[name='vltvehicle']").val();
+		if( livetest ) {
+			vehicle = "livetest" ;
+			vltlist[vehicle] = { phone: "99999"};
+		}
+		if( vehicle ) {
+			if( vehicle instanceof Array) {
+				vehicle = vehicle[0] ;
+			}
+			live_vehicle = vehicle ;
+			if( vltlist[live_vehicle] && vltlist[live_vehicle].phone ) {
+				live_phone = vltlist[live_vehicle].phone ;
+				$.getJSON("livechinfo.php?phone="+live_phone, function(data){
+					if( data.res && data.channels && data.channels.length>0 ) {
+						chhtml='' ;
+						var i ;
+						for( i=0; i<data.channels.length; i++ ) {
+							chhtml += "<option value=\"" + data.channels[i].camera +"\">" + data.channels[i].name + "</option>" ;
+						}
+						$("select#webplay_camera").html(chhtml);
+						$( ".tdcdialog#dialog_webplay" ).dialog("open");
+					}
+				});
+			}
+		}
+	});
+}
+else {
+	$( "button[name='livepreview']" ).hide();
+}
 
 $( window ).unload( function(){
 	// save map position
@@ -1227,8 +1319,7 @@ $( window ).unload( function(){
 	$.ajax( {
 		url: "vltunload.php",
 		data: vltparam ,
-		async: false ,	
-		timeout: 500
+		timeout: 100
 	});
 });
 
@@ -1238,50 +1329,56 @@ $("select[name='vehicle']").change(function(e){
 
 function showup()
 {
-trigger_resize();
+	trigger_resize();
 
-var mapcenter = new Microsoft.Maps.Location(35, -100);
-var mapzoom = 4 ;
-var mapinit=false ;
-if( sessionStorage ) {
-	var tdsess = sessionStorage.getItem('tdsess');
-	var localsession ;
-	if( tdsess ) {
-		localsession = JSON.parse(tdsess);
-	}
-	if( localsession && localsession.tdcmap ) {
-		if( localsession.tdcmap.zoom ) {
-			mapcenter = new Microsoft.Maps.Location(localsession.tdcmap.lat, localsession.tdcmap.lon);
-			mapzoom = localsession.tdcmap.zoom ;
-			mapinit=true ;
+	// load bing theme
+	Microsoft.Maps.loadModule('Microsoft.Maps.Themes.BingTheme', { callback: themesModuleLoaded });
+	function themesModuleLoaded() {
+		var mapcenter = new Microsoft.Maps.Location(35, -100);
+		var mapzoom = 4 ;
+		var mapinit=false ;
+		if( sessionStorage ) {
+			var tdsess = sessionStorage.getItem('tdsess');
+			var localsession ;
+			if( tdsess ) {
+				localsession = JSON.parse(tdsess);
+			}
+			if( localsession && localsession.tdcmap ) {
+				if( localsession.tdcmap.zoom ) {
+					mapcenter = new Microsoft.Maps.Location(localsession.tdcmap.lat, localsession.tdcmap.lon);
+					mapzoom = localsession.tdcmap.zoom ;
+					mapinit=true ;
+				}
+			}
 		}
+
+		map = new Microsoft.Maps.Map(document.getElementById("tdcmap"),
+		{	credentials: <?php echo "'$map_credentials'"; ?> ,
+			center: mapcenter,
+			zoom: mapzoom,
+			enableSearchLogo: false,
+			enableClickableLogo: false,
+			mapTypeId : Microsoft.Maps.MapTypeId.road
+		});
+
+		if( !mapinit ) {
+			$.getJSON("mapquery.php", function(resp){
+				if( resp.res && resp.map && resp.map.bbox && resp.map.bbox.length>=4) {
+					setTimeout( function(){
+						var nbounds = Microsoft.Maps.LocationRect.fromLocations( [
+							new Microsoft.Maps.Location( resp.map.bbox[0], resp.map.bbox[1] ),
+							new Microsoft.Maps.Location( resp.map.bbox[2], resp.map.bbox[3] )
+							] );
+						map.setView({bounds:nbounds});
+					}, 1000 ) ;
+				}
+			});
+		}		
 	}
 }
 
-map = new Microsoft.Maps.Map(document.getElementById("tdcmap"),
-{credentials: <?php echo "'$map_credentials'"; ?> ,
-center: mapcenter,
-zoom: mapzoom,
-enableSearchLogo: false,
-enableClickableLogo: false,
-mapTypeId : Microsoft.Maps.MapTypeId.road
-});
-
-if( !mapinit ) {
-	$.getJSON("mapquery.php", function(resp){
-		if( resp.res && resp.map && resp.map.bbox && resp.map.bbox.length>=4) {
-			setTimeout( function(){
-				var nbounds = Microsoft.Maps.LocationRect.fromLocations( [
-					new Microsoft.Maps.Location( resp.map.bbox[0], resp.map.bbox[1] ),
-					new Microsoft.Maps.Location( resp.map.bbox[2], resp.map.bbox[3] )
-					] );
-				map.setView({bounds:nbounds});
-			}, 1000 ) ;
-		}
-	});
-}
-
-}
+// load bing theme
+Microsoft.Maps.loadModule('Microsoft.Maps.Themes.BingTheme');
 
 // show up 
 $('#rcontainer').show('slow', showup );
@@ -1297,7 +1394,11 @@ $('#rcontainer').show('slow', showup );
 <div id="container">
 <div id="header" style="text-align: right;"><span style="color:#006400;"><span style="font-size: 14px;"><span>Welcome </span></span></span><span style="color:#2F4F4F;"><span style="font-size: 14px;margin-right:24px;"><?php echo $_SESSION['welcome_name'] ;?></span></span><span><a href="logout.php" style="background-color:#98bf21;text-decoration:none;text-align:center;"> Logout </a></span><span  id="servertime" style="color:#800080;font-size: 11px; margin-left:30px;margin-right:30px;"></span><span style="color:#B22222;"><span style="font-size: 12px;"><span>TOUCH DOWN CENTER <?php echo $_SESSION['release']; ?></span></span></span></div>
 
-<div id="lpanel"><img alt="index.php" src="res/side-TD-logo-clear.png" />
+<div id="lpanel"><?php if( empty($support_viewtrack_logo) ){ ?>
+	<img alt="index.php" src="res/side-TD-logo-clear.png" />
+<?php } else { ?> 
+	<img alt="index.php" src="res/side-VT-logo-clear.png" />
+<?php } ?>
 	<p style="text-align: center;"><span style="font-size:11px;"><a href="http://www.247securityinc.com/" style="text-decoration:none;">247 Security Inc.</a></span></p>
 <ul style="list-style-type:none;margin:0;padding:0;">
 	<li><a class="lmenu" href="dashboard.php"><img onmouseout="this.src='res/side-dashboard-logo-clear.png'" onmouseover="this.src='res/side-dashboard-logo-fade.png'" src="res/side-dashboard-logo-clear.png" /> </a></li>
@@ -1357,7 +1458,9 @@ $('#rcontainer').show('slow', showup );
 <?php if( $_SESSION['user_type'] == "admin" ) { ?>
 <div style="text-align: center;"><button style="min-width:14em;" name="setupdvr">Setup DVR</button></div>
 <?php } ?>
-
+<?php if( !empty($support_livepreview) ){ ?>
+<div style="text-align: center;"><button style="min-width:14em;" id="livepreview" name="livepreview">Live Preview</button></div>
+<?php } ?>
 <form id="liveviewform" enctype="application/x-www-form-urlencoded" method="get" action="vltliveview.php" >
 <input type="hidden" name="info"/>
 </form>
@@ -1460,8 +1563,6 @@ $('#rcontainer').show('slow', showup );
 		</tr>
 	</table>
 	
-	
-	
 </td>
 <td>
 	 <p><button name="vltsavedefault" value="1">Save As Default 1</button></p>
@@ -1476,6 +1577,19 @@ $('#rcontainer').show('slow', showup );
 </table>
 <input type="hidden" name="vlt_geo" value="" />
 </form>
+</div>
+
+<!-- Video Live Preview Dialog -->
+<div class="tdcdialog" title="Live Preview" id="dialog_webplay">
+<video id="webplay" poster="res/247logo.jpg" width="640" height="400" src="" type="video/mp4" >
+Your browser does not support the video tag.
+</video>
+<hr />
+<p style="text-align: right;">
+<label for="webplay_camera"> Select camera:</label> 
+<select id="webplay_camera"></select>
+&nbsp;&nbsp;&nbsp;
+<button id="webplay_reload">Reload</button> <button id="webplay_close">Close</button></p>
 </div>
 
 <!-- Geo Fence Dialog -->

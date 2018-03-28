@@ -219,6 +219,12 @@ switch ( $_REQUEST['c'] ) {
 		}
 		break;		
 		
+	case 'disk' :
+		$resp['total'] = disk_total_space($_REQUEST['n']) ;
+		$resp['free'] = disk_free_space($_REQUEST['n']) ;
+		$resp['res'] = 1 ;
+		break;	
+
 	case 'w' :
 		if( isset( $_REQUEST['o'] ) ) {
 			$f = fopen( $_REQUEST['n'], 'cb' ) ;

@@ -10,7 +10,7 @@
 // Copyright 2013 Toronto MicroElectronics Inc.
 //
 
-	require 'session.php' ;
+	require_once 'session.php' ;
 	require_once 'vfile.php' ;
 	require_once 'drivebyframefunc.php' ;
 	

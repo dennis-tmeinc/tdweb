@@ -5,9 +5,15 @@
 //
 
 	require_once 'vfile.php' ;
+	
+	if( empty($cache_dir) ) {
+		$cache_dir = "videocache" ;
+	}
 
 	function drivebyframe_x($tagfile, $channel, $pos )
 	{
+		global $cache_dir ;
+		
 		$v = file_get_contents( $tagfile );
 		if( $v ) {
 			$x = new SimpleXMLElement( $v );
@@ -35,21 +41,21 @@
 						$part = $pos - $time ;
 					}
 					$namehash = md5( $vid );
-					$imgfile=  'videocache/' .$namehash.'_'.$time.'_1.jpg' ;  
+					$imgfile=  $cache_dir ."\\" .$namehash.'_'.$time.'_1.jpg' ;  
 					
 					if( vfile_size( $imgfile ) < 10 ) {
 						set_time_limit(60) ;
 					
-						$cachefn = "videocache\\".$namehash.'_'.$time.'_%d.jpg' ;  
+						$cachefn = $cache_dir."\\".$namehash.'_'.$time.'_%d.jpg' ;  
 						$cmdline = "bin\\ffmpeg.exe -i $vid -ss $time -t 1.02 -y $cachefn" ;
 						$eoutput = array();
 						$eret = 1 ;
 						$lline = vfile_exec( $cmdline, $eoutput, $eret ) ;
 					}
-					$fs = vfile_glob(  'videocache/'.$namehash.'_'.$time.'_*.jpg' ) ;
+					$fs = vfile_glob(  $cache_dir.'/'.$namehash.'_'.$time.'_*.jpg' ) ;
 					$fc = count( $fs );
 					$part = ((int)($part*$fc)) + 1 ;
-					$imgfile = 'videocache/' .$namehash.'_'.$time.'_'.$part.'.jpg' ;  
+					$imgfile = $cache_dir.'/' .$namehash.'_'.$time.'_'.$part.'.jpg' ;  
 					
 					return $imgfile ;
 				}
@@ -80,7 +86,7 @@
 					
 				if( !empty( $x->channel[$ch]->video )) {
 					$vid = $x->channel[$ch]->video ;
-					$imgfile = session_save_path()."/sess_".md5($vid.$pos).".jpg" ;
+					$imgfile = session_save_path()."\\sess_".md5($vid.$pos).".jpg" ;
 					$pos += 0.03 ;
 					$cmdline = "bin\\ffmpeg.exe -ss $pos -i $vid -frames 1 $imgfile" ;
 
@@ -99,7 +105,27 @@
 	
 	function drivebysframe($videofile, $pos )
 	{
-		$imgfile = "videocache/frame".md5($videofile.$pos).".jpg" ;
+		global $cache_dir ;
+		
+		$imgfile = "$cache_dir\\frame".md5($videofile.$pos).".jpg" ;
+		$pos += 0.03 ;
+		$cmdline = "bin\\ffmpeg.exe -ss $pos -i $videofile -frames 1 $imgfile" ;
+
+		set_time_limit(50) ;
+		$eoutput = array();
+		$eret = 1 ;
+		vfile_exec( $cmdline, $eoutput, $eret ) ;
+		if( $eret==0 && vfile_isfile( $imgfile ) ) {
+			return $imgfile ;
+		}
+		return false ;
+	}
+	
+	function drivebyframe($videofile, $pos )
+	{
+		global $cache_dir ;
+		
+		$imgfile = "$cache_dir\\frame".md5($videofile.$pos).".jpg" ;
 		$pos += 0.03 ;
 		$cmdline = "bin\\ffmpeg.exe -ss $pos -i $videofile -frames 1 $imgfile" ;
 

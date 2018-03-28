@@ -74,5 +74,9 @@
 	$avlcbserver = "http://localhost:80" ;		
 	$avlcbapp = "vltevent.php" ;
 	
+	$support_livepreview = true ;
+	$support_liveaudio = true ;
+	$cache_dir = "G:\\" ;
+	
 	return ;
 ?>	

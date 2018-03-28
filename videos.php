@@ -10,7 +10,7 @@ session_save('videofilter','');
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">
 	<meta name="author" content="Dennis Chen @ TME, 2013-05-24">		
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"https://code.jquery.com/ui/1.11.0/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><?php echo "<link href=\"https://code.jquery.com/ui/1.11.0/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
 	<link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
       #search {
@@ -208,12 +208,42 @@ function webplay_settitle()
 	$( ".tdcdialog#dialog_webplay" ).dialog("option", "title", clipinfo.vehicle_name + " - " + clipinfo.camera_name[ clipinfo.channel ] + "   " + dstr );	
 }
 
+// try pre-load video
+function webplay_preload() {
+	var clipinfo = $( "video#webplay" ).data("clipinfo") ;
+	var param=new Object ;
+	param.dir = 1 ;
+	param.vehicle_name = clipinfo.vehicle_name ;
+	param.time_start = clipinfo.time_start ;
+	param.channel = clipinfo.channel ;
+	$.getJSON("webplay.php", param , function(resp){
+		if( resp.res == 1 ) {
+			$.get( resp.mp4 ) ;	// to cache the video file
+		}
+	});	
+}
+
+function webplay_playnext() {
+	var clipinfo = $( "video#webplay" ).data("clipinfo") ;
+	var param=new Object ;
+	param.dir = 1 ;
+	param.vehicle_name = clipinfo.vehicle_name ;
+	param.time_start = clipinfo.time_start ;
+	param.channel = clipinfo.channel ;
+	$.getJSON("webplay.php", param , function(resp){
+		if( resp.res == 1 ) {
+			$( "video#webplay" ).data("clipinfo", resp );
+			webplay_play();
+		}
+	});		
+}
+
 function webplay_play()
 {
 	var clipinfo = $( "video#webplay" ).data("clipinfo") ;
 	$( "video#webplay" )[0].onended = function(){
 		if( $( "video#webplay" )[0].currentTime > 2 ) {
-			$("button#webplay_next").click();
+			webplay_playnext();
 		}
 	}
 	webplay_playtime = -1 ;
@@ -221,6 +251,8 @@ function webplay_play()
 	$( "video#webplay" )[0].ontimeupdate = webplay_settitle ;
 	$( "video#webplay" )[0].src = clipinfo.mp4  ;
 	$( "video#webplay" )[0].play();
+	
+	webplay_preload();
 //	$( "video#webplay" )[0].load();
 }
 
@@ -356,7 +388,11 @@ $("#rcontainer").show('slow' );
 <div id="container">
 <div id="header" style="text-align: right;"><span style="color:#006400;"><span style="font-size: 14px;"><span>Welcome </span></span></span><span style="color:#2F4F4F;"><span style="font-size: 14px;margin-right:24px;"><?php echo $_SESSION['welcome_name'] ;?></span></span><span><a href="logout.php" style="background-color:#98bf21;text-decoration:none;text-align:center;"> Logout </a></span><span  id="servertime" style="color:#800080;font-size: 11px; margin-left:30px;margin-right:30px;"></span><span style="color:#B22222;"><span style="font-size: 12px;"><span>TOUCH DOWN CENTER <?php echo $_SESSION['release']; ?></span></span></span></div>
 
-<div id="lpanel"><img alt="index.php" src="res/side-TD-logo-clear.png" />
+<div id="lpanel"><?php if( empty($support_viewtrack_logo) ){ ?>
+	<img alt="index.php" src="res/side-TD-logo-clear.png" />
+<?php } else { ?> 
+	<img alt="index.php" src="res/side-VT-logo-clear.png" />
+<?php } ?>
 	<p style="text-align: center;"><span style="font-size:11px;"><a href="http://www.247securityinc.com/" style="text-decoration:none;">247 Security Inc.</a></span></p>
 <ul style="list-style-type:none;margin:0;padding:0;">
 	<li><a class="lmenu" href="dashboard.php"><img onmouseout="this.src='res/side-dashboard-logo-clear.png'" onmouseover="this.src='res/side-dashboard-logo-fade.png'" src="res/side-dashboard-logo-clear.png" /> </a></li>
@@ -431,8 +467,9 @@ Vehicles &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="selectallvehicle">Select All<
 <div id="workarea" style="width:auto;">
   
 <p class="btset">
-  <input  checked="checked" href="videos.php" id="btvideo"   name="btset"  type="radio" /><label for="btvideo"> Browse &amp; Manage Video </label> 
-  <input  href="videosrequest.php" id="btvideoreq"  name="btset" type="radio" /><label for="btvideoreq"> Request Video Clips </label>
+  <input   name="btset" checked="checked" href="videos.php" id="btvideo" type="radio" /><label for="btvideo"> Browse &amp; Manage Video </label> 
+  <input   name="btset" href="videosrequest.php" id="btvideoreq" type="radio" /><label for="btvideoreq"> Request Video Clips Via WiFi </label>
+  <input   name="btset" href="videosrequestcell.php" id="btvideoreqcell" type="radio" /><label for="btvideoreqcell"> Request Video Clips Via Cellular </label>
 </p>
   
 <h4>Browse &amp; Manage Videos</h4>

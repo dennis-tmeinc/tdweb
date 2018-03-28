@@ -1,5 +1,14 @@
 <?php
-require 'session.php'; 
+// livesetup.php - live setup support over web tunnel 
+// Requests:
+//      DVR setup url :  ex, http://host/tdc/livesetup.php/<phonenumber>/page.html
+// Return:
+//      tunneled data (web page)
+// By Dennis Chen @ TME	 - 2016-11-18
+// Copyright 2016 Toronto MicroElectronics Inc.
+
+require_once 'session.php' ; 
+require_once 'webtunstream.php' ;
 
 if( !empty( $_SERVER['PATH_INFO'] ) ) {
 	$p = strpos( $_SERVER['PATH_INFO'], '/', 1 );
@@ -29,198 +38,76 @@ if( $_SESSION['user_type'] != "admin" ) {
 	return ;
 }
 
-// repack http header
-$_SERVER['HTTP_CONNECTION'] = "close" ;		// no keep alive 
-$_SERVER['HTTP_HOST'] = "127.0.0.1" ;		// replace Host header
+$stream = fopen("webtun://$phone:80", "c") ;
+if( $stream ) {
 
-$header = $_SERVER['REQUEST_METHOD'].' '.$nreq.' '.$_SERVER['SERVER_PROTOCOL']."\r\n" ;
-foreach( $_SERVER as $key => $value )
-{
-	if( strncmp( $key, "HTTP_", 5 ) == 0 ) {
-		$l = strlen( $key ) ;
-		$xkey = '' ;
-		$cap = true ;
-		for( $i=5 ; $i<$l; $i++ ) {
-			$c = $key[$i] ;
-			if($c=='_') {
-				$xkey .='-' ;
-				$cap = true ;
-			}
-			else if( $cap ) {
-				$xkey .= $c ;
-				$cap = false ;
-			}
-			else {
-				$xkey .= strtolower( $c );
-			}
-		}
-		$header .= $xkey . ': '. $value . "\r\n" ;
-	}
-}
+	register_shutdown_function(function ()
+	{
+		global $stream ;
+		if( $stream ) {
+			fclose( $stream );
+		} 
+		$stream = NULL ;
+		
+	});
+	
+	// send request
+	fwrite( $stream,  $_SERVER['REQUEST_METHOD'].' '.$nreq.' '.$_SERVER['SERVER_PROTOCOL']."\r\n" ) ;
 
-$wserver= false ;
-$wport = 0 ;
+	$_SERVER['HTTP_CONNECTION'] = "close" ;		// no keep alive 
+	$_SERVER['HTTP_HOST'] = "127.0.0.1" ;		// replace Host header
 
-// web listener on random tcp port 10000 ~ 55000
-while( !$wserver) {
-	$wport = mt_rand( 10000, 55000 ) ;
-	$wserver= stream_socket_server("tcp://127.0.0.1:".$wport, $errno, $errstr);
-}
-
-$tunnelid = $wport ;
-
-$nsvrfile = $session_path.'/sess_lvr_'.$tunnelid ;
-$wsvrfile = fopen( $nsvrfile , "w" );
-if( $wsvrfile ) {
-	fprintf( $wsvrfile, "%d\r\n", $wport );
-	fclose( $wsvrfile );
-}
-
-$rtime = time();			// current time
-
-$flvc = fopen( $session_path.'/sess_lvc_'.$phone, "r+" );
-if( $flvc ) {
-	flock( $flvc, LOCK_EX ) ;		// exclusive lock
-
-	fseek( $flvc, 0, SEEK_END );
-	$x = fwrite( $flvc, "$rtime,$tunnelid,127.0.0.1,80\n");
-
-	fflush( $flvc ) ;              	// flush before release the lock
-	flock( $flvc, LOCK_UN ) ;		// unlock ;
-	fclose( $flvc );
-}
-else {
-	echo "<html><body>Sorry, contents not available</body></html>" ;
-	return ;
-}
-
-set_time_limit( 100 );
-// wait for id listner
-$timeout = 30 ;
-
-$recv_header = true ;
-$xline = '' ;
-$content_length = 1000000000 ;	// set to an impossible max content length
-while( $conn = stream_socket_accept($wserver, $timeout ) ) {
-	$msgtype = fread( $conn, 1 ) ;
-	if( $msgtype == 'd' ) {			// data incoming
-		while( true ) {
-			if( $recv_header ) {
-				$line = fgets( $conn, 8192 ) ;
-				if( $line === false || strlen( $line ) == 0 ) {
-					break ;
+	// headers
+	foreach( $_SERVER as $key => $value )
+	{
+		if( strncmp( $key, "HTTP_", 5 ) == 0 ) {
+			$l = strlen( $key ) ;
+			$xkey = '' ;
+			$cap = true ;
+			for( $i=5 ; $i<$l; $i++ ) {
+				$c = $key[$i] ;
+				if($c=='_') {
+					$xkey .='-' ;
+					$cap = true ;
 				}
-				$xline .= $line ;
-				if( strstr( $xline, "\n" ) ) {		// completed line with eol
-					$xline = trim( $xline );
-					if( strlen( $xline ) == 0 ) {	// empty line ? end of http header
-						$recv_header = false ;		// to receive contents
-					}
-					else {
-						// try to get content length
-						if( strncasecmp( $xline, "Content-Length:", 15)==0 ) {
-							$content_length = (int)substr($xline, 15);
-						}
-						header( $xline );
-						$xline = '' ;				// clean line buffer
-					}
+				else if( $cap ) {
+					$xkey .= $c ;
+					$cap = false ;
+				}
+				else {
+					$xkey .= strtolower( $c );
 				}
 			}
-			else {
-				// contents, transfer data back to browser
-				$rl = $content_length ;
-				if( $rl>128*1024 )$rl=128*1024 ;
-				$data = fread( $conn, $rl );
-				if( $data === false || strlen($data)==0 ) {
-					$timeout = 15 ;
-					break;
-				}
-				echo $data ;
-				$content_length -= strlen($data);
-				if( $content_length <= 0 ) {		// content completed
-					$timeout = 0 ;
-					break;
-				}
-			}
+			fwrite( $stream,  $xkey . ': '. $value . "\r\n"  );
 		}
 	}
-	else if( $msgtype == 'g' ) {		// GET data
-		if( !empty( $header ) ) {		// to send header
-			fwrite( $conn, 'd' );		// data coming
 
-			// headers
-			fwrite( $conn, $header );
+	// Content-length
+	$length = 0 ;
+	if( isset( $_SERVER['CONTENT_LENGTH'] ) ) {
+		$length = (int) $_SERVER['CONTENT_LENGTH'] ;
+	}
+	
+	$multipart_boundary = '' ;
 
-			// Content-length
-			$length = 0 ;
-			if( isset( $_SERVER['CONTENT_LENGTH'] ) ) {
-				$length = (int) $_SERVER['CONTENT_LENGTH'] ;
-			}
-			
-			$multipart_boundary = '' ;
-
-			// Content-Type, recalculate content length
-			if( isset( $_SERVER['CONTENT_TYPE'] ) ) {
-				// pack multipart/form-data
-				if( strncasecmp($_SERVER['CONTENT_TYPE'], "multipart/form-data", 19 )== 0 ) {
-					$multipart_boundary = stristr( $_SERVER['CONTENT_TYPE'], "boundary=" );
-					if( !empty( $multipart_boundary ) ) {
-						$multipart_boundary = trim(substr( $multipart_boundary, 9 ));
-						// recalculate content size base on multipart/formdata
-						$length =0 ;
-						
-						// POST array
-						if( !empty( $_POST ) )
-						foreach ( $_POST as $key => $value ) {
-							// begin of boundary
-							$length += 4+strlen($multipart_boundary) ; 	//fwrite($conn, "--$multipart_boundary\r\n" );
-							$length += 43+strlen($key);             	//fwrite($conn, "Content-Disposition: form-data; name=\"$key\"\r\n\r\n" );
-							$length += strlen($value);					//fwrite($conn, $value);
-							$length += 2 ;								//fwrite($conn, "\r\n");
-						}
-
-						// FILES array, ex:
-						// -----------------------------22350430211355483321311962510 
-						// Content-Disposition: form-data; name="xfile"; filename="app.yaml" 
-						// Content-Type: application/x-yaml
-						if( !empty( $_FILES ) )
-						foreach ( $_FILES as $key => $value ) {
-							// begin of boundary
-							$length += 4+strlen($multipart_boundary) ;			//fwrite($conn, "--$multipart_boundary\r\n" );
-							$length += 54+strlen($key)+strlen($value['name']);	//fwrite($conn, "Content-Disposition: form-data; name=\"$key\"; filename=\"$value[name]\"\r\n" );
-							if( !empty( $value['type'] ) ) {
-								$length += 	16+strlen($value['type']);			//fwrite($conn, "Content-Type: $value[type]\r\n" );
-							}
-							$length += 2;										//fwrite($conn, "\r\n");
-							$length += $value['size'] ;							// output file contents
-							$length += 2;										// fwrite($conn, "\r\n");
-						}
-
-						// end boundary
-						$length += 6+strlen($multipart_boundary);				//fwrite($conn, "--$multipart_boundary--\r\n" );
-					}
-				}
+	// Content-Type, recalculate content length
+	if( isset( $_SERVER['CONTENT_TYPE'] ) ) {
+		// pack multipart/form-data
+		if( strncasecmp($_SERVER['CONTENT_TYPE'], "multipart/form-data", 19 )== 0 ) {
+			$multipart_boundary = stristr( $_SERVER['CONTENT_TYPE'], "boundary=" );
+			if( !empty( $multipart_boundary ) ) {
+				$multipart_boundary = trim(substr( $multipart_boundary, 9 ));
+				// recalculate content size base on multipart/formdata
+				$length =0 ;
 				
-				fwrite($conn,  "Content-Type: ".$_SERVER['CONTENT_TYPE']."\r\n" );
-			}
-
-			if( $length > 0 ) {
-				fwrite( $conn, "Content-Length: ".$length."\r\n" );
-			}
-			fwrite( $conn, "\r\n" );	// empty line for end of http header
-			unset( $header );
-			
-			// contents
-			if( !empty( $multipart_boundary ) ) {		// multipart
-			
 				// POST array
 				if( !empty( $_POST ) )
 				foreach ( $_POST as $key => $value ) {
 					// begin of boundary
-					fwrite($conn, "--$multipart_boundary\r\n" );
-					fwrite($conn, "Content-Disposition: form-data; name=\"$key\"\r\n\r\n" );
-					fwrite($conn, $value);
-					fwrite($conn, "\r\n");
+					$length += 4+strlen($multipart_boundary) ; 	//fwrite($conn, "--$multipart_boundary\r\n" );
+					$length += 43+strlen($key);             	//fwrite($conn, "Content-Disposition: form-data; name=\"$key\"\r\n\r\n" );
+					$length += strlen($value);					//fwrite($conn, $value);
+					$length += 2 ;								//fwrite($conn, "\r\n");
 				}
 
 				// FILES array, ex:
@@ -230,106 +117,154 @@ while( $conn = stream_socket_accept($wserver, $timeout ) ) {
 				if( !empty( $_FILES ) )
 				foreach ( $_FILES as $key => $value ) {
 					// begin of boundary
-					fwrite($conn, "--$multipart_boundary\r\n" );
-					fwrite($conn, "Content-Disposition: form-data; name=\"$key\"; filename=\"$value[name]\"\r\n" );
+					$length += 4+strlen($multipart_boundary) ;			//fwrite($conn, "--$multipart_boundary\r\n" );
+					$length += 54+strlen($key)+strlen($value['name']);	//fwrite($conn, "Content-Disposition: form-data; name=\"$key\"; filename=\"$value[name]\"\r\n" );
 					if( !empty( $value['type'] ) ) {
-						fwrite($conn, "Content-Type: $value[type]\r\n" );
+						$length += 	16+strlen($value['type']);			//fwrite($conn, "Content-Type: $value[type]\r\n" );
 					}
-					fwrite($conn, "\r\n");
-					// output file contents
-					$uploadcontents = file_get_contents ( $value['tmp_name'] );
-					fwrite($conn, $uploadcontents);
-					unset( $uploadcontents );	// to release the memory
-					fwrite($conn, "\r\n");
+					$length += 2;										//fwrite($conn, "\r\n");
+					$length += $value['size'] ;							// output file contents
+					$length += 2;										// fwrite($conn, "\r\n");
 				}
 
 				// end boundary
-				fwrite($conn, "--$multipart_boundary--\r\n" );
-				
+				$length += 6+strlen($multipart_boundary);				//fwrite($conn, "--$multipart_boundary--\r\n" );
 			}
-			else if( $length > 0 ) {
-				$inputdata = fopen("php://input", "r");
-				if( $inputdata ) {
-					while( $length > 0 ) {
-						$rl = $length ;
-						if( $rl > 32*1024 ) $rl = 32*1024 ;
-						$data = fread( $inputdata, $rl ) ;
-						if( $data === false || strlen($data)==0 ) {
-							break;
-						}
-						fwrite( $conn, $data );
-						$length -= strlen( $data );
+		}
+		
+		fwrite($stream,  "Content-Type: ".$_SERVER['CONTENT_TYPE']."\r\n" );
+	}
+
+	if( $length > 0 ) {
+		fwrite( $stream, "Content-Length: ".$length."\r\n" );
+	}
+	fwrite( $stream, "\r\n" );	// empty line for end of http header
+	
+	// contents
+	if( !empty( $multipart_boundary ) ) {		// multipart
+	
+		// POST array
+		if( !empty( $_POST ) )
+		foreach ( $_POST as $key => $value ) {
+			// begin of boundary
+			fwrite($stream, "--$multipart_boundary\r\n" );
+			fwrite($stream, "Content-Disposition: form-data; name=\"$key\"\r\n\r\n" );
+			fwrite($stream, $value);
+			fwrite($stream, "\r\n");
+		}
+
+		// FILES array, ex:
+		// -----------------------------22350430211355483321311962510 
+		// Content-Disposition: form-data; name="xfile"; filename="app.yaml" 
+		// Content-Type: application/x-yaml
+		if( !empty( $_FILES ) )
+		foreach ( $_FILES as $key => $value ) {
+			// begin of boundary
+			fwrite($stream, "--$multipart_boundary\r\n" );
+			fwrite($stream, "Content-Disposition: form-data; name=\"$key\"; filename=\"$value[name]\"\r\n" );
+			if( !empty( $value['type'] ) ) {
+				fwrite($stream, "Content-Type: $value[type]\r\n" );
+			}
+			fwrite($stream, "\r\n");
+			
+			// output file contents
+			$uploadfile = fopen($value['tmp_name'],"r");
+			if( $uploadfile ) {
+				$uploadsize = $value['size'] ;
+				while( $uploadsize > 0 && connection_status()==CONNECTION_NORMAL ) {
+					set_time_limit( 200 );
+					if( $uploadsize > 4096 )
+						$data = fread( $uploadfile, 4096 );
+					else
+						$data = fread( $uploadfile, $uploadsize );
+					@$dlen = strlen( $data );
+					if( $data === false || $dlen==0 ) {
+						break;
 					}
-					fclose( $inputdata );
+					fwrite( $stream, $data );
+					$uploadsize -= $dlen;
 				}
+				fclose($uploadfile);
+			}
+			
+			fwrite($stream, "\r\n");
+		}
+
+		// end boundary
+		fwrite($stream, "--$multipart_boundary--\r\n" );
+		
+	}
+	else if( $length > 0 ) {
+		$inputdata = fopen("php://input", "r");
+		if( $inputdata ) {
+			while( $length > 0 && connection_status()==CONNECTION_NORMAL ) {
+				set_time_limit( 200 );
+				if( $length > 8192 )
+					$data = fread( $inputdata, 8192 );
+				else
+					$data = fread( $inputdata, $length );
+				@$dlen = strlen( $data );
+				if( $data === false || $dlen == 0 ) {
+					break;
+				}
+				fwrite( $stream, $data );
+				$length -= $dlen;
+			}
+			fclose( $inputdata );
+		}
+	}
+	
+	// to enable cache
+	header_remove("Pragma"); 
+	// receive header first
+	$recv_header = true ;
+	// default with no content length, set to max
+	$content_length = 1000000000 ;	
+		
+	// not necessary
+	// fflush($stream);
+	
+	// get response
+	while( $content_length>0 && connection_status()==CONNECTION_NORMAL ) {
+		if( $recv_header ) {
+			$line = fgets( $stream, 4096 ) ;
+			if( $line === false || strlen( $line ) == 0 ) {
+				break ;
+			}
+			$line = trim( $line );	
+			if( strlen( $line ) == 0 ) {	// empty line, end of http header
+				$recv_header = false ;		// to receive contents
+			}
+			else {
+				// try to get content length
+				if( strncasecmp( $line, "Content-Length:", 15)==0 ) {
+					$content_length = (int)substr($line, 15);
+				}
+				header( $line );
 			}
 		}
 		else {
-			fwrite( $conn, 'e' );	// end, no more GET data
-		}
-	}
-	else if( $msgtype == 'n' ) {	// notification of get req ready
-		if( !empty( $header ) ) {		// to send header
-			$sendfile = fopen( $session_path.'/sess_lvs_'.$tunnelid, "r" );
-			if( $sendfile ) {
-				$sendfileport = 0 ;
-				fscanf( $sendfile, "%d", $sendfileport );
-				if( $sendfileport ) {
-					$sendsocket = stream_socket_client( "tcp://127.0.0.1:".$sendfileport );
-					if( $sendsocket ) {
-						fwrite( $sendsocket, "d" );		// message type: data
-						fwrite( $sendsocket, $header );
-
-						// Content-length
-						$length = 0 ;
-						if( isset( $_SERVER['CONTENT_LENGTH'] ) ) {
-							$length = (int) $_SERVER['CONTENT_LENGTH'] ;
-							fwrite( $sendsocket, "Content-Length: ".$length."\r\n" );
-						}
-						
-						fwrite( $sendsocket, "\r\n" );	// empty line for end of http header
-						unset( $header );
-						
-						// contents
-						if( $length > 0 ) {
-							
-							$inputdata = fopen("php://input", "r");
-							if( $inputdata ) {
-								while( $length > 0 ) {
-									$rl = $length ;
-									if( $rl > 128*1024 ) $rl = 128*1024 ;
-									$data = fread( $inputdata, $rl ) ;
-									if( $data === false || strlen($data)==0 ) {
-										break;
-									}
-									else {
-										fwrite( $sendsocket, $data );
-										$length -= strlen( $data );
-									}
-								}
-								fclose( $inputdata );
-							}
-						}
-
-						fclose( $sendsocket );
-					}
-				}
-				fclose( $sendfile );
+			// contents, transfer data back to browser
+			set_time_limit( 200 );
+			if( $content_length>8192 ) {
+				$data = fread( $stream, 8192 );
 			}
+			else {
+				$data = fread( $stream, $content_length );
+			}
+			@$dlen = strlen( $data );
+			if( $data === false || $dlen==0 ) {
+				break;
+			}
+			echo $data ;
+			$content_length -= $dlen;
 		}
 	}
-	else if( $msgtype == 'e' ) {	// close connection (end)
-		$timeout = 0;				// quit !
-	}
-
-	fclose( $conn ) ;
-
+    $stream = NULL;
+}
+else {
+	echo "<html><body>Sorry, contents not available</body></html>" ;
 }
 
-// clear listener
-fclose($wserver);
-
-// remove server file
-@unlink( $nsvrfile );
-
+return ;
 ?>

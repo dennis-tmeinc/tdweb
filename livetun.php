@@ -1,176 +1,168 @@
 <?php
-	
-require_once 'config.php' ;
+// livetun.php - live web tunnel over http protocl (connected from DVR)
+// Requests:
+//      c : command , i: initialize connection, g: get data, p: put data
+//      p : phone number (DVR ID)
+//      t : connection ID 
+// Return:
+//      raw data
+// By Dennis Chen @ TME	 - 2016-11-18
+// Copyright 2016 Toronto MicroElectronics Inc.
 
+require_once 'config.php' ;
+require_once 'netpackfunc.php' ;
+
+// default session path
 if( empty($session_path) ) {
-	$session_path= "session" ;
+	$session_path= "session";
+}
+
+if( !empty($_REQUEST['s']) ){
+	header("X-Webt-Serial:".$_REQUEST['s'] );
 }
 
 if( !empty( $_REQUEST['c'] ) ) {
 
-	set_time_limit( 300 );
+	set_time_limit( 150 );
 	
 	if( $_REQUEST['c'] == 'i' && !empty($_REQUEST['p']) ) {	// initial
 		header( "X-Webt: ready" );				// give out right response
 	
-		$flvc = fopen( $session_path.'/sess_lvc_'.$_REQUEST['p'], "c+" );
-		
 		$starttime = time() ;
-		$stime = $starttime ;
-		$xtime = $stime ;
-		$timeout = 100 ;
+		$xtime = $starttime ;
+		$timeout = 100;
 		
-		while( ($xtime-$starttime)<1800 && ($xtime-$stime) < $timeout ) {
-			set_time_limit( 30 );
-			flock( $flvc, LOCK_EX ) ;		// exclusive lock
+		$flvc = fopen( $session_path.'/sess_lvc_'.$_REQUEST['p'], "c+" );
 
-			$o=false ;
-			fseek( $flvc, 0, SEEK_SET );
-			while( $line = fgets( $flvc ) ) {
-				$x = explode( ',', $line );
-				if( count( $x )>= 4 && ($xtime - $x[0]) < 30 ) {
-					echo 'c '.trim($x[1]).' '.trim($x[2]).' '.trim($x[3])."\r\n" ; 
-					$o=true ;
+		// write something to the file to force update filemtime
+		flock( $flvc, LOCK_EX ) ;
+		fseek( $flvc, 0, SEEK_END );
+		if( ftell( $flvc ) == 0 ) {
+			fwrite( $flvc, "n\n");
+			fflush( $flvc ) ;
+		}
+		flock( $flvc, LOCK_UN ) ;
+		
+		while( ($xtime-$starttime) < $timeout ) {
+			fseek( $flvc, 0, SEEK_END );
+			if( ftell( $flvc )>1 ) {
+				flock( $flvc, LOCK_EX ) ;		// exclusive lock
+
+				rewind($flvc);
+				while( $line = fgets( $flvc ) ) {
+					$x = explode( ',', $line );
+					if( count( $x )>1 && ($xtime - $x[0]) < 15 ) {
+						echo $x[1] ;
+					}
 				}
-			}
-			
-			if( $o ) {							// clean init file
+
 				ftruncate( $flvc, 0 );
 				fflush( $flvc ) ;              	// flush before release the lock
+				flock( $flvc, LOCK_UN ) ;		// unlock ;
+
+				if( ob_get_length()>0 ) {
+					ob_flush();flush();
+				}
 			}
-			flock( $flvc, LOCK_UN ) ;		// unlock ;
-			
-			if( $o ) {							// contents? flush out buffer, and clean the init file
-				break ;
+			else {
+				usleep(20000);
 			}
-	
-			usleep(50000);
 			$xtime = time() ;
 		}
 		fclose( $flvc );
 
 	}
 	else if( $_REQUEST['c'] == 'g' && !empty($_REQUEST['t']) ) {		// GET, WCURL
-		$rport = 0 ;
-		// check if dvr with phone number is ready
-		$rfilename = $session_path.'/sess_lvr_'.$_REQUEST['t'] ;
-		$rfile = fopen( $rfilename, "r" );
-		if( $rfile ) {
-			fscanf( $rfile, "%d", $rport );
-			fclose( $rfile );
-		}
-		else {
-			$rport = 0 ;
-		}
-		
-		if( $rport ) {
-			$conn = stream_socket_client("tcp://127.0.0.1:".$rport, $errno, $errstr, 30);
+		// check if connection with phone number is ready
+		$lvr = $session_path.'/sess_lvr_'.$_REQUEST['t'] ;
+		if( file_exists ( $lvr ) ) {
+			$conn = stream_socket_client("tcp://127.0.0.1:".$_REQUEST['t']);
 			if( $conn ) {
+				stream_set_timeout( $conn, 100 );
+				// message type handshake
 				fwrite( $conn, 'g' );		// Get data
-
-				$msgtype = fread( $conn, 1 ) ;
- 
-				if( $msgtype === false || strlen($msgtype) == 0 ) {
-					header( "X-Webt-Connection: close" );
-				}
-				else if( $msgtype == 'd' ) {			// data incoming
-					while( true ) {
-						$data = fread( $conn, 65536 ) ;
-						if( $data === false || strlen($data) == 0 ) {
-							break ;
-						}
-						echo $data ;
+				while( !feof($conn) ) {
+					set_time_limit( 120 );	// a bit longer than stream timeout
+					$data = net_readpack( $conn ) ;
+					if( strlen($data) == 0 ) {	// timeout or closed
+						break ;
 					}
+					echo $data ;
+					ob_flush();
+					flush();
+					stream_set_timeout( $conn, 5);
 				}
-				else if( $msgtype == 'e' ) {	// end of output data
-					// header( "X-Webt-Connection: gend" );	// GET END, *** not used, could cause webtun run into deadloop
-					
-					// wait 10 sec or until rfile removed
-					for( $d=0; $d<10; $d++ ) {
-						if( !file_exists( $rfilename ) ) {
-							header( "X-Webt-Connection: close" );
-							break;
-						}
-						sleep(1);
-					}
-				}
-				
-				fclose( $conn );
+				$conn = NULL ;
 			}
 			else {
-				header( "X-Webt-Connection: close" );
+				$lvr = '.nc.' ;
 			}
 		}
-		else {
-			header( "X-Webt-Connection: close" );
+
+		clearstatcache();
+		if( !headers_sent() && !file_exists ( $lvr ) ) {
+			header( "X-Webt-Connection: close", true, 204 );
 		}
 	}
 	else if( $_REQUEST['c'] == 'p' && !empty($_REQUEST['t']) ) {		// PUT, RCURL
-		$closed = false ;
-		$rport = 0 ;
-		// check if dvr with phone number is ready
-		$rfile = fopen( $session_path.'/sess_lvr_'.$_REQUEST['t'], "r" );
-		if( $rfile ) {
-			fscanf( $rfile, "%d", $rport );
-			fclose( $rfile );
+		if( isset( $_SERVER['CONTENT_LENGTH'] ) ) {
+			$length = (int) $_SERVER['CONTENT_LENGTH'] ;
 		}
 		else {
-			$rport = 0 ;
+			$length = 1000000000 ;		// an impossible max length
 		}
+		$lvr = $session_path.'/sess_lvr_'.$_REQUEST['t'] ;
+		// check if connection with phone number is ready
+		if( file_exists ( $lvr ) && $length > 0 ) {
 		
-		if( $rport ) {
-			$length = 500000000 ;		// an impossible max length
-			if( !empty( $_SERVER['CONTENT_LENGTH'] ) ) {
-				$length = (int) $_SERVER['CONTENT_LENGTH'] ;
-			}
-			if( $length > 0 ) {
-				$conn = stream_socket_client("tcp://127.0.0.1:".$rport, $errno, $errstr, 10);
+			$inputdata = fopen("php://input", "r");
+			if( $inputdata ) {
+				$conn = stream_socket_client("tcp://127.0.0.1:".$_REQUEST['t']);
 				if( $conn ) {
-					$inputdata = fopen("php://input", "r");
-					if( $inputdata ) {
-						// message type ($msgtype)
-						fwrite( $conn, 'd' );			// data
-						// transfer data over
-						while( $length > 0 ) {
-							$rl = $length ;
-							if( $rl > 65536 ) $rl = 65536 ;
-							$data = fread($inputdata, $rl) ;
-							if( $data === false || strlen($data)==0 ) 
-								break;
-							fwrite( $conn, $data );
-							$length -= strlen( $data );
-						}
-						fclose( $inputdata );
+					stream_set_timeout( $conn, 100 );
+					// message type handshake
+					fwrite( $conn, 'p' );		// Put data
+					// transfer data over
+					while( $length > 0 && !feof($conn) && !feof($inputdata) ) {
+						set_time_limit( 120 );
+						if( $length > 100000 )
+							$data =  fread($inputdata, 100000) ;
+						else 
+							$data =  fread($inputdata, $length) ;
+						if( $data === false || strlen($data) == 0 ) 
+							break;
+						// write packet
+						if( ! net_sendpack( $conn, $data ) )
+							break;
+						$length -= strlen($data);
 					}
-					fclose( $conn );
+					$conn = NULL ;
 				}
 				else {
-					$closed = true ;
+					$lvr = '.nc.' ;
 				}
+				fclose($inputdata);
 			}
-				
-			if( !$closed && !empty($_SERVER['HTTP_X_WEBT_CONNECTION']) && $_SERVER['HTTP_X_WEBT_CONNECTION'] == "close" ) {	// connection closed!
-				$conn = stream_socket_client("tcp://127.0.0.1:".$rport, $errno, $errstr, 10);
-				if( $conn ) {
-					// message type ($msgtype)
-					fwrite( $conn, 'e' );			// End connection
-					fclose( $conn );
-				}
-				else {
-					$closed = true ;
-				}			
-			}	
 		}
-		else {						// no listener, close connection
-			$closed = true ;
+
+		clearstatcache();
+		if( file_exists ( $lvr ) && !empty($_SERVER['HTTP_X_WEBT_CONNECTION']) && $_SERVER['HTTP_X_WEBT_CONNECTION'] == "close" ) {	// connection closed!
+			$conn = stream_socket_client("tcp://127.0.0.1:".$_REQUEST['t']);
+			if( $conn ) {
+				// message type handshake
+				fwrite( $conn, 'e' );		// End connection
+				fread($conn,1);				// wait connection closed by peer
+				$conn = NULL ;
+			}
 		}
 		
-		if( $closed ) {
-			header( "X-Webt-Connection: close" );
+		clearstatcache();
+		if( !headers_sent() && !file_exists ( $lvr ) ) {
+			header( "X-Webt-Connection: close", true, 204 );
 		}
-		header("Content-Length: 0");
 
 	}
 }
 
+return ;
 ?>

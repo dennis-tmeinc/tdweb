@@ -11,7 +11,9 @@ if( empty($session_path) ) {
 if( empty($session_idname) ) {
 	$session_idname = "touchdownid";
 }
-
+if( empty($cache_dir) || !is_dir($cache_dir) ) {
+	$cache_dir = "videocache" ;
+}
 session_save_path( $session_path );
 session_name( $session_idname );
 

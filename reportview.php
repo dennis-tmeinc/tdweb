@@ -12,7 +12,7 @@ session_save('mapfilter', array() );
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta content="Touch Down Center by TME" name="description" />
 	<meta content="Dennis Chen @ TME, 2013-05-15" name="author" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.11.0.min.js"></script><?php echo "<link href=\"https://code.jquery.com/ui/1.11.0/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?> <script src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type="text/javascript" src="https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0&s=1"></script><script src="picker.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><?php echo "<link href=\"https://code.jquery.com/ui/1.11.0/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?> <script src="https://code.jquery.com/ui/1.11.0/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type="text/javascript" src="https://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0&s=1"></script><script src="picker.js"></script>
 	<link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	.summarytable {
@@ -26,7 +26,7 @@ session_save('mapfilter', array() );
 var eventmap = null ;
 
 $(document).ready(function(){
-				
+	
 $("button").button();
 $(".btset").buttonset();
 
@@ -52,7 +52,7 @@ $("#vllist").jqGrid({
 	datatype: "json",
 	height: 380,
 	width: 768,
-    colNames:['Vehicle','Driver', 'Activity','Date-Time','Duration', 'Speed', 'Coordinates'],
+    colNames:['Vehicle','Driver', 'Activity','Date-Time','Duration', 'Speed', 'Coordinates', 'Address'],
     colModel :[ 
       {name:'vl_vehicle_name', index:'vl_vehicle_name', sortable: true, width:120}, 
       {name:'vl_driver_name', index:'vl_driver_name', width:100, sortable: true}, 
@@ -60,7 +60,8 @@ $("#vllist").jqGrid({
       {name:'vl_datetime', index:'vl_datetime', width:230, sortable: true }, 
       {name:'vl_time_len', index:'vl_time_len', width:80, sortable: true, align:'right' }, 
       {name:'vl_speed', index:'vl_speed', width:80, sortable: true, align:'right' }, 
-      {name:'vl_coordinate', index:'vl_lat', width:250, sortable: true }
+      {name:'vl_coordinate', index:'vl_lat', width:250, sortable: true, hidden: true },
+      {name:'vl_address', index:'vl_addr', width:250, sortable: false },
     ],
    	rowNum:100,
 	rowList: [20, 50, 100, 200],
@@ -124,6 +125,38 @@ $("#vllist").jqGrid({
 			}
 		}
     },
+	loadComplete: function(data){
+		if( data && data.rows ) {
+			function loadAddress( id, coor ) {
+				$.ajax({
+					url: "https://dev.virtualearth.net/REST/v1/Locations/" + coor,
+					data: {
+						includeEntityTypes: "Address",
+						maxResults : 1,
+						key : "<?php echo $map_credentials ; ?>",
+					},
+					dataType: "jsonp" ,
+					jsonp: "jsonp",
+					success: function( location ) {
+						var addr ;
+						try{
+							addr = location.resourceSets[0].resources[0].address.formattedAddress ;
+						}
+						catch( err ) {
+							addr = "(Address not available)" ;
+						}
+						finally {
+							$("#vllist").jqGrid('setCell', id, 8, addr );
+						}
+					}
+				});
+			}
+			var i ;
+			for( i in data.rows ) {
+				loadAddress( data.rows[i].id, data.rows[i].cell[6] ) ;
+			}
+		}
+	},
 	onSelectRow: function(rowid,status,e){
 		if(	$( "#eventmapdialog" ).dialog( "isOpen" ) ) {
 			update_eventmap(rowid);
@@ -392,7 +425,11 @@ function map_generate_x(mapevent, formdata)
 <body><div id="container">
 <div id="header" style="text-align: right;"><span style="color:#006400;"><span style="font-size: 14px;"><span>Welcome </span></span></span><span style="color:#2F4F4F;"><span style="font-size: 14px;margin-right:24px;"><?php echo $_SESSION['welcome_name'] ;?></span></span><span><a href="logout.php" style="background-color:#98bf21;text-decoration:none;text-align:center;"> Logout </a></span><span  id="servertime" style="color:#800080;font-size: 11px; margin-left:30px;margin-right:30px;"></span><span style="color:#B22222;"><span style="font-size: 12px;"><span>TOUCH DOWN CENTER <?php echo $_SESSION['release']; ?></span></span></span></div>
 
-<div id="lpanel"><img alt="index.php" src="res/side-TD-logo-clear.png" />
+<div id="lpanel"><?php if( empty($support_viewtrack_logo) ){ ?>
+	<img alt="index.php" src="res/side-TD-logo-clear.png" />
+<?php } else { ?> 
+	<img alt="index.php" src="res/side-VT-logo-clear.png" />
+<?php } ?>
 	<p style="text-align: center;"><span style="font-size:11px;"><a href="http://www.247securityinc.com/" style="text-decoration:none;">247 Security Inc.</a></span></p>
 <ul style="list-style-type:none;margin:0;padding:0;">
 	<li><a class="lmenu" href="dashboard.php"><img onmouseout="this.src='res/side-dashboard-logo-clear.png'" onmouseover="this.src='res/side-dashboard-logo-fade.png'" src="res/side-dashboard-logo-clear.png" /> </a></li>

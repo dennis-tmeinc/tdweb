@@ -8,195 +8,206 @@
 // Copyright 2013 Toronto MicroElectronics Inc.
 //
 
-	$noredir=1 ;
-    require 'session.php' ;
-	require_once 'vfile.php' ;
+$noredir=1 ;
+require_once 'session.php' ;
+require_once 'vfile.php' ;
 
-	header("Content-Type: video/mp4");	
+header("Content-Type: video/mp4");	
 
-	function fcmp($a, $b)
-	{
-		return $a['stat']['atime'] - $b['stat']['atime'] ;
-	}
+function fcmp($a, $b)
+{
+	return $a['stat']['atime'] - $b['stat']['atime'] ;
+}
 
-	function mp4cache_clear( $pattern )
-	{
-		$cachesize = 0 ;
-		$remaindays = 10 ;
-		$tnow = time();
-		$flist = array();
-		$cachesize = 0 ;
-		foreach( vfile_glob($pattern) as $filename) {
-			$st = vfile_stat( $filename );
-			if( $st['atime'] + 8*60*60 < $tnow ) {
-				$ft = array();
-				$ft['filename'] = $filename ;
-				$ft['stat'] = $st ;
-				$cachesize += $st['size'] ;
-				$ft['a'] = true ;
-				$flist[] = $ft ;
+function mp4cache_clear( $pattern )
+{
+	$cachesize = 0 ;
+	$remaindays = 10 ;
+	$tnow = time();
+	$flist = array();
+	$cachesize = 0 ;
+	$directory = '' ;
+	foreach( vfile_glob($pattern) as $filename) {
+		$st = vfile_stat( $filename );
+		if( $st && $st['size'] ) {
+			if( empty($directory) ) {
+				$directory = dirname($filename) ;
 			}
-		}
-		usort($flist, "fcmp");
-		
-		while( $flist && $cachesize > 2000000000 ) {
-			if( $p = array_pop( $flist ) ) {
-				vfile_unlink( $p['filename'] );
-				$cachesize -= $p['stat']['size'] ;
+			if( $st['mtime'] > $st['atime'] ) {
+				$st['atime'] = $st['mtime'] ;		// noatime fs fix
+			}
+			if( $tnow - $st['atime'] > 96*60*60 ) {
+				@vfile_unlink( $filename );
 			}
 			else {
-				break;
+				$cachesize += $st['size'] ;
+				$flist[] = array(
+					'filename' => $filename,
+					'stat' => $st ,
+					'a' => true 
+				);
 			}
 		}
 	}
-	
-	if( $logon ) {
 
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+	usort($flist, "fcmp");		
+	while( $flist && ($cachesize > 2000000000 || vfile_disk_free_space($directory) < 100000000 ) ) {
+		if( $p = array_pop( $flist ) ) {
+			@vfile_unlink( $p['filename'] );
+			$cachesize -= $p['stat']['size'] ;
+		}
+		else {
+			break;
+		}
+	}
+}
 
-		$sql = "SELECT `path` FROM videoclip WHERE `index` = $_REQUEST[index] ;" ;
+if( $logon ) {
 
-		if($result=$conn->query($sql)) {
-			if( $row=$result->fetch_array() ) {
-				$hash = md5($row['path']);
+	@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 
-				if( vfile_realpath( "/" ) == "/" ) {
-					$dirc = "/" ;
-				}
-				else {
-					$dirc = "\\" ;
-				}
+	$sql = "SELECT `path` FROM videoclip WHERE `index` = $_REQUEST[index] ;" ;
 
-				$vcachedir = "videocache" ;
-				
-				$preview_file = $vcachedir.$dirc."v".$hash.".mp4" ;
-				$preview_tmpfile = $vcachedir.$dirc."t".$hash.".mp4" ;
-				$preview_file_pattern = $vcachedir.$dirc."*.mp4" ;
-				$preview_lockfile = session_save_path().'/sess_lock'.$hash ;
-				
-				if( vfile_size( $preview_file ) < 100 ) {
-				
-					// exclude other process do the converting
-					$lockf = fopen( $preview_lockfile, "c" );
-					if( $lockf ) {
-						flock( $lockf, LOCK_EX ) ;		// exclusive lock
+	if($result=$conn->query($sql)) {
+		if( $row=$result->fetch_array() ) {
+			$hash = md5($row['path']);
 
-						if( !vfile_exists( $preview_file ) ) {
-							// clear cache
-							mp4cache_clear( $preview_file_pattern ) ;
-							
-							// convert
-							set_time_limit(200) ;
-							$cmdline = "bin\\ffmpeg.exe -i ".$row['path']." -y -codec:v copy ".$preview_tmpfile ;
+			if( vfile_realpath( "/" ) == "/" ) {
+				$dirc = "/" ;
+			}
+			else {
+				$dirc = "\\" ;
+			}
+
+			$preview_file = $cache_dir.$dirc."v".$hash.".mp4" ;
+			$preview_tmpfile = $cache_dir.$dirc."t".$hash.".mp4" ;
+			$preview_file_pattern = $cache_dir.$dirc."*" ;
+			$preview_lockfile = session_save_path().'/sess_lock'.$hash ;
+			
+			if( vfile_size( $preview_file ) < 100 ) {
+			
+				// exclude other process do the converting
+				$lockf = fopen( $preview_lockfile, "c" );
+				if( $lockf ) {
+					flock( $lockf, LOCK_EX ) ;		// exclusive lock
+
+					if( !vfile_exists( $preview_file ) ) {
+						// clear cache
+						mp4cache_clear( $preview_file_pattern ) ;
 						
-							vfile_exec( $cmdline );
-							vfile_rename( $preview_tmpfile, $preview_file );
-						}
-
-						flock( $lockf, LOCK_UN ) ;		// unlock ;
-						fclose( $lockf );
+						// convert
+						set_time_limit(200) ;
+						$cmdline = "bin\\ffmpeg.exe -i ".$row['path']." -y -codec:v copy ".$preview_tmpfile ;
+					
+						vfile_exec( $cmdline );
+						vfile_rename( $preview_tmpfile, $preview_file );
 					}
-	
-				}
-				else {
-					// lock file are safe to be removed
-					if( file_exists( $preview_lockfile ) ) 
-						unlink( $preview_lockfile );
+
+					flock( $lockf, LOCK_UN ) ;		// unlock ;
+					fclose( $lockf );
 				}
 
-				if( !empty( $preview_file ) ) {
-					$vstat = vfile_stat( $preview_file ) ;
+			}
+			else {
+				// lock file are safe to be removed
+				if( file_exists( $preview_lockfile ) ) 
+					unlink( $preview_lockfile );
+			}
+
+			if( !empty( $preview_file ) ) {
+				$vstat = vfile_stat( $preview_file ) ;
+			}
+
+			// enable cache 
+			if( !empty($vstat['mtime']) ) {
+				$expires=24*3600;		// expired in 1 day
+				header('Cache-Control: public, max-age='.$expires);
+				$lastmodtime = gmdate('D, d M Y H:i:s ', $vstat['mtime']).'GMT';
+				$etag = hash('md5', $hash.$vstat['mtime'].$vstat['size'] );
+				header('Expires: '.gmdate('D, d M Y H:i:s ', $_SERVER['REQUEST_TIME']+$expires).'GMT');
+				if( (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH']==$etag ) ) {
+					header("HTTP/1.1 304 Not Modified");
+					die;
 				}
-	
-				// enable cache 
-				if( !empty($vstat['mtime']) ) {
-					$expires=24*3600;		// expired in 1 day
-					header('Cache-Control: public, max-age='.$expires);
-					$lastmodtime = gmdate('D, d M Y H:i:s ', $vstat['mtime']).'GMT';
-					$etag = hash('md5', $hash.$vstat['mtime'].$vstat['size'] );
-					header('Expires: '.gmdate('D, d M Y H:i:s ', $_SERVER['REQUEST_TIME']+$expires).'GMT');
-					if( (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH']==$etag ) ) {
-						header("HTTP/1.1 304 Not Modified");
-						die;
-					}
-					header('Etag: '.$etag);
-					header('Last-Modified: '.$lastmodtime);
+				header('Etag: '.$etag);
+				header('Last-Modified: '.$lastmodtime);
+			}
+			
+			if( $f = vfile_open( $preview_file ) ) {
+				header( "Accept-Ranges: bytes" );
+				vfile_seek( $f, 0, SEEK_END );
+				$fs = vfile_tell( $f );
+				if( empty( $mp4preloadsize ) ) {
+					$mp4preloadsize = 102400 ;		// 100 K
 				}
 				
-				if( $f = vfile_open( $preview_file ) ) {
-					header( "Accept-Ranges: bytes" );
-					vfile_seek( $f, 0, SEEK_END );
-					$fs = vfile_tell( $f );
-					if( empty( $mp4preloadsize ) ) {
-						$mp4preloadsize = 102400 ;		// 100 K
-					}
-					
-					$partial = false ;
+				$partial = false ;
 
-					if( !empty( $_SERVER['HTTP_RANGE'] ) ) {
-						$range = sscanf($_SERVER['HTTP_RANGE'] , "bytes=%d-%d");
-						if( empty($range[1]) ) {
-							// max len
-							$lastpos = $fs - 1 ;
-						}
-						else {
-							$lastpos = $range[1] ;
-						}
-						$offset = $range[0] ;
-						if( $offset<0 ) $offset = 0 ;
-						$len = $lastpos + 1 - $offset ;
-						$partial = true ;
+				if( !empty( $_SERVER['HTTP_RANGE'] ) ) {
+					$range = sscanf($_SERVER['HTTP_RANGE'] , "bytes=%d-%d");
+					if( empty($range[1]) ) {
+						// max len
+						$lastpos = $fs - 1 ;
 					}
 					else {
-						$len = $fs ;
-						$offset = 0 ;
-						// only to output partial contents
-						if( $len > $mp4preloadsize ) {
-							$len = $mp4preloadsize ;
-							$partial = true ;
-						}
+						$lastpos = $range[1] ;
 					}
+					$offset = $range[0] ;
+					if( $offset<0 ) $offset = 0 ;
+					$len = $lastpos + 1 - $offset ;
+					$partial = true ;
+				}
+				else {
+					$len = $fs ;
+					$offset = 0 ;
+					// only to output partial contents
+					if( $len > $mp4preloadsize ) {
+						$len = $mp4preloadsize ;
+						$partial = true ;
+					}
+				}
 
-					if( $len>0 ) {
-						if( $partial ){
-							if( $len > 256*1024 ) {
-								$len = 256*1024 ;
-							}
-							$lastpos = $offset + $len - 1 ;	
-							header("Content-Length: $len" );
-							header( sprintf("Content-Range: bytes %d-%d/%d", $offset, $lastpos, $fs ));
-							header( "HTTP/1.1 206 Partial Content" );
+				if( $len>0 ) {
+					if( $partial ){
+						if( $len > 256*1024 ) {
+							$len = 256*1024 ;
 						}
-						
-						// header("Connection: close");
-						vfile_seek( $f, $offset );
-
-						while( $len > 0 ) {
-							set_time_limit(30);
-							
-							usleep(200000);				// throttle download speed
-
-							$r = $len ;
-							if( $r > 256*1024 ) {
-								$r = 256*1024 ;
-							}
-							$da = vfile_read( $f, $r ) ;
-							if( strlen( $da ) > 0 ) {
-								echo $da ;
-								if( connection_aborted () ) break;
-								$len -= $r ;
-							}
-							else {
-								break;
-							}
-						}
+						$lastpos = $offset + $len - 1 ;	
+						header("Content-Length: $len" );
+						header( sprintf("Content-Range: bytes %d-%d/%d", $offset, $lastpos, $fs ));
+						header( "HTTP/1.1 206 Partial Content" );
 					}
 					
-					vfile_close( $f );
+					// header("Connection: close");
+					vfile_seek( $f, $offset );
+
+					while( $len > 0 ) {
+						set_time_limit(30);
+						
+						usleep(200000);				// throttle download speed
+
+						$r = $len ;
+						if( $r > 256*1024 ) {
+							$r = 256*1024 ;
+						}
+						$da = vfile_read( $f, $r ) ;
+						if( strlen( $da ) > 0 ) {
+							echo $da ;
+							if( connection_aborted () ) break;
+							$len -= $r ;
+						}
+						else {
+							break;
+						}
+					}
 				}
+				
+				vfile_close( $f );
 			}
-			$result->free();
 		}
-		$conn->close();
+		$result->free();
 	}
+	$conn->close();
+}
+exit ;
 ?>

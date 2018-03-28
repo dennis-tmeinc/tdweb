@@ -227,6 +227,52 @@ function vfile_basename( $filename )
 	return basename( $filename );
 }
 
+// get disk free space
+function vfile_disk_free_space( $directory ) 
+{
+	if( vfile_remote() ) {
+		// remote file
+		$j = vfile_http_post( array( 
+			'c' => "disk",
+			'n' => $directory 
+		));
+		@$jd = json_decode( $j, true );
+		if( !empty( $jd['res'] ) && !empty($jd['free']) ) {
+			return $jd['free'] ;
+		}
+		else {
+			return false ;
+		}
+	}
+	else {
+		// local file
+		return disk_free_space( $directory );
+	}
+}
+
+// get disk total space
+function vfile_disk_total_space( $directory ) 
+{
+	if( vfile_remote() ) {
+		// remote file
+		$j = vfile_http_post( array( 
+			'c' => "disk",
+			'n' => $directory 
+		));
+		@$jd = json_decode( $j, true );
+		if( !empty( $jd['res'] ) && !empty($jd['total']) ) {
+			return $jd['total'] ;
+		}
+		else {
+			return false ;
+		}
+	}
+	else {
+		// local file
+		return disk_total_space( $directory ) ;
+	}	
+}
+
 function vfile_glob( $filename )
 {
 	if( vfile_remote() ) {

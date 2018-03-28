@@ -142,7 +142,7 @@
 				$grid['rows'][] = array(
 						"id" => $row[0],
 						"cell" => array( 
-							$row[1], $row[9], vl_icon( $row ), $row[2], "$h:$m:$s", (string)round($row[7]/ 1.609334 , 1), $row[5].",".$row[6] 
+							$row[1], $row[9], vl_icon( $row ), $row[2], "$h:$m:$s", (string)round($row[7]/ 1.609334 , 1), $row[5].",".$row[6] ,""
 						) );
 			}
 			$result->free();

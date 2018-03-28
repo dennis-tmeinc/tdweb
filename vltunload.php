@@ -11,6 +11,8 @@
     require 'session.php' ;
 	header("Content-Type: application/json");
 
+	ignore_user_abort();
+	
 	if( $logon ) {
 
 		// success
