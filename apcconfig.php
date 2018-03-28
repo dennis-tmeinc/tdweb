@@ -1,6 +1,0 @@
-<?php
-	
-	$apcvar="apcvar" ;
-	
-	return ;
-?>	

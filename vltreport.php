@@ -43,12 +43,16 @@
 					for( $i=0; $i<count($vlt['events']); $i++ ) {
 						$vdata = $vlt['events'][$i] ;
 						if( !empty( $vdata['command'] )) {
-							if( $vdata['command'] == 23 ) {		// AVL_DVR_LIST(23)
+							if( $vdata['command'] == 23 ) {			// AVL_DVR_LIST(23)
 								if( !empty( $vdata['avlp']['list']['item'] ) ) {
 									for( $ii = 0; $ii<count($vdata['avlp']['list']['item']); $ii++) {
 										$phone = $vdata['avlp']['list']['item'][$ii]['phone'] ;
 										if( !empty( $phone ) ) {
-											file_get_contents("http://tdlive.darktech.org/vlt/vltreg.php?p=$phone&u=$script") ;
+											$ctx = stream_context_create(array(
+											  'http' => array
+											  ( 'method' => 'GET', 'timeout' => 0.2 )
+										    ));
+											@file_get_contents("http://tdlive.darktech.org/vlt/vltreg.php?p=$phone&u=$script", false, $ctx ) ;
 										}
 									}
 								}
@@ -56,7 +60,11 @@
 							else if( $vdata['command'] == 20 ) { // AVL_IP_REPORT(20)
 								if( !empty( $vdata['avlp']['phone'] ) ) {
 									$phone = $vdata['avlp']['phone'] ;
-									file_get_contents("http://tdlive.darktech.org/vlt/vltreg.php?p=$phone&u=$script") ;
+									$ctx = stream_context_create(array(
+									  'http' => array
+									  ( 'method' => 'GET', 'timeout' => 0.5 )
+									));
+									@file_get_contents("http://tdlive.darktech.org/vlt/vltreg.php?p=$phone&u=$script", false, $ctx ) ;
 								}
 							}
 							$tdwebc[] = $vdata ;

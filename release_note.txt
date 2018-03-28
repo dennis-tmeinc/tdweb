@@ -1,6 +1,9 @@
 Touch Down Center 
 Release Notes
 
+V3.7.12 (2014-05-02) (by Dennis)
+	Decrease live setup register timeout to 0.2 seconds
+
 V3.7.12 (2014-04-24) (by Dennis)
 	Fix save live track configure max_count, max_bytes to new defined fields on table 'vlt_config'
 	On display live track route event icon, speed value have higher priortiy then stop arm status. 
