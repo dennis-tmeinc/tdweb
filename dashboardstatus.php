@@ -154,6 +154,24 @@ function load_dashboard()
 load_dashboard();		
 //setInterval(load_dashboard,300000);
 
+$("#mss_status").jqGrid({        
+    scroll: true,
+	url:'dashboardmssgrid.php',
+	datatype: "json",		
+	height: 300,
+	width: 750,
+    colNames:['MSS id','Connection', 'HDD Status','SD1 Status','SD2 Status', 'Access Point Status'],
+    colModel :[ 
+      {name:'mss_id', index:'mss_id', width:180 }, 
+      {name:'mss_connection', index:'mss_connection', width:120 }, 
+      {name:'mss_hdd', index:'mss_hdd', width:120 }, 
+      {name:'mss_sd1', index:'mss_sd1', width:120 }, 
+      {name:'mss_sd2', index:'mss_sd2', width:120}, 
+      {name:'mss_ap', index:'mss_ap', width:120 } 
+    ],
+	rownumbers: true,
+});
+
 $("#list_Vehicles_In_Service").jqGrid({        
 	scroll: true,
 	datatype: "local",
@@ -245,6 +263,42 @@ $("#list_system_alerts").jqGrid({
 	}
 });	
 
+$("#list_solo_alerts").jqGrid({        
+	scroll: true,
+	url:'dashboardsoloalertsgrid.php',
+	datatype: "json",	
+	height: 240,
+	width: 600,
+	colNames:['Vehicle Name','Description', 'Alert Code', 'Alert Time'],
+	colModel :[ 
+	  {name:'dvr_name', width:120, sortable: false, }, 
+	  {name:'description', width:300, sortable: false }, 
+	  {name:'alert_code', width:130, sortable: false }, 
+	  {name:'date_time', width:180, sortable: true } 
+	],
+	sortname: 'date_time',
+    sortorder: 'desc',
+	rownumbers: true,
+	onSelectRow: function(id){ 
+		var vname = $("#list_solo_alerts").jqGrid('getCell',id, 1) ;
+		showHistory( vname );
+	}
+});	 
+
+$("div#dialog_solo_alerts").dialog({
+	autoOpen: false,
+	width:"auto",
+	modal: true,
+	open: function( event, ui ) {
+		$("#list_solo_alerts").trigger("reloadGrid");
+	},
+	buttons:{
+		"Close": function() {
+			$( this ).dialog( "close" );
+		}
+	}
+});
+
 $("#list_alert_history").jqGrid({        
 	scroll: true,
 	url:'dashboardalerthistorygrid.php',
@@ -306,15 +360,15 @@ $(".sum_circle").click(function(){
 	$("div.listgrid#"+dialogid).show();
 	$("div#diaglog_list").dialog("option", {title:$("div.listgrid#"+dialogid).attr("title") });
 	$("div#diaglog_list").dialog("open");
-					
 });
 
-$("td.system_alert").click(function(){
-	$(".listgrid").hide();
-	$("div.listgrid#system_alerts").show();
+$("td.system_alert").css( 'cursor', 'pointer' );
+$("td.sum_circle").css( 'cursor', 'pointer');
 
-	$("div#diaglog_list").dialog("option", {title:"System Alerts" });
-	$("div#diaglog_list").dialog("open");
+$("td.system_alert").click(function(e){
+	$("#list_solo_alerts").setGridParam( {url: "dashboardsoloalertsgrid.php?alertcode="+$(e.target).attr("alertcode"), page: 1} );
+	$("div#dialog_solo_alerts").dialog("option", {title: $(e.target).text() });
+	$("div#dialog_solo_alerts").dialog("open");
 });
 
 $( "#status_type" ).buttonset();
@@ -322,16 +376,23 @@ $( "#status_type" ).buttonset();
 $( "input[name='status_type']" ).change(function() {
 	if( $( "input#status_simple" ).prop("checked") ) {
 		$("div#summary_simple").show("slow");
+		$("div#summary_mss").hide("slow");
 		$("div#summary_advance").hide("slow");
 	}
-	else {
+	else if( $( "input#status_mss" ).prop("checked") ) {
 		$("div#summary_simple").hide("slow");
+		$("div#summary_mss").show("slow");
+		$("div#summary_advance").hide("slow");
+	}	
+	else if( $( "input#status_advanced" ).prop("checked") ){
+		$("div#summary_simple").hide("slow");
+		$("div#summary_mss").hide("slow");
 		$("div#summary_advance").show("slow");
 	}
 }).change();
 
+$("div#summary_mss").hide();
 $("div#summary_advance").hide();
-
 		
 $("#rcontainer").show('slow');	
 });
@@ -431,19 +492,26 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 <table id="list_system_alerts"></table> 
 </div>
 </div>
+<div id="dialog_solo_alerts" title="Alerts" >
+<table id="list_solo_alerts"></table> 
+</div>
 <div id="diaglog_alert_history">
 <table id="list_alert_history"></table> 
 </div>
-
 
 <h4><?php echo $title_type; ?>Status Summary</h4> 
 
 <form>
 <div id="status_type">
 <input type="radio" id="status_simple" name="status_type" checked="checked"/><label for="status_simple">Simple</label>
+<input type="radio" id="status_mss" name="status_type" /><label for="status_mss">MSS</label>
 <input type="radio" id="status_advanced" name="status_type" /><label for="status_advanced">Advanced</label>
 </div>
 </form>
+
+<div id="summary_mss">
+<table id="mss_status"></table> 
+</div>
 
 <div id="summary_simple">
 <table border="1" class="summarytable" id="summary_table">
@@ -456,25 +524,35 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 	</thead>
 	<tbody style="font-size:20px;" >
 		<tr>
-			<td class="system_alert" >Connection Alerts</td>
-			<td class="system_alert" style="text-align: right; background-color: rgb(204, 255, 255);" id="Connection_Alerts_day" ></td>
-			<td class="system_alert" style="text-align: right; background-color: rgb(255, 204, 255);" id="Connection_Alerts_avg" ></td>
+			<td class="system_alert" alertcode="3"  >Connection Alerts</td>
+			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Connection_Alerts_day" ></td>
+			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Connection_Alerts_avg" ></td>
 		</tr>
 		<tr>
-			<td class="system_alert" >Camera Alerts</td>
-			<td class="system_alert" style="text-align: right; background-color: rgb(204, 255, 255);" id="Camera_Alerts_day" ></td>
-			<td class="system_alert" style="text-align: right; background-color: rgb(255, 204, 255);" id="Camera_Alerts_avg" ></td>
+			<td class="system_alert" alertcode="4" >Camera Alerts</td>
+			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Camera_Alerts_day" ></td>
+			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Camera_Alerts_avg" ></td>
 		</tr>
 		<tr>
-			<td class="system_alert" >Recording Alerts</td>
-			<td class="system_alert" style="text-align: right; background-color: rgb(204, 255, 255);" id="Recording_Alerts_day"></td>
-			<td class="system_alert" style="text-align: right; background-color: rgb(255, 204, 255);" id="Recording_Alerts_avg"></td>
+			<td class="system_alert" alertcode="5"  >Recording Alerts</td>
+			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Recording_Alerts_day"></td>
+			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Recording_Alerts_avg"></td>
 		</tr>
 		<tr>
-			<td class="system_alert" >System Reset Alerts</td>
-			<td class="system_alert" style="text-align: right; background-color: rgb(204, 255, 255);" id="System_Reset_Alerts_day"></td>
-			<td class="system_alert" style="text-align: right; background-color: rgb(255, 204, 255);" id="System_Reset_Alerts_avg"></td>
+			<td class="system_alert" alertcode="8" >System Reset Alerts</td>
+			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="System_Reset_Alerts_day"></td>
+			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="System_Reset_Alerts_avg"></td>
 		</tr>
+		<tr>
+			<td class="system_alert" alertcode="7" >Partial Storage Failure</td>
+			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Partial_Storage_Failure_day"></td>
+			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Partial_Storage_Failure_avg"></td>
+		</tr>		
+		<tr>
+			<td class="system_alert" alertcode="11" >Panic Alerts</td>
+			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Panic_Alerts_day"></td>
+			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Panic_Alerts_avg"></td>
+		</tr>		
 	</tbody>
 </table>
 </div>
@@ -506,33 +584,33 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 			<td style="font-size:12px;">Operating Hours</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Operating_Hours_day" ></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Operating_Hours_avg" ></td>
-			<td class="system_alert" style="font-size:12px;">Connection Alerts</td>
-			<td class="system_alert" style="text-align: right; background-color: rgb(204, 255, 255);" id="Connection_Alerts_day" ></td>
-			<td class="system_alert" style="text-align: right; background-color: rgb(255, 204, 255);" id="Connection_Alerts_avg" ></td>
+			<td class="system_alert" alertcode="3" style="font-size:12px;">Connection Alerts</td>
+			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Connection_Alerts_day" ></td>
+			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Connection_Alerts_avg" ></td>
 		</tr>
 		<tr>
 			<td style="font-size:12px;">Distance Travelled</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Distance_Travelled_day" ></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Distance_Travelled_avg" ></td>
-			<td class="system_alert" style="font-size:12px;">Camera Alerts</td>
-			<td class="system_alert" style="text-align: right; background-color: rgb(204, 255, 255);" id="Camera_Alerts_day" ></td>
-			<td class="system_alert" style="text-align: right; background-color: rgb(255, 204, 255);" id="Camera_Alerts_avg" ></td>
+			<td class="system_alert" alertcode="4" style="font-size:12px;">Camera Alerts</td>
+			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Camera_Alerts_day" ></td>
+			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Camera_Alerts_avg" ></td>
 		</tr>
 		<tr>
 			<td style="font-size:12px;">Vehicles Checked-In</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Vehicles_Checkedin_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Vehicles_Checkedin_avg"></td>
-			<td class="system_alert" style="font-size:12px;">Recording Alerts</td>
-			<td class="system_alert" style="text-align: right; background-color: rgb(204, 255, 255);" id="Recording_Alerts_day"></td>
-			<td class="system_alert" style="text-align: right; background-color: rgb(255, 204, 255);" id="Recording_Alerts_avg"></td>
+			<td class="system_alert" alertcode="5" style="font-size:12px;">Recording Alerts</td>
+			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Recording_Alerts_day"></td>
+			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Recording_Alerts_avg"></td>
 		</tr>
 		<tr>
 			<td style="font-size:12px;">Vehicles Uploaded</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Vehicles_Uploaded_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Vehicles_Uploaded_avg"></td>
-			<td class="system_alert" style="font-size:12px;">System Reset Alerts</td>
-			<td class="system_alert" style="text-align: right; background-color: rgb(204, 255, 255);" id="System_Reset_Alerts_day"></td>
-			<td class="system_alert" style="text-align: right; background-color: rgb(255, 204, 255);" id="System_Reset_Alerts_avg"></td>
+			<td class="system_alert" alertcode="8" style="font-size:12px;">System Reset Alerts</td>
+			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="System_Reset_Alerts_day"></td>
+			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="System_Reset_Alerts_avg"></td>
 		</tr>
 		<tr>
 			<td style="font-size:12px;">Hours Of Video</td>
@@ -554,10 +632,18 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 			<td style="font-size:12px;">G-Force Alerts</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="GForce_Alerts_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="GForce_Alerts_avg"></td>
+			<td class="system_alert" alertcode="7" style="font-size:12px;">Partial Storage Failure</td>
+			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Partial_Storage_Failure_day"></td>
+			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Partial_Storage_Failure_avg"></td>
+		</tr>
+		<tr>
+			<td class="system_alert" alertcode="11" style="font-size:12px;">Panic Alerts</td>
+			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Panic_Alerts_day"></td>
+			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Panic_Alerts_avg"></td>
 			<td style="font-size:12px;"></td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="NNDEF_Alerts_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="UNDEF_Alerts_day"></td>
-		</tr>
+		</tr>		
 	</tbody>
 </table>
 

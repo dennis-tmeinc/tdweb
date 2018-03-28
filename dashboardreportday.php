@@ -13,6 +13,21 @@
 	
 	if( $logon ) {
 
+		// td_alert codes
+		/*
+			1: video_uploaded, 
+			2: temperature, 
+			3: fail_login, 
+			4: video_lost, 
+			5: storage fail, 
+			6: rtc error, 
+			7: partial storage fail,
+			8: system reset, 
+			9: ignition on 
+			10: ignition off
+			11: panic alert
+		*/
+
 		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		$sql = "select now();" ;
 		$reqdate = new DateTime() ;
@@ -235,7 +250,6 @@
 		}
 
 		// Camera Alerts
-
 		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = 4 AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
 		$result=$conn->query($sql);
 		if( $result ){
@@ -351,7 +365,49 @@
 			}
 			$result->free();
 		}
+		
+		
+		// Partial Storage Alerts
+		$alert_code = 7 ;
+		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = $alert_code AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['Partial_Storage_Failure_day']=$row[0] ;
+			}
+			$result->free();
+		}
 
+		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = $alert_code AND date_time BETWEEN  '$date_avg' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['Partial_Storage_Failure_avg']=round( ($row[0])/($dashboard_option['nAverageDuration']), 2) ;
+			}
+			$result->free();
+		}
+
+		
+		// Panic Alerts
+		$alert_code = 11 ;
+		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = $alert_code AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['Panic_Alerts_day']=$row[0] ;
+			}
+			$result->free();
+		}
+
+		$sql = "SELECT count(*) FROM `td_alert` WHERE alert_code = $alert_code AND date_time BETWEEN  '$date_avg' AND '$date_end' ;";
+		$result=$conn->query($sql);
+		if( $result ){
+			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+				$resp['report']['Panic_Alerts_avg']=round( ($row[0])/($dashboard_option['nAverageDuration']), 2) ;
+			}
+			$result->free();
+		}
+		
 		$resp['res'] = 1 ;
 		
 		$conn->close();

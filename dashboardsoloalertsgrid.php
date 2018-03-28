@@ -1,10 +1,10 @@
 <?php
-// dashboardalerthistorygrid.php -  get dashboard report alert history (grid data) (td health feature)
+// dashboardsoloalertsgrid.php - get dashboard report on solo alerts list (grid data)
 // Requests:
 //             
 // Return:
 //      JSON object, (contain event list)
-// By Dennis Chen @ TME	 - 2015-02-25
+// By Dennis Chen @ TME	 - 2016-06-02
 // Copyright 2015 Toronto MicroElectronics Inc.
 
     require_once 'session.php' ;
@@ -14,14 +14,47 @@
 	if( $logon ) {
 
 		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-				
-		$resp['report']=array();
-		
-		$filter = "" ;
-		if( !empty( $_REQUEST["vehicle"] ) ) {
-			$filter = " WHERE dvr_name = '$_REQUEST[vehicle]' " ;
+		$sql = "select now();" ;
+		$reqdate = new DateTime() ;
+		// use mysql time instead if possible
+		if($result=$conn->query($sql)) {
+			if( $row=$result->fetch_array() ) {
+				$reqdate = new DateTime( $row[0] );
+			}
+			$result->free();
 		}
+		if( strstr($_SESSION['dashboardpage'], 'dashboardmorning') ) {		// dashboard morning?
+			$reqdate->sub(new DateInterval('P1D'));
+		}
+
+		// dashboard options
+		$dashboard_option = parse_ini_string( vfile_get_contents( $dashboard_conf ) ) ;
 		
+		// default value
+		if( empty( $dashboard_option ) ) $dashboard_option =  array(
+			'tmStartOfDay' => '3:00'
+		);
+		
+		if( empty( $dashboard_option['tmStartOfDay'] ) || $dashboard_option['tmStartOfDay'] == 'n/a' ) {
+			$dashboard_option['tmStartOfDay'] = '0:00' ;
+		}
+				
+		// time ranges
+		@$date_begin = new DateTime( $dashboard_option['tmStartOfDay'] );
+		if( empty($date_begin) ) {
+			$date_begin = new DateTime( "03:00:00" );
+		}
+
+		$date_begin = new DateTime( $reqdate->format('Y-m-d ').$date_begin->format('H:i:s') );
+		$date_begin = $date_begin->format('Y-m-d H:i:s');
+		$date_end = new DateTime( $date_begin );
+		$date_end->add(new DateInterval('P1D'));
+		$date_end = $date_end->format('Y-m-d H:i:s');
+
+		$resp['report']=array();
+	
+		$filter = " WHERE alert_code = $_REQUEST[alertcode] AND date_time BETWEEN '$date_begin' AND '$date_end' ";
+
 		// get total records	
 		$sql="SELECT count(*) FROM td_alert $filter ;" ;
 		$records = 0 ;
@@ -31,16 +64,19 @@
 			}
 			$result->free();
 		}
-		
+
 		$grid=array( 
 			"records" => $records,
 			"total" => ceil($records/$_REQUEST['rows']),
 			"page" => $_REQUEST['page'] ,
 			"rows" => array()  );
+		
+		$grid['filter'] = $sql ;
 			
 		if( $grid['page'] > $grid['total'] ) {
 			$grid['page']=$grid['total'] ;
 		}
+		if( $grid['page'] < 1 ) $grid['page'] = 1 ;
 		$start = $_REQUEST['rows'] * ($grid['page']-1) ;
 			
 		$alert_code = array(
@@ -60,6 +96,8 @@
 
 		$sql="SELECT `index`, `dvr_name`, `description`, `alert_code`, `date_time` FROM td_alert $filter ORDER BY $_REQUEST[sidx] $_REQUEST[sord] LIMIT $start, $_REQUEST[rows] ;";
 		
+		$grid['query'] = $sql ;
+		
 		if( $result=$conn->query($sql) ) {
 			while( $row=$result->fetch_array() ) {
 				if( $row[3]>0 && $row[3]<12 ) {
@@ -78,4 +116,5 @@
 	else {
 		echo json_encode( $resp );
 	}
+		
 ?>
