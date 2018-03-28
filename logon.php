@@ -3,26 +3,9 @@
 <head><?php 
 require_once 'config.php';
 
-$xt = time();
-// clean old session files
-if( is_dir($session_path) ) {
-  // clean older session files
-  foreach (glob($session_path . "/sess_*") as $filename) {
-  	 if (filemtime($filename) + (48*60*60) < $xt || filesize($filename)<=0 ) {
-       @unlink($filename);
-     }
-  }
-}
-else {
-   mkdir($session_path) ;
-}
-
-require 'sessionstart.php' ;
-	
 // ui
-$ui_theme=$default_ui_theme ;
-if( !empty($_SESSION['ui']))
-	$ui_theme = $_SESSION['ui'] ;
+if( !empty($_COOKIE['ui']))
+	$default_ui_theme = $_COOKIE['ui'] ;
 
 ?>
 	<title>Touch Down Center</title>
@@ -31,7 +14,7 @@ if( !empty($_SESSION['ui']))
 	<meta name="author" content="Dennis Chen @ TME, 2013-06-15">	
 	<link rel="shortcut icon" href="/favicon.ico" />
 	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-	<link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" /><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script>
+	<link href="http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css" rel="stylesheet" type="text/css" /><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script>
 (window.jQuery || document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>'));</script>
 	<script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script><script src="md5min.js"></script>
 	<style> body { display:none; } </style>
@@ -42,11 +25,11 @@ $(document).ready(function(){
 
 $("button").button();
 
-function gencnonce()
+function gencnonce(bits)
 {
   var hexch = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ " ;
   var output = "" ;
-  for( var i=0; i<64; i++ ) {
+  for( var i=0; i<bits; i++ ) {
 	  output += hexch.charAt(Math.random()*62);
   }
   return output ;
@@ -80,10 +63,11 @@ $("form").submit(function(e){
 	e.preventDefault();
 	var userid=$("#userid").val();
 	wait(1);
-	$.getJSON('signuser.php', { user: userid }, function(data) {
+	var nonce = gencnonce(10);
+	$.getJSON('signuser.php', { user: userid, n: nonce }, function(data) {
 		wait(0);
 		if( data.res == 1 && data.user.toLowerCase() == userid.toLowerCase() ) {
-		  var vcnonce=gencnonce();
+		  var vcnonce=gencnonce(64);
 		  var ha1 ;
 		  if( data.keytype==0 ){
 		  ha1 = hex_md5(data.user+":"+data.slt+":"+pwdEncode($("#password").val())) ;

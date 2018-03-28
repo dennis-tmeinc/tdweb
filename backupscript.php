@@ -36,6 +36,12 @@
 	$progresstotal = 1 ;
 	if( $result = $conn->query($sql) ) {
 		while( $row = $result->fetch_array() ) {
+			if( $row['Engine'] == 'MEMORY' ) {	// don't backup memory tables
+				continue ;
+			}
+			if( strncasecmp( $row['Name'], '_tmp_', 5)==0 ) {	// don't backup temporary tables
+				continue ;
+			}
 			$tables[]=$row;
 			$progresstotal += 5 + $row['Rows'] ;
 		}

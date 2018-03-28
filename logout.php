@@ -1,10 +1,10 @@
-<!DOCTYPE html>
-<html>
-<head><?php 
-require 'sessionstart.php' ;
-unset($_SESSION['user']);
+<?php 
+require 'session.php' ;
+session_save( 'user', '' );
 header("Location: logon.php");
-?>
+?><!DOCTYPE html>
+<html>
+<head>
 	<title>Touch Down Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta http-equiv="REFRESH" content="0;url=logon.php">

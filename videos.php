@@ -1,27 +1,37 @@
 <!DOCTYPE html>
 <html>
 <head><?php 
-require 'config.php' ; 
 require 'session.php'; 
+session_save('lastpage', $_SERVER['REQUEST_URI'] );
+
 // MySQL connection
 if( $logon ) {
 	@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 }
 // clear video filter
-unset($_SESSION['videofilter']);
-session_write();
+session_save('videofilter','');
 	
 ?>
 	<title>Touch Down Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">
 	<meta name="author" content="Dennis Chen @ TME, 2013-05-24">		
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.9.1.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.9.1.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
 	<link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
       #search {
         font-size:20px;
       }
+	  
+select#webplay_camera {
+	min-width: 100px ;
+    border-radius: 4px;
+    box-shadow: 1px 1px 5px #cfcfcf inset;
+    border: 1px solid #cfcfcf;
+    vertical-align: middle;
+}
+
+	  
 	</style>
 	<script>
 // start up 
@@ -45,6 +55,9 @@ function touchdownalert()
 			$("#servertime").text(resp.time);
 			setTimeout(touchdownalert,60000);
 		}
+		else {
+			window.location.assign("logout.php");
+		}		
 	});
 }
 touchdownalert();
@@ -158,34 +171,154 @@ $("select[name='groups[]']").change(function(e){
 	$("select[name='vehicles[]'] option").prop("selected",false);
 });
 
-var tablerequest ;
-function loadtable()
-{
+$('#videosearchform').submit(function() {
+	var tablerequest=$(this).serialize();
 	$.getJSON("videosearch.php", tablerequest, function(vclips){
 		$("#videolist").clearGridData().trigger("reloadGrid");
 	}).fail(function(jqXHR, textStatus) { 
 		console.log( "error" ); 
 	});
-}
-
-$('#videosearchform').submit(function() {
-	tablerequest=$(this).serialize();
-	loadtable();
 	return false ;
 });
 
-$('#formplayvideo').submit(function(e) {
+if( navigator.platform == 'Win32' || navigator.platform == 'Win64' )  {
+	$("button#playvideo").click(function(e){
+		e.preventDefault();
+		var id=$("#videolist").jqGrid('getGridParam','selrow') ;
+		if( id == null ) {
+			alert("Please select one video clip!");
+			return ;
+		}
+		$("#formplayvideo input[name='index']").val(id);
+		$("#formplayvideo input[name='vehicle_name']").val($("#videolist").getCell(id,1));
+		$('#formplayvideo').submit();
+	});
+}
+else {
+	$("button#playvideo").hide();
+	$("#playsync").hide();
+	$("#downloadplayer").hide();	
+}
+
+$("#playsync").button();
+$("#downloadplayer").button();
+
+var webplayser=1 ;
+var webplay_clip ;
+
+function webplay_play()
+{
+	var clipinfo = $( "video#webplay" ).data("clipinfo") ;
+	$( ".tdcdialog#dialog_webplay" ).dialog("option", "title", clipinfo.filename );
+	$( "video#webplay" )[0].src = clipinfo.mp4  ;
+	$( "video#webplay" )[0].autoplay=true;
+	$( "video#webplay" )[0].load();
+}
+
+var webplay_1open=0 ;
+
+$( ".tdcdialog#dialog_webplay" ).dialog({
+	autoOpen: false,
+	width:"auto",
+	modal: true,
+	beforeClose: function( event, ui ) {
+		$( "video#webplay" )[0].src = "" ;
+		$( "video#webplay" )[0].autoplay=false;
+		$( "video#webplay" )[0].load();	
+	},
+	resize: function( event, ui ) {
+		$( "video#webplay" )[0].width=$( "div#dialog_webplay" ).width() - $( ".tdcdialog#dialog_webplay" ).data("wdif");
+		$( "video#webplay" )[0].height=$( "div#dialog_webplay" ).height() - $( ".tdcdialog#dialog_webplay" ).data("hdif");
+	},
+	open: function( event, ui ) {
+		if( !webplay_1open ) {
+			var wdif = $( "div#dialog_webplay" ).width() - $( "video#webplay" )[0].width ;
+			var hdif = $( "div#dialog_webplay" ).height() - $( "video#webplay" )[0].height ;
+			$( ".tdcdialog#dialog_webplay" ).data("wdif", wdif );
+			$( ".tdcdialog#dialog_webplay" ).data("hdif", hdif );
+			webplay_1open = 1 ;
+		}
+		else {
+			$( "video#webplay" )[0].width=$( "div#dialog_webplay" ).width() - $( ".tdcdialog#dialog_webplay" ).data("wdif");
+			$( "video#webplay" )[0].height=$( "div#dialog_webplay" ).height() - $( ".tdcdialog#dialog_webplay" ).data("hdif");
+		}
+		var clipinfo = $( "video#webplay" ).data("clipinfo") ;
+		var options = "" ;
+		for( var ci=0; ci<clipinfo.camera_number; ci++ ) {
+			options += "<option>"+clipinfo.camera_name[ci]+"</option>" ;
+		}
+		$("select#webplay_camera").html(options);
+		$("select#webplay_camera")[0].selectedIndex=clipinfo.channel ;
+		webplay_play();
+	},
+	create: function( event, ui ) {
+		$("select#webplay_camera").change( function(){
+			var clipinfo = $( "video#webplay" ).data("clipinfo") ;
+			var param=new Object ;
+			param.dir = 3 ;
+			param.vehicle_name = clipinfo.vehicle_name ;
+			param.time_start = clipinfo.time_start ;
+			param.channel = $("select#webplay_camera")[0].selectedIndex ;
+			$.getJSON("webplay.php", param , function(resp){
+				if( resp.res == 1 ) {
+					$( "video#webplay" ).data("clipinfo", resp );
+					webplay_play();
+				}
+			});
+		});	
+		$("button#webplay_prev").click(function(){
+			var clipinfo = $( "video#webplay" ).data("clipinfo") ;
+			var param=new Object ;
+			param.dir = 2 ;
+			param.vehicle_name = clipinfo.vehicle_name ;
+			param.time_start = clipinfo.time_start ;
+			param.channel = clipinfo.channel ;
+			$.getJSON("webplay.php", param , function(resp){
+				if( resp.res == 1 ) {
+					$( "video#webplay" ).data("clipinfo", resp );
+					webplay_play();
+				}
+			});		
+		});
+		$("button#webplay_next").click(function(){
+			var clipinfo = $( "video#webplay" ).data("clipinfo") ;
+			var param=new Object ;
+			param.dir = 1 ;
+			param.vehicle_name = clipinfo.vehicle_name ;
+			param.time_start = clipinfo.time_start ;
+			param.channel = clipinfo.channel ;
+			$.getJSON("webplay.php", param , function(resp){
+				if( resp.res == 1 ) {
+					$( "video#webplay" ).data("clipinfo", resp );
+					webplay_play();
+				}
+			});		
+		});
+
+		$("button#webplay_reload").click(function(){
+			webplay_play();	
+		});
+		$("button#webplay_close").click(function(){
+			$( ".tdcdialog#dialog_webplay" ).dialog( "close" );
+		});
+	}
+});
+
+$("button#webplay").click(function(){
 	var id=$("#videolist").jqGrid('getGridParam','selrow') ;
 	if( id == null ) {
-		e.preventDefault();
 		alert("Please select one video clip!");
 		return ;
 	}
-	$("#formplayvideo input[name='index']").val(id);
-	$("#formplayvideo input[name='vehicle_name']").val($("#videolist").getCell(id,1));
+	webplayser++ ;
+	$.getJSON("webplay.php?index="+id+"&ser="+webplayser, function(resp){
+		if( resp.res == 1 && resp.ser == webplayser ) {
+			$( "video#webplay" ).data("clipinfo", resp );
+			$( ".tdcdialog#dialog_webplay" ).dialog("open");
+		}
+	});
 	return ;
 });
-
 
 $("#rcontainer").show('slow' );
 });
@@ -203,7 +336,7 @@ $("#rcontainer").show('slow' );
 	<li><a class="lmenu" href="mapview.php"><img onmouseout="this.src='res/side-mapview-logo-clear.png'" onmouseover="this.src='res/side-mapview-logo-fade.png'" src="res/side-mapview-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="reportview.php"><img onmouseout="this.src='res/side-reportview-logo-clear.png'" onmouseover="this.src='res/side-reportview-logo-fade.png'" src="res/side-reportview-logo-clear.png" /> </a></li>
 	<li><img src="res/side-videos-logo-green.png" /></li>
-	<!--	<li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li> -->
+	<li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="settings.php"><img onmouseout="this.src='res/side-settings-logo-clear.png'" onmouseover="this.src='res/side-settings-logo-fade.png'" src="res/side-settings-logo-clear.png" /> </a></li>
 </ul>
 </div>
@@ -274,14 +407,19 @@ Vehicles &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="selectallvehicle">Select All<
 <div id="vlist" style="overflow:auto;">
 <table id="videolist"></table> 
 <div id="videopager"></div> 
-<div>
-<button id="deletevideo"><img src="res/button_delete.png" > Delete </button>
+<p>
 <form id="formplayvideo" enctype="application/x-www-form-urlencoded" method="get" action="playvideo.php" >
 <input name="index" type="hidden" />
 <input name="vehicle_name" type="hidden"  />
-<button  id="playvideo" type="submit"><img src="res/button_play.png" > Play </button>
 </form>
-</div>
+<button id="deletevideo"><img src="res/button_delete.png" > Delete </button>
+<button  id="playvideo"><img src="res/button_play.png" > Play </button>
+<?php if( ! empty( $webplay_support ) ) { ?>
+<button  id="webplay"> Preview Video Clip </button>
+<?php } ?>
+<a  id="playsync" href="mapview.php?sync=1" >Sync on Map View</a>
+<a  id="downloadplayer" href="downloadplayer.php" >Download Player</a>
+</p>
 </div>
 
 <!-- Generic Delete Dialog -->
@@ -290,6 +428,17 @@ Vehicles &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="selectallvehicle">Select All<
 <p id="deletename" style="text-align: center;">this</p>
 <p>&nbsp;</p>
 </div>
+<!-- Video Clip Preview Dialog -->
+<div class="tdcdialog" id="dialog_webplay">
+<video id="webplay" width="480" height="360" src="" type="video/mp4" controls>
+Your browser does not support the video tag.
+</video> 
+<hr />
+<p style="text-align: right;">
+<select id="webplay_camera"></select>
+&nbsp;&nbsp;&nbsp;<button id="webplay_prev">Prev</button> <button id="webplay_next">Next</button> <button id="webplay_reload">Reload</button> <button id="webplay_close">Close</button></p>
+</div>
+
 </div>
 <!-- workarea --></div>
 <!-- mcontainer --></div>

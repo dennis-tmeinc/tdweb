@@ -37,14 +37,14 @@
 		}
 		
 		if( count($vlist)<1 ) {
-			$_SESSION['videofilter']=" (`time_start` BETWEEN '$fromdate 0:00:00' AND '$todate 23:59:59' ) AND (`time_end` BETWEEN '$fromdate 0:00:00' AND '$todate 23:59:59' ) " ;
+			$videofilter=" (`time_start` BETWEEN '$fromdate 0:00:00' AND '$todate 23:59:59' ) AND (`time_end` BETWEEN '$fromdate 0:00:00' AND '$todate 23:59:59' ) " ;
 		}
 		else {
-			$_SESSION['videofilter']=" (`time_start` BETWEEN '$fromdate 0:00:00' AND '$todate 23:59:59' ) AND (`time_end` BETWEEN '$fromdate 0:00:00' AND '$todate 23:59:59' ) AND ( vehicle_name IN ('".join("','",$vlist)."') ) " ;
+			$videofilter=" (`time_start` BETWEEN '$fromdate 0:00:00' AND '$todate 23:59:59' ) AND (`time_end` BETWEEN '$fromdate 0:00:00' AND '$todate 23:59:59' ) AND ( vehicle_name IN ('".join("','",$vlist)."') ) " ;
 		}
 
 		// save session data
-		session_write();
+		session_save('videofilter', $videofilter);
 		
 		$resp['res']=1 ;	// success
 	}

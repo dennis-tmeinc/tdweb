@@ -3,10 +3,12 @@
 // Request:
 //      index : video clip id
 //      vehicle_name : vehicle name , if video clip id is not available
+//      playtime : play back time
 // Return:
 //      .dpl file , contain JSON contents
-// By Dennis Chen @ TME	 - 2013-09-26
+// By Dennis Chen @ TME	 - 2013-10-29
 // Copyright 2013 Toronto MicroElectronics Inc.
+//
 
     require 'session.php' ;
 	header( "Content-Type: application/x-touchdown-playlist");
@@ -15,11 +17,19 @@
 	if( $logon ){
 
 		$server = array() ;
-		$server['protocol']="http" ;
-		$server['host']=$_SERVER["SERVER_NAME"];
+
+		$server['protocol'] = $_SERVER["REQUEST_SCHEME"] ;
 		$server['port']=$_SERVER["SERVER_PORT"];
+			
+		if( empty($support_https_playback) && $server['port'] == "443" ) {
+			// https not supported
+			$server['protocol'] = "http" ;
+			$server['port']="80" ;
+		}
+		
+		$server['host']=$_SERVER["SERVER_NAME"];
 		$server['app']=dirname( $_SERVER["SCRIPT_NAME"] )."/istream.php" ;
-		$server['url']="http://".$server['host'].":".$server['port'].$server['app'] ;
+		$server['url']= $server['protocol'].'://'.$server['host'].":".$server['port'].$server['app'] ;
 		$server['sessionidname']=session_name();
 		$server[$server['sessionidname']]=session_id() ;
 		
@@ -29,7 +39,7 @@
 		$info['camera_number'] = 0 ;
 		$info['support_playback'] = 1 ;
 		$info['support_live'] = 0 ;
-		$info['playtime'] = "2013-08-01 09:30:00" ;
+		$info['playtime'] = "2000-01-01 00:00:00" ;
 		
 		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 		
@@ -65,16 +75,29 @@
 		
 		$conn->close();
 		
+		if( !empty($_REQUEST['playtime']) ) {
+			$info['playtime'] = $_REQUEST['playtime'] ;
+		}
+		
 		$dpl = array();
 		$dpl["server"] = $server ;
 		$dpl['info'] = $info ;
 		
 		$playlist = array();
 		$playlist['info'] = $info ;
-		$_SESSION['playlist'] = $playlist ;
-		session_write() ;
+		session_save('playlist', $playlist);
+		
+		// default player sync time
+		$playsync = array();
+		$playsync['run'] = false ;
+		$playtime = new DateTime($info['playtime']);
+		$playsync['playtime'] = $playtime->getTimestamp();
+		$playtime = new DateTime();
+		$playsync['reporttime'] = $playtime->getTimestamp();
+		session_save('playsync', $playsync);
 
 		echo "#DPL\r\n" ;
+		echo "# Content-Type: JSON\r\n" ;
 		echo "# Touch Down Center ". $_SESSION['release']."\r\n\r\n" ;
 		
 		echo json_encode( $dpl ) ;

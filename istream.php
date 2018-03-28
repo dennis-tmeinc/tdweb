@@ -13,10 +13,49 @@ if( !empty($sid) ) {
 }
 session_start();
 
-// store $_SESSION variable after session_write_close()
-function session_write()
+$resp = array();
+$resp['error'] = 0 ;
+
+$xt = $_SERVER['REQUEST_TIME'];
+if( empty($_SESSION['user']) ||
+	empty($_SESSION['user_type']) ||
+	empty($_SESSION['xtime']) || 
+    $xt<$_SESSION['xtime'] ||
+	$xt>$_SESSION['xtime']+$session_timeout ||
+	empty($_SESSION['clientid']) ) 
 {
-	file_put_contents( session_save_path().'/sess_'.session_id(), session_encode() );	
+	// error session
+	$resp['error']=101 ;
+	$resp['error_message'] = "Session error!" ;
+	if( !empty($_REQUEST['cmd']) && $_REQUEST['cmd']=='getvideo' ) {
+		header( "x-touchdown-vdata: error=".$resp['error'] );
+	}
+}
+else {
+	$_SESSION['xtime']=$xt ;
+}
+
+session_write_close();
+
+// store one variable to session
+function session_save( $vname, $value )
+{
+	$fsess = fopen( session_save_path().'/sess_'.session_id(), 'r+' );
+	if( $fsess ) {
+		flock( $fsess, LOCK_EX ) ;		// exclusive lock
+		
+		$sess_str = fread( $fsess, 20000 );
+		session_decode ( $sess_str ) ;
+		$_SESSION[$vname] = $value ;
+		$sess_str = session_encode() ;
+		rewind( $fsess ) ;
+		fwrite( $fsess, $sess_str );
+		fflush( $fsess ) ;              // flush before releasing the lock
+		ftruncate( $fsess, ftell($fsess));
+
+		flock( $fsess, LOCK_UN ) ;		// unlock ;
+		fclose( $fsess );
+	}
 }
 
 // Get channel info from camera, and busname ( playtime in $chctx['ve'] )
@@ -180,36 +219,14 @@ function videodata( &$chctx, &$data, &$vheaddata )
 	return $chctx['fl'] ;
 }
 
-
-$resp = array();
-$resp['error'] = 0 ;
-
-$xt = time();
-if( empty($_SESSION['user']) ||
-	empty($_SESSION['user_type']) ||
-	empty($_SESSION['xtime']) || 
-    $xt<$_SESSION['xtime'] ||
-	$xt>$_SESSION['xtime']+$session_timeout ||
-	empty($_SESSION['clientid']) ) 
-{
-	// error session
-	$resp['error']=101 ;
-	$resp['error_message'] = "Session error!" ;
-	echo json_encode( $resp );
-	return ;
+if( !empty( $_REQUEST['serno'] ) ) {
+	$resp['serno'] = $_REQUEST['serno'];
 }
 
-$_SESSION['xtime']=$xt ;
-session_write_close();
-
-$cmd = $_REQUEST['cmd'] ;
-
-$resp['cmd'] = $cmd ;
-
-switch ($cmd) {
+if( $resp['error'] == 0 ) 
+switch ( $_REQUEST['cmd'] ) {
     case 'getinfo':
         $resp = $_SESSION['playlist']['info'] ;
-		$resp['error'] = 0 ;
         break;
 		
     case 'getdaylist':
@@ -221,7 +238,7 @@ switch ($cmd) {
 		else {
 			$busname = $_SESSION['playlist']['info']['name'] ;
 			$channel = $camera - 1 ;
-			$sql = "SELECT distinct DATE(time_start) from videoclip where vehicle_name = '$busname' AND channel = $channel " ;
+			$sql = "SELECT DISTINCT DATE(time_start), path from videoclip where vehicle_name = '$busname' AND channel = $channel " ;
 			if( !empty( $_REQUEST['begin'] ) ){
 				$resp['begin']=$_REQUEST['begin'] ;
 				$sql = $sql . " AND time_start >= '$_REQUEST[begin]' " ;
@@ -236,8 +253,10 @@ switch ($cmd) {
 			if( $result = $conn->query($sql) ) {
 				$resp['list'] = array();
 				while( $row=$result->fetch_array() ) {
-					$resp['list'][]=$row[0] ;
-					$resp['number'] ++ ;
+					if( file_exists( dirname($row[1]) ) ) {
+						$resp['list'][]=$row[0] ;
+						$resp['number'] ++ ;
+					}
 				}
 				$result->free();
 			}
@@ -307,49 +326,6 @@ switch ($cmd) {
 		}
 		else {
 			$busname = $_SESSION['playlist']['info']['name'] ;
-			$channel = $camera - 1 ;
-			$sql = "SELECT time_start,  TIMESTAMPDIFF(SECOND, time_start, time_end ) as length, path from videoclip where vehicle_name = '$busname' AND channel = $channel " ;
-			if( !empty( $_REQUEST['begin'] ) ){
-				$resp['begin']=$_REQUEST['begin'] ;
-				$sql = $sql . " AND time_start >= '$_REQUEST[begin]' " ;
-			}
-			if( !empty( $_REQUEST['end'] ) ){
-				$resp['end']=$_REQUEST['end'] ;
-				$sql = $sql . " AND time_start < '$_REQUEST[end]' " ;
-			}
-			$sql = $sql . " ORDER BY time_start ;" ;
-			$resp['number'] = 0 ;
-			@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-			if( $result = $conn->query($sql) ) {
-				$resp['number'] = 0 ;
-				$resp['list'] = array();
-				while( $row=$result->fetch_array() ) {
-					if( file_exists ( $row['path'] ) ) {
-						
-						$clip = array() ;
-						$clip['time'] = $row['time_start'] ;
-						$clip['length'] = $row['length'] ;
-						if( strstr( basename ( $row['path'] ), "_L_") ) {
-							$clip['lock'] = 1 ;
-						}
-						else {
-							$clip['lock']=0 ;
-						}
-						$kfile = substr_replace( $row['path'], "k", -3 )  ;
-						if( file_exists ( $kfile ) ) {
-							$clip['key'] = 1 ;
-						}
-						else {
-							$clip['key'] = 0 ;
-						}
-						$clip['clipsize'] = filesize ( $row['path'] ) ;
-						$resp['list'][]=$clip ;
-						$resp['number'] ++ ;
-					}
-				}
-				$result->free();
-			}
-			$conn->close();
 		}
         break;
 		
@@ -366,19 +342,43 @@ switch ($cmd) {
 			$resp['error'] = 104 ;
 			$resp['error_message'] = "Parameter 'time' not specified!" ;
 		}
+		else if( empty( $_SESSION['playlist'] ) ) {
+			$resp['error']=101 ;
+			$resp['error_message'] = "Session error!" ;		
+		}
 		else {
+			$play = array();
 			if( !empty( $_REQUEST['headersize'] ) ) {
 				$_SESSION['playlist']['headersize'] = $_REQUEST['headersize'] ;
+				session_save( 'playlist', $_SESSION['playlist'] );
 			}
 				
 			$busname = $_SESSION['playlist']['info']['name'] ;
 			$camera = $camera - 1 ;
 			
+			// channel file
+			$chfile = session_save_path().'/sess_'.session_id().'-'.$camera ;
+			if( !empty( $_REQUEST['xid'] ) ) {
+				$chfile .= '-'.$_REQUEST['xid'] ;
+			}
+
 			// channel context,   
 			//   v: video file, vo: video file offset, vs: video file size, vt: video file time, vl: video length
 			//   k: k file, ko: k file offset
 			//   hs: file header size
-			$chctx = $_SESSION['playlist'][$camera] ;
+			
+			if( file_exists ( $chfile ) ) {
+				$fch = fopen( $chfile, "r+" );
+				flock( $fch, LOCK_EX );
+				$chctx = unserialize( fread( $fch, 10000 ) );
+			}
+			else {
+				$fch = fopen( $chfile, "w+" );
+				fflush($fch);
+				flock( $fch, LOCK_EX );
+				$chctx = array();
+			}
+			
 			if( $_REQUEST['time'] == 'continue' && !empty( $chctx )  ) {
 				if( !empty($_REQUEST['length'] ) ) {
 					$chctx['rl'] = $_REQUEST['length'] ;
@@ -416,8 +416,14 @@ switch ($cmd) {
 					}
 				}
 			}
-			$_SESSION['playlist'][$camera] = $chctx ;
-			session_write();
+			
+			rewind( $fch ) ;
+			fwrite( $fch, serialize( $chctx ) );
+			fflush( $fch ) ;              // flush before releasing the lock
+			ftruncate( $fch, ftell($fch));
+			flock( $fch, LOCK_UN );
+			fclose( $fch );
+			
 		}
 		
 		// output extra header
@@ -439,6 +445,15 @@ switch ($cmd) {
 				$extra_http_header .= ",error_message=".$resp['error_message'] ;
 			}
 		}
+
+		if( !empty( $_REQUEST['xid'] ) ) {
+			$extra_http_header .= ',xid='.$_REQUEST['xid'];
+		}
+
+		if( !empty( $_REQUEST['serno'] ) ) {
+			$extra_http_header .= ',serno='.$_REQUEST['serno'];
+		}
+
 		header($extra_http_header);
 		header("Content-Type: application/octet-stream");
 
@@ -454,9 +469,28 @@ switch ($cmd) {
 		return ;
         break;
 
+	case 'reporttime':
+		$now=new DateTime();
+		$etime=new DateTime("2000-01-01");
+		@$playtime = new DateTime($_REQUEST['time']);
+		if( empty($_REQUEST['time']) || $playtime >= $now || $playtime < $etime ) {
+			$resp['error'] = 105 ;
+			$resp['error_message'] = "Wrong time parameter!";
+		}
+		else {
+			$playsync = array();
+			$playsync['run'] = !empty($_REQUEST['run']);
+			$playsync['playtime'] = $playtime->getTimestamp();
+			$playsync['reporttime'] = $now->getTimestamp();
+			session_save('playsync', $playsync);
+			$resp['run'] = $synctime['run'] ? 1:0 ;
+			$resp['time'] = $playtime->format('Y-m-d H:i:s');
+		}
+        break;
+	
 	default:
 		$resp['error']=102 ;
-		$resp['error_message'] = "Unknown command : ".$cmd ;
+		$resp['error_message'] = "Unknown command : ".$_REQUEST['cmd'] ;
 		break;
 }
 

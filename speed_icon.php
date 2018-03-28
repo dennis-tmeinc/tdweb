@@ -28,7 +28,7 @@
 	$lastmodtime = gmdate('D, d M Y H:i:s ', $lastmod).'GMT';
 
 	$etag = hash('md5', 'r'.$ftime1.$ftime2.$degrees );
-	header('Expires: '.gmdate('D, d M Y H:i:s ', time()+$expires).'GMT');
+	header('Expires: '.gmdate('D, d M Y H:i:s ', $_SERVER['REQUEST_TIME']+$expires).'GMT');
 
 	if( (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH']==$etag ) ) {
 		header("HTTP/1.1 304 Not Modified");

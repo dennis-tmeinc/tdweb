@@ -1,6 +1,6 @@
 <?php
 	// SQL server
-	$smart_host="localhost" ;
+	$smart_host="localhost" ;	
 	$smart_user="server" ;
 	$smart_password="password" ;
 	$smart_database="smart" ;
@@ -34,7 +34,7 @@
 	$grid_scroll=false;
 	
 	// exact time range (seconds)
-	$exact_time_range=600;
+	$exact_time_range=60;
 
 	// minimum travelling interval time.
 	// $min_traveltime = 30 ;
@@ -60,6 +60,16 @@
 	//              cupertino south-street blitzer humanity hot-sneaks excite-bike 
 	//              vader dot-luv mint-choc black-tie trontastic swanky-purse
 	$default_ui_theme = "start" ;
+	
+	// web video playback
+	$webplay_support = 0 ;
+	// Maximum videos cache size in Mega Bytes
+	$webplay_cache_size = 10000 ;
+	
+	// live track server (AVL Service)
+	$avlservice = "http://localhost:40520/avlservice" ;
+	$avlcbserver = "http://localhost:80" ;
+	$avlcbapp = "vltevent.php" ;
 	
 	// setup time zone
 	date_default_timezone_set($timezone) ;	

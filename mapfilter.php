@@ -4,10 +4,9 @@
 // Copyright 2013 Toronto MicroElectronics Inc.
 // MySQL connection
 
-if( $logon && empty($conn) ) {
-	@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-}
+@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 ?>
+
 <div class="ui-widget ui-widget-content ui-corner-all" id="rpanel"><button id="generate" style="font-size:1.3em;">Generate</button>
 
 <form action="#" id="filterform">

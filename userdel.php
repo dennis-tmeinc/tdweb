@@ -40,8 +40,7 @@
 			if( mysqli_query($conn, $sql) ) {
 				if( $_SESSION['user'] == $_REQUEST['username'] ) {
 					// current user removed!!!
-					unset($_SESSION['user']);	// stop this session
-					session_write();
+					session_save('user', '');	// stop this session
 				}
 				$resp['res']=1 ;	// success
 			}

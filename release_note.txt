@@ -1,6 +1,37 @@
 Touch Down Center 
 Release Notes
 
+V3.4 (2013-11-28)
+	Live track features
+		Features are duplicated from TDManagement software
+		Communicate with a program named "AVL Service" for all live track information. Ask Tongrui Zhang for details about this software. I do not maintain this software.
+		Each browser tab (window) use one live track session and has its own auto-report settings.
+		Support live view over internet (mobile), by click "Live View" button to download a .dpl file and open it with "DVRViewer".
+	Add channel selection on web playback
+
+	
+V3.3 (2013-11-1)
+	Fix play list file https error
+	Add on web video file playback (Not official feature)
+		It is hidden by default, to enable it, set $webplay_support to 1 in config.php, load "videos" page, search and select one video, click "Preview Video Clip".
+		This is clips based video play, total depends on web browser support for back back controls.
+		MP4 format only for HTML <video> tag. Would works on windows, androids devices.  Almost all recent browser should work.  ( for IE, please update to version 10 ) (Firefox also works ^^)
+		Trans-code on server, expect some delay when opening
+		No audio, audio format on .266 are specific to TME, no chance to make it work except some one can ask the developer of .266
+		No OSD, same reason as above.
+		If video did not auto start or show error, try click reload.
+		Again, this is not official feature, I only thought this could be cool and may be useful. ( Don't report as bugs if it doesn't work well, leave it hidden )
+
+V3.2 (2013-10-28)
+	Add Player (DVRViewer) download button. Installation file default is "player\player.msi", can be changed in config.php file with "$playerinstallfile" .
+	Add "$support_https_playback" setting in config.php. If it set and non-zero, playback to use same protocol as web browsing, otherwise use http.
+	 
+
+V3.1 (2013-10-21)
+	Play Video anchor on Map View Icon's Infobox
+	Separated video playing session files, to avoid video playing affect web interface
+	Sync MAP VIEW to dvrviewer (need player support) 
+
 V3.0 (2013-10-08)
 	Playback over http support
 	On video page add play button

@@ -4,7 +4,11 @@
 // By Dennis Chen @ TME	 - 2013-07-12
 // Copyright 2013 Toronto MicroElectronics Inc.
 	
-    require 'sessionstart.php' ;
+	require_once 'config.php' ;
+
+	session_save_path( $session_path );
+	session_name( $session_idname );
+	session_start();
 	
 	header("Content-Type: application/json");
 	
@@ -25,22 +29,29 @@
 			$_SESSION['user']=$savesess['xuser'];
 			$_SESSION['user_type']=$savesess['user_type'];
 			$_SESSION['welcome_name'] = $savesess['welcome_name'];
-			$_SESSION['clientid']=hash("md5", $_SERVER['HTTP_USER_AGENT'].":".$_SERVER['REMOTE_ADDR']);
-			$_SESSION['xtime'] = time() ;
-			$_SESSION['ui'] = $default_ui_theme ;
-			$_SESSION['release']="V3.0" ;
-			session_regenerate_id(true);
+			$_SESSION['clientid']=$_SERVER['REMOTE_ADDR'] ;
+			$_SESSION['xtime'] = $_SERVER['REQUEST_TIME'] ;
+			$_SESSION['release']="V3.4" ;
 
-			// read ui theme from user setting
-			$userfile=@fopen( $user_path."/".$_SESSION['user'], "r" );
-			if( $userfile ) {
-				$ujs = fread ( $userfile, 4096 );
-				fclose($userfile);
-				$uset = json_decode($ujs,true);
-				if( isset($uset['ui']) )
-					$_SESSION['ui']=$uset['ui'];				
+			// restore user theme
+			if( empty( $user_path ) ) {
+				$user_path = $session_path ;
 			}
-			
+			$themefile=@fopen( $user_path."/theme", "r" );
+			if( $themefile ) {
+				flock($themefile, LOCK_EX ) ;
+				$uthemestr = fread( $themefile, 100000 );
+				$utheme = array();
+				if( strlen( $uthemestr ) > 2 ) {
+					@$utheme = json_decode($uthemestr, true) ;
+				}
+				if( !empty( $utheme[$_SESSION['user']] ) ) {
+					setcookie("ui", $utheme[$_SESSION['user']]);
+				}
+				flock($themefile, LOCK_UN ) ;
+				fclose( $themefile );
+			}
+	
 		    $resp['res']=1 ;
 			$resp['user']=$savesess['xuser'] ;
 			if( !empty($savesess['lastpage']) ) {

@@ -4,7 +4,7 @@
 require 'session.php'; 
 
 // remember recent page
-$_SESSION['dashboardpage']=$_SERVER['REQUEST_URI'] ;
+session_save('dashboardpage', $_SERVER['REQUEST_URI'] );
 
 if( strpos($_SERVER["SCRIPT_NAME"], 'dashboardmorning.php')>0 ) {
 	$reqdate->sub(new DateInterval('P1D'));
@@ -15,8 +15,6 @@ else {
 	$day_title='Today';
 	$title_type='Live ' ;
 }
-
-session_write();
 
 // MySQL connection
 if( $logon ) {
@@ -46,7 +44,7 @@ include 'dashboard_data_ph1.php' ;
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">
 	<meta name="author" content="Dennis Chen @ TME, 2013-05-15">
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.9.1.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.9.1.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 .sum_circle
 {
@@ -116,6 +114,9 @@ function touchdownalert()
 			$("#servertime").text(resp.time);
 			setTimeout(touchdownalert,60000);
 		}
+		else {
+			window.location.assign("logout.php");
+		}		
 	});
 }
 touchdownalert();

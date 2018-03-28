@@ -2,17 +2,17 @@
 <html>
 <head><?php 
 require 'session.php'; 
+session_save('lastpage', $_SERVER['REQUEST_URI'] );
 
 // clear map filter
-unset($_SESSION['mapfilter']);
-session_write();
+// session_save('mapfilter', array() );
 	
 ?>
 	<title>Touch Down Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">
 	<meta name="author" content="Dennis Chen @ TME, 2013-05-15">		
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.9.1.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?> <script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script><script src="picker.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.9.1.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?> <script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script><script src="picker.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	</style>
 	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
@@ -40,6 +40,9 @@ function touchdownalert()
 			$("#servertime").text(resp.time);
 			setTimeout(touchdownalert,60000);
 		}
+		else {
+			window.location.assign("logout.php");
+		}		
 	});
 }
 touchdownalert();
@@ -130,10 +133,100 @@ if( !mapinit ) {
 		});
 }	
 
+function showsyncicon( mapevent )
+{
+	map.entities.clear();
+
+	var pinicons = {
+		1:"res/map_icons_stop.png",
+		2:"route_icon.php?",
+		4:"res/map_icons_idle.png",
+		16:"res/map_icons_g.svg",
+		17:"res/map_icons_desstop.png",
+		18:"res/map_icons_park.png",
+		23:"res/map_icons_mevent.png" ,
+		100:"speed_icon.php?",
+		101:"res/map_icons_fi.png" ,
+		102:"res/map_icons_ri.png" ,
+		103:"res/map_icons_si.png" ,
+		104:"res/map_icons_hb.png" ,
+		105:"res/map_icons_rs.png" ,
+		106:"res/map_icons_ht.png" ,
+		107:"res/map_icons_br.png" 
+		};
+
+	// mapevent: [id,icon,direction,lat,lon]
+	// place pushpins
+	var iconimg = pinicons[mapevent[1]];
+	if( mapevent[1] == 2 || mapevent[1] == 100 ) {
+		var direction = ((parseInt(mapevent[2])+5)/10).toFixed()*10;
+		iconimg += "deg="+direction ;
+	}
+
+	var pushpinOptions = {icon:iconimg, width: 24, height: 24, anchor: new Microsoft.Maps.Point(12,12) }; 
+	var pinlocation = new Microsoft.Maps.Location( mapevent[3], mapevent[4] );
+	var pushpin= new Microsoft.Maps.Pushpin(pinlocation, pushpinOptions);
+	map.entities.push(pushpin);
+	
+	map.setView( {center: pinlocation} );
+
+}
+
+function playsync()
+{
+	if( playerinsync ) {
+		$.getJSON("playsync.php", function(resp){
+			if( resp && resp.res && playerinsync ) {
+				showsyncicon( resp.mapevent ) ;
+				setTimeout( playsync, 3500 );
+			}
+			else {
+				playerinsync=0 ;
+				$("button#playsync").button( "option", "label", syncLabel1 );
+			}
+		});
+	}
+}
+
+// player synchronizing
+if( navigator.platform == 'Win32' || navigator.platform == 'Win64' ) {
+	playerinsync=0 ;
+	$("button#playsync").button( "option", "label", syncLabel1 );
+	
+	$("button#playsync").click( function(){ 
+		map_clear() ;
+		if( playerinsync ) {
+			playerinsync=0 ;
+			$("button#playsync").button( "option", "label", syncLabel1 );
+		}
+		else {
+			playerinsync=1 ;
+			$("button#playsync").button( "option", "label", syncLabel0 );
+			playsync();
+		}
+	}) ;
+<?php if( empty( $_SESSION['playsync'] ) ) { ?>
+	$("button#playsync").hide();	
+<?php } ?>
+<?php if( !empty($_REQUEST['sync']) ) { ?>
+	setTimeout( function(){
+		$("button#playsync").click();
+	}, 3000 ) ;
+<?php } ?>	
+}
+else {
+	$("button#playsync").hide();
+}
+
 // show up 
 $('#rcontainer').show('slow', trigger_resize );
 
 });
+
+// player sync variable
+var playerinsync=0 ;
+var syncLabel0 = "Stop Sync" ;
+var syncLabel1 = "Player Sync" ;
 
 // zone changed
 function map_zonechanged( zone )
@@ -166,6 +259,10 @@ var gendelay=40;
 
 function map_generate(mapevent, formdata)
 {
+	// stop player sync (v3.0)
+	playerinsync=0 ;
+	$("button#playsync").button( "option", "label", syncLabel1 );
+			
 	if( mapevent.res==1 && mapevent.zone && mapevent.zone.north != null ) {
 		if( formdata.zoneName != "User Define" ) {	// don't change view on 'User Defined Zone'
 			if( mapevent.zone.north == mapevent.zone.south ) {
@@ -216,7 +313,7 @@ function loadvlmap()
 
 			var speedLimit = map_search.speedLimit * 1.609334 ;			// convert to KMh
 			var save = new Object ;		// saved value for reducing displayed event ;
-			var eventInfobox = new Microsoft.Maps.Infobox(map.getCenter(), {visible:false,showPointer:true,showCloseButton:false} );    
+			var eventInfobox = new Microsoft.Maps.Infobox(map.getCenter(), {visible:false,showPointer:true,showCloseButton:true} );    
 			map.entities.push(eventInfobox);
 			var pinicons = {
 				1:"res/map_icons_stop.png",
@@ -250,14 +347,15 @@ function loadvlmap()
 				var pushpin= new Microsoft.Maps.Pushpin(pinlocation, pushpinOptions);
 				Microsoft.Maps.Events.addThrottledHandler(pushpin, 'mouseover', function(e){
 					var vl_id=parseInt(e.target.getText()); 
-					e.target.setOptions( {zIndex: 10 } );		// to prevent Infobox flashing
+					// e.target.setOptions( {zIndex: 10 } );		// to prevent Infobox flashing
 					var loc=e.target.getLocation() ;
 					eventInfobox.setLocation( loc );
 					var icon = e.target.getIcon() ;
-					eventInfobox.setOptions( { description:"Loading...", visible: true } );
+					eventInfobox.setOptions( { title:'', description:"Loading...", actions: [], visible: true,  zIndex: 10 } );
 					$.getJSON("vllist.php?vl_id="+vl_id, function(v){
 						if( v.res == 1 && v.vl.vl_id == vl_id ) {
-							var desc = '<img src="'+icon+'" /> <b> '+v.vl.vl_vehicle_name+"</b><br/>Event Time: "+v.vl.vl_datetime ;
+							var ititle = '<img src="'+icon+'" /> '+v.vl.vl_vehicle_name ;
+ 							var desc = 'Event Time: '+v.vl.vl_datetime ;
 							if( v.vl.vl_speed>0 ) {
 								desc += "<br/>Speed: "+(v.vl.vl_speed/1.609334).toFixed(1) ;
 							}
@@ -269,19 +367,29 @@ function loadvlmap()
 								if( s<10 ) s='0'+s ;
 								desc += "<br/>Duration: "+h+':'+m+':'+s;
 							}
+							var iheight=130 ;
 							if( v.vl.vl_impact_x != 0 || v.vl.vl_impact_y != 0 || v.vl.vl_impact_z != 0 ) {
 								desc += "<br/>X: "+v.vl.vl_impact_x +
-										"<br/>Y: "+v.vl.vl_impact_y +
-										"<br/>Z: "+v.vl.vl_impact_z ;
+										" Y: "+v.vl.vl_impact_y +
+										" Z: "+v.vl.vl_impact_z ;
+								iheight = 145 ;
 							}
-							eventInfobox.setOptions( { description: desc } );
+							function iplayvideo() 
+							{ 
+								$("#formplayvideo input[name='vehicle_name']").val(v.vl.vl_vehicle_name);
+								$("#formplayvideo input[name='playtime']").val(v.vl.vl_datetime);
+								$('#formplayvideo').submit();
+								$("button#playsync").show();	
+							} 
+							var iaction = [] ;
+							if( v.vl.video == 1 && (navigator.platform == 'Win32' || navigator.platform == 'Win64') ) {
+								iaction = [{label: 'Play Video', eventHandler: iplayvideo}] ;
+							}
+							eventInfobox.setOptions( { title:ititle, description: desc, actions: iaction, height: iheight,  zIndex: 10 } );
 						}
 					});
 				}, 100 );  
-				Microsoft.Maps.Events.addThrottledHandler(pushpin, 'mouseout', function(e){
-					e.target.setOptions( {zIndex: 0 } );
-					eventInfobox.setOptions( {visible: false } );
-				}, 100 );  
+
 				map.entities.push(pushpin);
 			}
 		}
@@ -303,7 +411,7 @@ function loadvlmap()
 	<li><img src="res/side-mapview-logo-green.png" /></li>
 	<li><a class="lmenu" href="reportview.php"><img onmouseout="this.src='res/side-reportview-logo-clear.png'" onmouseover="this.src='res/side-reportview-logo-fade.png'" src="res/side-reportview-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="videos.php"><img onmouseout="this.src='res/side-videos-logo-clear.png'" onmouseover="this.src='res/side-videos-logo-fade.png'" src="res/side-videos-logo-clear.png" /> </a></li>
-	<!--	<li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li> -->
+	<li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="settings.php"><img onmouseout="this.src='res/side-settings-logo-clear.png'" onmouseover="this.src='res/side-settings-logo-fade.png'" src="res/side-settings-logo-clear.png" /> </a></li>
 </ul>
 </div>
@@ -315,7 +423,11 @@ function loadvlmap()
  
 </pre>
 </div>
-<strong><span style="font-size:26px;">MAP VIEW</span></strong></div>
+<strong><span style="font-size:26px;">MAP VIEW</span></strong>
+
+<button id="playsync">Player Sync</button>
+
+</div>
 
 <div id="rcontainer">
 
@@ -324,6 +436,12 @@ function loadvlmap()
 <div id="workarea">
 <div id="tdcmap">Bing Maps</div>
 </div>
+
+<form id="formplayvideo" enctype="application/x-www-form-urlencoded" method="get" action="playvideo.php" >
+<input name="vehicle_name" type="hidden"  />
+<input name="playtime" type="hidden"  />
+</form>
+
 </div>
 <!-- mcontainer --></div>
 <div id="push"></div>

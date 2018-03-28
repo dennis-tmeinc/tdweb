@@ -34,9 +34,17 @@
 		
 		// MySQL connection
 		$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-		$sql="SELECT * FROM quickfilter WHERE `name` = '$_REQUEST[name]';" ;
+		// escaped string for SQL
+		$esc_req=array();
+		foreach( $_REQUEST as $key => $value )
+		{
+			$esc_req[$key]=$conn->escape_string($value);
+		}	
+		
+		$sql="SELECT * FROM quickfilter WHERE `name` = '$esc_req[name]';" ;
 		$result=$conn->query($sql) ;
 		if( $result->num_rows>0 ) {	// to update
+		
 			$sql=
 "UPDATE quickfilter SET 
  `timeType`=$_REQUEST[timeType],
@@ -72,8 +80,16 @@
  `gRearImpact`=$_REQUEST[gRearImpact],
  `gSideImpact`=$_REQUEST[gSideImpact],
  `gBumpyRide`=$_REQUEST[gBumpyRide]
- WHERE `name` = '$_REQUEST[name]' ;" ;
- 		}
+ WHERE `name` = '$_REQUEST[name]' " ;
+		
+			if( $_SESSION['user_type'] == 'admin' ) {
+				$sql .=';' ;
+			}
+			else {
+				$sql .=" AND `user` = '$_SESSION[user]';" ;
+			}
+
+	    }
 		else {		// to insert
 			$sql=
 "INSERT INTO `quickfilter`( `name`, `user`, `timeType`, `startTime`, `endTime`, `vehicleType`, `vehicleGroupName`, `zoneType`, `zoneName`, `bStop`, `bIdling`, `bParking`, `bDesStop`, `bSpeeding`, `bRoute`, `bEvent`, `bRacingStart`, `bHardBrake`, `bHardTurn`, `bFrontImpact`, `bRearImpact`, `bSideImpact`, `bBumpyRide`, `stopDuration`, `idleDuration`, `parkDuration`, `desStopDuration`, `speedLimit`, `gRacingStart`, `gHardBrake`, `gHardTurn`, `gFrontImpact`, `gRearImpact`, `gSideImpact`, `gBumpyRide`) VALUES ( '$_REQUEST[name]', '$_SESSION[user]', $_REQUEST[timeType], '$_REQUEST[startTime]', '$_REQUEST[endTime]', $_REQUEST[vehicleType], '$_REQUEST[vehicleGroupName]', $_REQUEST[zoneType], '$_REQUEST[zoneName]',".
@@ -98,7 +114,8 @@
 		}
 		else {
 			$resp['res']=0;
-			$resp['errormsg']="SQL error: ".$conn->error ;
+//			$resp['errormsg']="SQL error: ".$conn->error ;
+			$resp['errormsg']="Not allowed." ;
 		}			
 
 	}

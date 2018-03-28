@@ -1,43 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head><?php 
-require 'config.php' ; 
 require 'session.php'; 
 
-// remember settings sub page
-$_SESSION['settingpage']=$_SERVER['REQUEST_URI'] ;
+// remember recent page
+session_save('settingpage', $_SERVER['REQUEST_URI'] );
 
-// apply new theme
-if( !empty($_COOKIE['tdcui'])){
-	$ui_theme=$_COOKIE["tdcui"] ;
-	$_SESSION['ui']=$ui_theme ;
-
-	// save user setting
-	$uset=array();
-	$userfile=@fopen( $user_path."/".$_SESSION['user'], "r" );
-	if( $userfile ) {
-		$ujs = fread ( $userfile, 4096 );
-		fclose($userfile);
-		$uset = json_decode($ujs,true);
-	}
-	$uset['ui']=$ui_theme ;
-	$userfile=@fopen( $user_path."/".$_SESSION['user'], "w" );
-	if( $userfile ) {
-		$ujs=json_encode($uset);
-		fwrite ($userfile, $ujs );
-		fclose($userfile);
-	}
+// save user theme
+if( empty( $user_path ) ) {
+	$user_path = $session_path ;
 }
+$themefile=@fopen( $user_path."/theme", "c+" );
+if( $themefile ) {
+	flock($themefile, LOCK_EX ) ;
+	$uthemestr = fread( $themefile, 100000 );
+	$utheme = array();
+	if( strlen( $uthemestr ) > 2 ) {
+		@$utheme = json_decode($uthemestr, true) ;
+	}
+	if( empty( $utheme[$_SESSION['user']]) || $utheme[$_SESSION['user']] != $default_ui_theme ) {
+		$utheme[$_SESSION['user']] = $default_ui_theme ;
+		$uthemestr = json_encode( $utheme );
+		rewind( $themefile );
+		fwrite( $themefile, $uthemestr );
 
-// session_write
-session_write();
-
+		ftruncate( $themefile, ftell($themefile) );
+		fflush( $themefile ) ;          // flush before releasing the lock
+	}
+	flock($themefile, LOCK_UN ) ;
+	fclose( $themefile );
+}
+	
 ?>
 	<title>Touch Down Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta content="Touch Down Center by TME" name="description" />
 	<meta content="Dennis Chen @ TME, 2013-05-15" name="author" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.9.1.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script>if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="http://code.jquery.com/jquery-1.9.1.min.js"></script><?php echo "<link href=\"http://code.jquery.com/ui/1.10.2/themes/$default_ui_theme/jquery-ui.css\" rel=\"stylesheet\" type=\"text/css\" />" ?><script src="http://code.jquery.com/ui/1.10.2/jquery-ui.min.js"></script><script>if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script src="http://ecn.dev.virtualearth.net/mapcontrol/mapcontrol.ashx?v=7.0"></script>
 	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none;}" ?>
 	</style>
@@ -80,6 +79,9 @@ function touchdownalert()
 			$("#servertime").text(resp.time);
 			setTimeout(touchdownalert,60000);
 		}
+		else {
+			window.location.assign("logout.php");
+		}		
 	});
 }
 touchdownalert();
@@ -658,7 +660,7 @@ $("form#emailsetup input[name='tmSendDaily']").timepicker({
 // user theme
 $('#setting-ui input[type="image"]').click(function(){
 	// setcookie
-	setcookie("tdcui",$(this).attr("id"),10);
+	setcookie("ui",$(this).attr("id"),10);
 	location.reload();
 });
 
@@ -695,7 +697,7 @@ text-align: center;
 	<li><a class="lmenu" href="mapview.php"><img onmouseout="this.src='res/side-mapview-logo-clear.png'" onmouseover="this.src='res/side-mapview-logo-fade.png'" src="res/side-mapview-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="reportview.php"><img onmouseout="this.src='res/side-reportview-logo-clear.png'" onmouseover="this.src='res/side-reportview-logo-fade.png'" src="res/side-reportview-logo-clear.png" /> </a></li>
 	<li><a class="lmenu" href="videos.php"><img onmouseout="this.src='res/side-videos-logo-clear.png'" onmouseover="this.src='res/side-videos-logo-fade.png'" src="res/side-videos-logo-clear.png" /> </a></li>
-	<!--	<li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li> -->
+	<li><a class="lmenu" href="livetrack.php"><img onmouseout="this.src='res/side-livetrack-logo-clear.png'" onmouseover="this.src='res/side-livetrack-logo-fade.png'" src="res/side-livetrack-logo-clear.png" /> </a></li>
 	<li><img src="res/side-settings-logo-green.png" /></li>
 </ul>
 </div>
