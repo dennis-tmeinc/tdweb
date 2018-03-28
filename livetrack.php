@@ -215,8 +215,13 @@ function showpin( avlp, id, iconimg, clean )
 		var pinlocation = new Microsoft.Maps.Location( pos.lat, pos.lon );
 		var pushpin= new Microsoft.Maps.Pushpin(pinlocation, pushpinOptions);
 		
+		var bounds=map.getBounds(); 
+		bounds.width = bounds.width * 0.9 ;
+		bounds.height = bounds.height * 0.9 ;
+		if( !bounds.contains( pinlocation ) ) {
+			map.setView({ center: pinlocation });
+		}
 		map.entities.push(pushpin);
-		map.setView({ center: pinlocation });
 
 		Microsoft.Maps.Events.addThrottledHandler(pushpin, 'mouseover', function(e){
 			var pin_id = e.target.getText(); 
@@ -325,7 +330,7 @@ function tdwebc_message( tdwebc )
 		}
 		else if( cmd == "32" ) {      // AVL_DI_EVENT(32)
 			if( tdwebc[i].source.dvrs.dvr ) {
-				showpin( avlp, "DI__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_mevent.png", false );
+				showpin( avlp, "DI__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_sensor.png", false );
 			}
 		}
 		else if( cmd == "33" ) {      // AVL_SYSTEMP_EVENT(33)
@@ -340,17 +345,17 @@ function tdwebc_message( tdwebc )
 		}		
 		else if( cmd == "39" ) { 	// AVL_IGNITION_EVENT(39)
 			if( tdwebc[i].source.dvrs.dvr ) {
-				showpin( avlp, "IG__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_mevent.png", false );
+				showpin( avlp, "IG__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_sensor.png", false );
 			}		
 		}
 		else if( cmd == "43" ) { 	// PASSBY(43)
 			if( tdwebc[i].source.dvrs.dvr ) {
-				showpin( avlp, "PB__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_mevent.png", true );
+				showpin( avlp, "PB__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_driveby.png", true );
 			}		
 		}		
 		else if( cmd == "31" ) {      // AVL_GFORCE_EVENT(31)
 			if( tdwebc[i].source.dvrs.dvr ) {
-				showpin( avlp, "PB__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_g.svg", false );
+				showpin( avlp, "PB__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_gforce.png", false );
 			}			
 		}
 		else if( cmd == "38" ) {      // AAVL_GEOFENCE_RECT_EVENT(38)
@@ -1015,6 +1020,20 @@ $( "button[name='liveview']" ).click(function(e){
 	}
 });
 
+// live view button
+$( "button[name='setupdvr']" ).click(function(e){
+	e.preventDefault();
+	var vehicle = $("select[name='vltvehicle']").val();
+	if( vehicle ) {
+		if( vehicle instanceof Array) {
+			vehicle = vehicle[0] ;
+		}
+		var dvrdetail = vltlist.d[vehicle] ;
+		var win=window.open("http://"+dvrdetail.ip+"/", '_blank');
+		win.focus();
+	}
+});
+
 
 var mapcenter = new Microsoft.Maps.Location(35, -100);
 var mapzoom = 4 ;
@@ -1133,6 +1152,7 @@ $('#rcontainer').show('slow', trigger_resize );
 <div style="text-align: center;"><button style="min-width:13em;" name="startautoreort">Start Auto Report</button></div>
 <div style="text-align: center;"><button style="min-width:13em;" name="stopautoreport">Stop Auto Report</button></div>
 <div style="text-align: center;"><button style="min-width:13em;" name="liveview">Live View</button></div>
+<div style="text-align: center;"><button style="min-width:13em;" name="setupdvr">Setup DVR</button></div>
 
 <form id="liveviewform" action="vltliveview.php">
 <input type="hidden" name="dvrid"/>

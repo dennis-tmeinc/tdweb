@@ -64,7 +64,7 @@
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bSpeeding" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_speed.png" /> Speeding</td>
-			<td>Limit: <input maxlength="10" name="speedLimit" size="10" type="text" value="0" /></td>
+			<td>Limit: <input maxlength="10" name="speedLimit" size="6" type="text" value="0" />mph</td>
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bRoute" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_route.png" /> Route</td>

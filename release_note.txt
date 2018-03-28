@@ -1,6 +1,12 @@
 Touch Down Center 
 Release Notes
 
+V3.5 (2013-12-05)
+	Add a few new icons for live track events
+	Add "Setup DVR" button on live track
+	Centering map on live track event only when the event icon is outside map viewable area
+
+
 V3.4 (2013-11-28)
 	Live track features
 		Features are duplicated from TDManagement software

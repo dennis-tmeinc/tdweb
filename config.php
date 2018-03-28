@@ -1,5 +1,4 @@
 <?php
-	// SQL server
 	$smart_host="localhost" ;	
 	$smart_user="server" ;
 	$smart_password="password" ;
@@ -62,7 +61,7 @@
 	$default_ui_theme = "start" ;
 	
 	// web video playback
-	$webplay_support = 0 ;
+	$webplay_support = 1 ;
 	// Maximum videos cache size in Mega Bytes
 	$webplay_cache_size = 10000 ;
 	
