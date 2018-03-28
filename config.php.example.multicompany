@@ -1,13 +1,13 @@
 <?php
 	// SQL server
-	$smart_host="tdweb.saferus.com" ;
+	$smart_host="localhost" ;
 	$smart_user="server" ;
 	$smart_password="password" ;
 	$smart_database="smart" ;
 	$database_persistent=true ;
 
 	// List of timezone: http://php.net/manual/en/timezones.php
-	$timezone = "US/Pacific" ;
+	$timezone = "US/Eastern" ;
 	
 	// number of icons on map , acture number of icons may get doubled
 	$map_icons=100;
@@ -19,7 +19,7 @@
 	$dashboard_conf="C:\\SmartSvrApps\\dashboardoption.config" ;
 	
 	// backup file location, 
-	$backup_path="C:\\SmartSvrApps\\tdweb.saferus" ;
+	$backup_path="\\TouchDownCenter\\www\\tdc\\smartbackup" ;
 	
 	// set to 1 to include auto_increment fields in backup.
 	$backup_auto_increment = 0 ;
@@ -35,18 +35,20 @@
 
 	// minimum travelling interval time.
 	// $min_traveltime = 30 ;
-	
+
 	// zone moving mode, "cross" or "center"
 	// $zone_mode = "cross" ;
 
+	// bing map
+	$map_credentials="AnC6aHa2J8jWAluq14HQu6HDH1cDshGtPEPrYiotanIf-q6ZdoSiVGd96wzuDutw" ;
+
 	// Default map location, comment it to auto detect
-	$map_area="San Francisco" ;
+	$map_area="Toronto" ;
 	
 	// session timeout (max half hour)
-	$session_timeout=900 ;	
-
-	$remote_fileserver = "http://tdweb.saferus.com/tdc/fileservice.php" ;	
-	
+	$session_timeout=900 ;
+	$session_path= "session";
+	$session_idname = "touchdownid";
 
 	// avaialbe ui: ui-lightness ui-darkness smoothness start redmond sunny 
 	//              overcast le-frog flick pepper-grinder eggplant dark-hive
@@ -62,12 +64,21 @@
 	
 	// enable or disable live track
 	$enable_livetrack = 1 ;
+	
+	// new td live support
+	$liveplay_protocol = "relay" ;
+	$liveplay_host = "209.167.16.254" ;			// this is td live relay server's public ip address
+					
 	// live track server (AVL Service)
-
-	$avlservice = "http://tdweb.saferus.com:40520/avlservice" ;
-	// this should be the public ip (domain name) of web server
-	$avlcbserver = "http://127.0.0.1:80" ;
+	$avlservice = "http://localhost:40520/avlservice" ;
+	$avlcbserver = "http://localhost:80" ;		
 	$avlcbapp = "vltevent.php" ;
+
+	// multi company support
+	$support_multicompany = 1 ;
+	// script/excutable to create/remove com
+	$td_new    = "C:\\SmartSvrApps\\tdnew.exe" ;
+	$td_clean  = "C:\\SmartSvrApps\\tdclean.exe" ;
 	
 	// setup time zone
 	date_default_timezone_set($timezone) ;	

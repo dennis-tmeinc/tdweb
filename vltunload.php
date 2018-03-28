@@ -37,10 +37,7 @@
 		if( $fvlt ) {
 			flock( $fvlt, LOCK_EX ) ;		// exclusive lock
 
-			$vlt = array();
-			$vlt['run'] = 0 ;
-			
-			fwrite( $fvlt, json_encode($vlt) );
+			fwrite( $fvlt, "{}" );			// empty class
 	
 			ftruncate( $fvlt, ftell($fvlt) );
 			fflush( $flvt ) ;              	// flush before release the lock

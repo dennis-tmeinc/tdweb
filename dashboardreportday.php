@@ -74,15 +74,20 @@
 		$__result_ok=FALSE ;
 		if( $result ){
 			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
-				$Distance_Travelled_day = $row[0] ;
-				$Operating_time_day =$row[1] ;
-				$__result_ok=TRUE ;
+				if( $row[0] ) {
+					$Distance_Travelled_day = $row[0] ;
+					$__result_ok=TRUE ;
+				}
+				if( $row[1] ) {
+					$Operating_time_day =$row[1] ;
+					$__result_ok=TRUE ;
+				}
 			}
 			$result->free();
 		}
 
 		if( !empty($_REQUEST['calc']) && $_REQUEST['calc'] == 'y' ) {
-		$__result_ok=FALSE ;
+			$__result_ok=FALSE ;
 		}
 
 		if(!$__result_ok) {	// not hit by vehicle_daily, to calculate from table vl
@@ -102,6 +107,8 @@
 			$sql = "SELECT vl_vehicle_name, vl_datetime, vl_lat, vl_lon FROM `vl` WHERE vl_datetime BETWEEN '$date_begin' AND '$date_end' ORDER BY vl_vehicle_name, vl_datetime;";
 			$result=$conn->query($sql,MYSQLI_USE_RESULT);	// set MYSQLI_USE_RESULT for huge data
 			if( $result ){
+			
+						
 				$pvehicle = "";
 				$ptime=0;
 				$plat = 0;

@@ -39,7 +39,7 @@
 					// keepGpsLogDataForDays	keepVideoDataForDays
 					$esc_req[$key]=$conn->escape_string($value);
 				}
-				else {	// others , save to registry
+				else if(empty($company_root)) {	// others , save to registry
 
 					$result=array();
 					$ret=-1 ;

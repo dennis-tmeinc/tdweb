@@ -740,6 +740,7 @@ bus2 : fan alert
 	<h3>Storage Setup</h3>
 	</caption>
 	<tbody>
+<?php if( empty( $company_root ) ) { ?>
 		<tr>
 			<td style="text-align: right;">Video Data Folder:</td>
 			<td><input name="videopath" type="text" /></td>
@@ -752,6 +753,7 @@ bus2 : fan alert
 			<td style="text-align: right;">Smart Log Folder:</td>
 			<td><input name="smartlogpath" type="text" /></td>
 		</tr>
+<?php } ?>
 		<tr>
 			<td style="text-align: right;">Keep GPS Data Within:</td>
 			<td><select name="keepGpsLogDataForDays"><option value="93">3 months</option><option value="186">6 months</option><option value="366">1 years</option><option value="732">2 years</option><option value="1464">4 years</option><option value="0">Forever</option> </select></td>

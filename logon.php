@@ -68,10 +68,12 @@ function pwdEncode(pwd)
 $("form").submit(function(e){
 	e.preventDefault();
 	var userid=$("#userid").val();
+	var clientid=$("#clientid").val();
 
 	wait(1);
 	var nonce = gencnonce(10);
-	$.getJSON('signuser.php', { user: userid, n: nonce }, function(data) {
+	
+	$.post("signuser.php", { user: userid, c: clientid, n: nonce }, function(data) {
 		wait(0);
 		if( data.res == 1 && data.user.toLowerCase() == userid.toLowerCase() ) {
 		  var vcnonce=gencnonce(64);
@@ -88,7 +90,7 @@ $("form").submit(function(e){
 		  var ha2 = hex_md5(vcnonce+":"+data.user+":"+data.nonce);
 		  var vresult = hex_md5(ha1+":"+ha2+":"+data.nonce+":"+vcnonce);
 		  wait(1);
-		  $.getJSON("signkey.php", { user: data.user, cnonce: vcnonce, result: vresult }, function(kdata){
+		  $.post("signkey.php", { user: data.user, cnonce: vcnonce, result: vresult }, function(kdata){
 			wait(0);
 			if( kdata.res == 1 && kdata.user == data.user ) {
 				if( sessionStorage ) {
@@ -100,12 +102,12 @@ $("form").submit(function(e){
 			else {
 			  alert("Password error!") ;
 			}
-		  } );
+		  }, "json" );
 		}
 		else {
 		  alert("User name error!") ;
 		}
-	});
+	}, "json" );
 });
 
 $(window).resize(function(){
@@ -133,11 +135,12 @@ $("body").show();
 <fieldset><legend> Sign in to Touch Down Center </legend>
 <div style="padding-left:20px;">
 
-<div id="dclientid" style="display:none">
+<?php if(!empty($support_multicompany) ) { ?>
+<div id="dclientid">
 <p>Client ID<br />
-<input id="clientid" name="clientid" type="password" /></p>
+<input id="clientid" name="clientid" value="<?php echo $_SESSION['clientid']; ?>" /></p>
 </div>
-
+<?php } ?>
 <p>User ID<br />
 <input id="userid" name="userid" type="text" /></p>
 

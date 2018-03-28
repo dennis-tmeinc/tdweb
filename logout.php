@@ -1,6 +1,10 @@
 <?php 
 require 'session.php' ;
-session_save( 'user', '' );
+
+unset( $_SESSION['user'] );
+unset( $_SESSION['superadmin'] );
+session_write();
+
 header("Location: logon.php");
 ?><!DOCTYPE html>
 <html>

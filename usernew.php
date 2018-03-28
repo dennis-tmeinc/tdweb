@@ -11,8 +11,10 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
-
-		if( $_SESSION['user'] == "admin" ) {		// only one admin can do this, 2013-06-14
+		if( strcasecmp($_REQUEST["user_name"],"SuperAdmin")==0 ) {
+			$resp['errormsg']="Not allowed!" ;	
+		}
+		else if( $_SESSION['user'] == "admin" ) {		// only one admin can do this, 2013-06-14
 		
 			// MySQL connection
 			$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );

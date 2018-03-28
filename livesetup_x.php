@@ -10,6 +10,7 @@ if( !empty( $_SERVER['PATH_INFO'] ) ) {
 		if(!empty($_SERVER['QUERY_STRING'])) {
 			$nreq.='?'.$_SERVER['QUERY_STRING'] ;
 		}
+
 	}
 }
 if( empty( $phone ) || empty( $nreq) ) {
@@ -148,6 +149,7 @@ while( $conn = stream_socket_accept($wserver, $timeout ) ) {
 	else if( $msgtype == 'g' ) {		// GET data
 		if( !empty( $header ) ) {		// to send header
 			fwrite( $conn, 'd' );		// data coming
+			
 
 			// headers
 			fwrite( $conn, $header );
@@ -332,5 +334,24 @@ fclose($wserver);
 
 // remove server file
 @unlink( $nsvrfile );
+
+// notify sender to close connection
+$sendfile = fopen( $session_path.'/sess_lvs_'.$tunnelid, "r" );
+if( $sendfile ) {
+	flock( $sendfile, LOCK_EX ) ;		// exclusive lock
+	
+	$sendfileport = 0 ;
+	fscanf( $sendfile, "%d", $sendfileport );
+	if( $sendfileport ) {
+		$sendsocket = stream_socket_client( "tcp://127.0.0.1:".$sendfileport );
+		if( $sendsocket ) {
+			fwrite( $sendsocket, "e" );		// message type: end of connection
+			fclose( $sendsocket );
+		}
+	}
+	
+	flock( $sendfile, LOCK_UN ) ;		// unlock 
+	fclose( $sendfile );
+}
 
 ?>

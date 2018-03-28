@@ -1,6 +1,16 @@
 Touch Down Center 
 Release Notes
 
+V3.7.11 (2014-04-22) (by Dennis)
+	Add TDWeb multi company login
+	Add TDWeb multi company management
+	All companys use local database and local file system (one set of database autherization)
+	On create new company, call TDWin creating script/excutable. script name set on variable $td_new in file config.php.
+	Creating script executed with parameters:   <script> <company id> <company root directory> <database name>
+	On remove company, call TDWin removing script/excutable. script name set on variable $td_clean in file config.php.
+	Removing script executed with parameters:   <script> <company id> <company root directory> <database name>
+
+
 V3.7.10 (2014-04-09) (by Dennis)
 	Add “Play back” button to live track page
 	Live DVR setup over td web tunneling (for DVR with internal mobile ip) (only admin can access this feature)

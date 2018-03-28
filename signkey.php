@@ -15,7 +15,23 @@
 	$savesess=$_SESSION ;
 	$_SESSION = array();
 	
-	if( !empty($savesess['xuser']) && !empty($_REQUEST['user']) && $savesess['xuser'] == $_REQUEST['user'] ) {
+	if( $savesess['xuser'] == 'SuperAdmin' ) {
+		$ha1=$savesess['key'] ;
+		$salt=$savesess['salt'] ;
+		$nonce=$savesess['nonce'] ;
+		$ha2=hash("md5", $_REQUEST['cnonce'] .":". $savesess['xuser'] .":". $nonce );
+		$rescmp=hash("md5", $ha1 . ":" . $ha2 . ":" . $nonce . ":" . $_REQUEST['cnonce'] );
+		if( $_REQUEST['result'] == $rescmp ) { // Matched!!!
+			// what should be copied to new session
+			$_SESSION['superadmin']= "--SuperAdmin--" ;
+			session_write();
+			
+			$resp['user'] = $savesess['xuser'] ;
+		    $resp['res']=1 ;
+			$resp['page']="company.php" ;
+		}	
+	}
+	else if( !empty($savesess['xuser']) && !empty($_REQUEST['user']) && $savesess['xuser'] == $_REQUEST['user'] ) {
 	    $ha1=$savesess['key'] ;
 		$salt=$savesess['salt'] ;
 		$nonce=$savesess['nonce'] ;
@@ -31,8 +47,7 @@
 			$_SESSION['welcome_name'] = $savesess['welcome_name'];
 			$_SESSION['remote']=$_SERVER['REMOTE_ADDR'] ;
 			$_SESSION['xtime'] = $_SERVER['REQUEST_TIME'] ;
-			$_SESSION['release']="V3.7.10" ;
-	
+			$_SESSION['release']="V3.7.11" ;
 		    $resp['res']=1 ;
 			$resp['user']=$savesess['xuser'] ;
 			if( !empty($savesess['lastpage']) ) {

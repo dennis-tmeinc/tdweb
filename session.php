@@ -3,7 +3,7 @@
 // By Dennis Chen @ TME	 - 2013-06-15
 // Copyright 2013 Toronto MicroElectronics Inc.
 
-require_once 'config.php' ;
+require 'config.php' ;
 
 if( empty($session_path) ) {
 	$session_path= "session";
@@ -27,17 +27,13 @@ session_start();
 if( !empty( $_SESSION['clientid'] )) {
 	$clientcfg = 'client/'.$_SESSION['clientid'].'/config.php' ;
 	if( file_exists ( $clientcfg ) ) {
-		require_once $clientcfg ;
+		require $clientcfg ;
 	}
 	else {
 		unset($_SESSION['clientid']);
 	}
 }
-	
-/* page ui */
-if( !empty($_COOKIE['ui']))
-	$default_ui_theme = $_COOKIE['ui'] ;	
-		
+
 // setup time zone
 date_default_timezone_set($timezone) ;	
 // persistent database connection
@@ -46,6 +42,20 @@ if(	$database_persistent ) {
 }
 else {
 	$smart_server = $smart_host ;
+}
+	
+/* page ui */
+if( !empty($_COOKIE['ui']))
+	$default_ui_theme = $_COOKIE['ui'] ;	
+
+// fixed directories for multi companies
+if( !empty($company_root) ) {
+	// MSS configure file
+	$mss_conf=$company_root."\\mss.conf";
+	// Dashboard Option file
+	$dashboard_conf=$company_root."\\dashboardoption.config" ;
+	// database backup file location, 
+	$backup_path=$company_root."\\smartbackup" ;
 }
 
 // store $_SESSION variable after session_write_close()
