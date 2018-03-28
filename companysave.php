@@ -120,8 +120,12 @@
 			set_var( $cfgfile, "\$timezone", $_REQUEST['TimeZone'] );
 		if( !empty($_REQUEST['MapArea']) )
 			set_var( $cfgfile, "\$map_area", $_REQUEST['MapArea'] );
-		if( !empty($_REQUEST['SessionTimeout']) )
-			set_var( $cfgfile, "\$session_timeout", $_REQUEST['SessionTimeout'] );
+		if( !empty($_REQUEST['SessionTimeout']) ) {
+			$SessionTimeout = (int)$_REQUEST['SessionTimeout'] ;
+			if( $SessionTimeout>=300 && $SessionTimeout<=86400 ) {
+				set_var( $cfgfile, "\$session_timeout", $_REQUEST['SessionTimeout'] );
+			}
+		}
 		
 		$companyinfo = new SimpleXMLElement( "<companyinfo></companyinfo>" );
 

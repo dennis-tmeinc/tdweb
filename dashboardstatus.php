@@ -262,15 +262,15 @@ $("#list_system_alerts").jqGrid({
 $("#list_solo_alerts").jqGrid({        
 	scroll: true,
 	url:'dashboardsoloalertsgrid.php',
-	datatype: "json",	
+	datatype: "json",
 	height: 240,
 	width: 600,
 	colNames:['Vehicle Name','Description', 'Alert Code', 'Alert Time'],
 	colModel :[ 
-	  {name:'dvr_name', width:120, sortable: false, }, 
-	  {name:'description', width:300, sortable: false }, 
-	  {name:'alert_code', width:130, sortable: false }, 
-	  {name:'date_time', width:180, sortable: true } 
+	  {name:'dvr_name', width:120, sortable: true, },
+	  {name:'description', width:300, sortable: true },
+	  {name:'alert_code', width:130, sortable: true },
+	  {name:'date_time', width:180, sortable: true }
 	],
 	sortname: 'date_time',
     sortorder: 'desc',
@@ -640,7 +640,7 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 			<td style="font-size:12px;">Operating Hours</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Operating_Hours_day" ></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Operating_Hours_avg" ></td>
-			<td class="system_alert" alertcode="3" style="font-size:12px;">Connection Alerts</td>
+			<td style="font-size:12px;">Connection Alerts</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Connection_Alerts_day" ></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Connection_Alerts_avg" ></td>
 		</tr>
@@ -648,7 +648,7 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 			<td style="font-size:12px;">Distance Travelled</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Distance_Travelled_day" ></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Distance_Travelled_avg" ></td>
-			<td class="system_alert" alertcode="4" style="font-size:12px;">Camera Alerts</td>
+			<td style="font-size:12px;">Camera Alerts</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Camera_Alerts_day" ></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Camera_Alerts_avg" ></td>
 		</tr>
@@ -656,7 +656,7 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 			<td style="font-size:12px;">Vehicles Checked-In</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Vehicles_Checkedin_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Vehicles_Checkedin_avg"></td>
-			<td class="system_alert" alertcode="5" style="font-size:12px;">Recording Alerts</td>
+			<td style="font-size:12px;">Recording Alerts</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Recording_Alerts_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Recording_Alerts_avg"></td>
 		</tr>
@@ -664,7 +664,7 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 			<td style="font-size:12px;">Vehicles Uploaded</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Vehicles_Uploaded_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Vehicles_Uploaded_avg"></td>
-			<td class="system_alert" alertcode="8" style="font-size:12px;">System Reset Alerts</td>
+			<td style="font-size:12px;">System Reset Alerts</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="System_Reset_Alerts_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="System_Reset_Alerts_avg"></td>
 		</tr>
@@ -688,12 +688,12 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 			<td style="font-size:12px;">G-Force Alerts</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="GForce_Alerts_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="GForce_Alerts_avg"></td>
-			<td class="system_alert" alertcode="7" style="font-size:12px;">Partial Storage Failure</td>
+			<td style="font-size:12px;">Partial Storage Failure</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Partial_Storage_Failure_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Partial_Storage_Failure_avg"></td>
 		</tr>
 		<tr>
-			<td class="system_alert" alertcode="11" style="font-size:12px;">Panic Alerts</td>
+			<td style="font-size:12px;">Panic Alerts</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Panic_Alerts_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Panic_Alerts_avg"></td>
 			<td style="font-size:12px;"></td>

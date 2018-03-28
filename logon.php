@@ -9,9 +9,11 @@ session_write();
 header( 'Location: logon.php' );
 }
 ?>
-	<title>Touch Down Center</title>
+
+	<title>TouchDown&trade; Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-	<meta name="description" content="Touch Down Center by TME V2.5">
+	<meta name="description" content="TouchDown&trade Center by TME V2.5">
+
 	<meta name="author" content="Dennis Chen @ TME, 2013-06-15">	
 	<link rel="shortcut icon" href="/favicon.ico" />
 	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /><script src="jq/jquery-ui.js"></script><script>(window.jQuery || document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>'));</script>
@@ -114,7 +116,7 @@ $("form").submit(function(e){
 				alert(data.errormsg);
 			}
 			else {
-				alert("User name error!") ;
+				alert("Username error!") ;
 			}
 		}
 	}, "json" );
@@ -136,8 +138,6 @@ if (typeof(Storage) !== "undefined") {
 	$("input#clientid").val(localStorage.getItem("ClientID"));
 	$("input#userid").val(localStorage.getItem("UserId"));
 } 
-
-
 });
  
 </script>  
@@ -145,8 +145,8 @@ if (typeof(Storage) !== "undefined") {
 <body>
 <div id="rcontainer">
 <div id="workarea" style="width:752px;margin:auto;min-height:400px;"> 
-<div>&nbsp;</div>
-<img alt="Touch Down Center (Internet Connection Required)" 
+
+<img alt="TouchDown&trade Center (Internet Connection Required)" 
 <?php if( !empty($support_viewtrack_logo) ){ ?>
 	src="res/main-logo-vt-top.png" 
 <?php } else if( !empty($support_fleetmonitor_logo) ){ ?>
@@ -155,9 +155,9 @@ if (typeof(Storage) !== "undefined") {
 	src="res/main-logo-td-top.jpg" 
 <?php } ?>
 />
-<form style="padding-left:60px;padding-right:60px;padding-top:20px;padding-bottom:20px;">
+<form style="padding-left:60px;padding-right:60px;padding-top:50px;padding-bottom:20px;">
 <fieldset><legend> Sign in to <?php echo $product_name ; ?></legend>
-<div style="padding-left:20px;">
+<div style="padding-left:30px;">
 
 <?php if(!empty($support_multicompany) ) { ?>
 <div id="dclientid">

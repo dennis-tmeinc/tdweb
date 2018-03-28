@@ -368,10 +368,10 @@ foreach( $timezonelist as $tz ) {
 		</tr>
 		<tr>
 			<td style="text-align:right">Session Timeout Value:</td>
-			<td><input name="SessionTimeout" type="text" value="900"/></td>
+			<td><input name="SessionTimeout" type="number" value="900" min="300" max="86400" /></td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
-		</tr>		
+		</tr>
 		<tr>
 			<td style="text-align:right">Address:</td>
 			<td><input name="Address" size="40" type="text" /></td>
@@ -422,7 +422,7 @@ foreach( $timezonelist as $tz ) {
 		</tr>
 		<tr>
 			<td style="text-align:right">Email Address:</td>
-			<td><input name="ContactEmail" type="text" /></td>
+			<td><input name="ContactEmail" type="email" /></td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 		</tr>

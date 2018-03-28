@@ -4,19 +4,25 @@ margin: 0px;
 padding: 0px ;
 height:100%;
 font:12px Arial, Helvetica, sans-serif ;
+background-color:#FCFCFC;
 }
 
 img {
  border:0;
 }
- 
+
+
+/*LINH-ADDITIONS,  added web fonts */
+<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Montserrat|Roboto+Condensed">
+
+
 :focus {
  outline:0;
 }
 
 #container {
 min-height:100%;
-background-color:#ffe;
+background-color:#FCFCFC;
 }
 
 #push {
@@ -35,10 +41,11 @@ display:none;
 
 #lpanel {
 	float:left;
-	margin-left:8px;
-	margin-right:1px;
-	background-color:#fff;
+	background-color:#F1F1F1 ; /*LINH-ADDITIONS , light grey */
+	min-height:100%;
 }
+
+
 
 #mcontainer {
 	position:relative;
@@ -59,9 +66,11 @@ z-index: 500;
 }
 
 #title {
-	background-color:#cee;
-	padding-left:20px;
-	padding-right:20px;
+	background-color:#E7E7E7; /*LINH-ADDITIONS  */
+	padding: 10px 20px 8px 20px;
+	font-family: Gotham, "Montserrat", "Helvetica Neue", Helvetica, Arial, "sans-serif";
+	font-size: 24px;
+	
 }
 
 #title #rt_msg_container {
@@ -88,7 +97,7 @@ z-index: 500;
 	overflow:auto;
 	padding-left:20px;
 	padding-right:20px;
-	overflow:auto;
+
 }
 
 #tdcmap {
@@ -111,7 +120,7 @@ text-align: left;
 
 table.listtable td, table.listtable th 
 {
-border:1px solid #98bf21;
+border:1px solid #9E9E9E;
 padding:3px 7px 2px 7px;
 }
 
@@ -119,8 +128,8 @@ table.listtable th
 {
 padding-top:5px;
 padding-bottom:4px;
-background-color:#A7C942;
-color:#ffffff;
+background-color:#C0C0C0;
+color:#fff;
 }
 
 table.listtable tr td 
@@ -132,12 +141,12 @@ background-color:#FFF;
 table.listtable tr.alt td 
 {
 color:#000000;
-background-color:#EAF2D3;
+background-color:#EAF2D3; /* old colour, avocado #EAF2D3 */
 }
 
 div .listtablebottomline {
-	border-bottom:1px solid #98bf21;
-	border-right:1px solid #98bf21;
+	border-bottom:1px solid #9e9e9e;
+	border-right:1px solid #9e9e9e;
 }
 
 table.summarytable
@@ -148,12 +157,12 @@ width:auto;
 
 table.summarytable col.altcol
 {
-background-color:#ecdff2;
+background-color:snow /* old colour, PINK #ecdff2 */
 }
 
 table.summarytable td, table.summarytable th 
 {
-border:1px solid #98bf21;
+border:1px solid #9e9e9e;
 padding:3px 7px 2px 7px;
 }
 
@@ -163,7 +172,7 @@ font-size:1.1em;
 text-align:left;
 padding-top:5px;
 padding-bottom:4px;
-background-color:#A7C942;
+background-color:#C0C0C0;
 color:#ffffff;
 }
 

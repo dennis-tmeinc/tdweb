@@ -42,8 +42,14 @@
 		$date_end = $date_end->format('Y-m-d H:i:s');
 
 		$resp['report']=array();
+		
+		$escape_req=array();
+		foreach( $_REQUEST as $key => $value )
+		{
+			$escape_req[$key]=$conn->escape_string($value);
+		}
 	
-		$filter = " WHERE alert_code = $_REQUEST[alertcode] AND date_time BETWEEN '$date_begin' AND '$date_end' ";
+		$filter = " WHERE alert_code = $escape_req[alertcode] AND date_time BETWEEN '$date_begin' AND '$date_end' ";
 
 		// get total records	
 		$sql="SELECT count(*) FROM td_alert $filter ;" ;
@@ -84,7 +90,7 @@
 		"panic"
 		);
 
-		$sql="SELECT `index`, `dvr_name`, `description`, `alert_code`, `date_time` FROM td_alert $filter ORDER BY $_REQUEST[sidx] $_REQUEST[sord] LIMIT $start, $_REQUEST[rows] ;";
+		$sql="SELECT `index`, `dvr_name`, `description`, `alert_code`, `date_time` FROM td_alert $filter ORDER BY $escape_req[sidx] $escape_req[sord] LIMIT $start, $escape_req[rows] ;";
 		
 		$grid['query'] = $sql ;
 		

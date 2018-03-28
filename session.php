@@ -22,7 +22,7 @@ if( !empty($_REQUEST[session_name()]) ) {
 }
 
 if( empty($product_name) ) {
-	$product_name = "TOUCH DOWN CENTER" ;
+	$product_name = "TouchDown™ Video Command Center" ;
 }
 
 if( empty($td_conf) )

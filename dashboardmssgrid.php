@@ -47,7 +47,7 @@
 				
 				// connection
 				$ctime = new DateTime($row[3]);
-				if( $nowTS - $ctime->getTimestamp() < 24*3600 ) {	// login less than 24 hours
+				if( $nowTS - $ctime->getTimestamp() < 65*60 ) {	// login interval is now 1 hour (login less than 24 hours)
 					$cell[1] = "OK" ; 
 				}
 				else {
