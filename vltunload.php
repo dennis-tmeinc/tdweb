@@ -12,14 +12,10 @@
 	header("Content-Type: application/json");
 
 	if( $logon ) {
+
+		// success
 		$resp['res'] = 1 ;
-		
-		// response to browser first
-		$content = json_encode($resp);
-		header( "Content-Length: ".strlen($content) );
-		echo $content ;
-		ob_flush();
-		flush();
+		echo json_encode($resp);
 
 		$vltsession = session_id().'-'.$_REQUEST['vltpage'];
 	

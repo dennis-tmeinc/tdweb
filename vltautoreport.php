@@ -30,13 +30,16 @@
 		if( !empty( $_SESSION['clientid'] ) )
 			$xml->company = $_SESSION['clientid'] ;
 		
-		$xml->callbackurl = $avlcbserver . dirname($_SERVER['REQUEST_URI']).'/' . $avlcbapp ;
+		if( empty($avlcbserver) ) {
+			$avlcbserver = $_SERVER['REQUEST_SCHEME'] . "://". $_SERVER['HTTP_HOST'] . ":". $_SERVER['SERVER_PORT']; 
+		}
+		$xml->callbackurl = $avlcbserver . dirname($_SERVER['REQUEST_URI']). "/vltevent.php" ;
 		$xml->session = $vltsession ;
 		$xml->serialno = $serialno ;
 		
 		// read report cfg from vlt file
 		$fvlt = fopen( session_save_path().'/sess_vlt_'.$vltsession, "r" );
-		if( $fvlt ) {
+		if( $fvlt )
 			flock( $fvlt, LOCK_SH ) ;		// read lock
 	
 			@$vlt = json_decode( fread( $fvlt, 256000 ), true );

@@ -51,7 +51,10 @@
 		if( !empty( $_SESSION['clientid'] ) )
 			$xml->company = $_SESSION['clientid'] ;
 		
-		$xml->callbackurl = $avlcbserver . dirname($_SERVER['REQUEST_URI']).'/' . $avlcbapp ;
+		if( empty($avlcbserver) ) {
+			$avlcbserver = $_SERVER['REQUEST_SCHEME'] . "://". $_SERVER['HTTP_HOST'] . ":". $_SERVER['SERVER_PORT']; 
+		}
+		$xml->callbackurl = $avlcbserver . dirname($_SERVER['REQUEST_URI']).'/vltevent.php' ;
 		$xml->session = $vltsession ;
 		$xml->serialno = $serialno ;
 		$xml->target->avl='' ;

@@ -42,10 +42,6 @@ if( !empty( $_REQUEST['c'] ) ) {
 			
 			if( $o ) {							// contents? flush out buffer, and clean the init file
 				break ;
-				// flush buffers
-				//ob_flush();
-				//flush();
-				//$stime = time() ;				// extent time out
 			}
 	
 			usleep(50000);

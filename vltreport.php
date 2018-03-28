@@ -66,7 +66,7 @@
 							if( !empty( $phone ) ) {
 								$ctx = stream_context_create(array(
 								  'http' => array
-								  ( 'method' => 'GET', 'timeout' => 0.3 )
+								  ( 'method' => 'GET', 'timeout' => 1.0 )
 								));
 								// add live tun register url
 								$phonereg = $phone."&u=".rawurlencode(dirname($_SERVER['SCRIPT_NAME']). "/livetun.php"  );

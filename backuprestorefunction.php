@@ -34,15 +34,15 @@ function dbrestore( $backupname, $conn, $fpercent )
 	}
 
 	$ext=".sql.bz2";
-	$compress_rate = 10.6 ;		// assume bz2 get 10 times compressed
+	$compress_rate = 10.6 ;		// assumed bz2 compression rate
 	@$fin = fopen("compress.bzip2://$backupname$ext", "r");
 	if( empty($fin) ) {
 		$ext=".sql.gz";
-		$compress_rate = 6.6 ;	
+		$compress_rate = 6.6 ;	// assumed gz compression rate
 		@$fin = fopen("compress.zlib://$backupname$ext", "r");
 		if( empty($fin) ) {
 			$ext=".sql";
-			$compress_rate = 1 ;	
+			$compress_rate = 1 ;	// plain rate
 			@$fin = fopen("$backupname$ext", "r");
 		}
 	}
@@ -64,7 +64,7 @@ function dbrestore( $backupname, $conn, $fpercent )
 	
 	$statement = '';
     while (($buffer = fgets($fin, 128*1024)) !== false) {
-		set_time_limit(15);
+		set_time_limit(30);
 		$totalread += strlen($buffer);
 		$tr = trim($buffer) ;
 		if( substr($tr,0,2)=='--' || $tr=='' ) {		// comment

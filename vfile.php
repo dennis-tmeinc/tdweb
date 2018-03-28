@@ -217,6 +217,16 @@ function vfile_realpath( $filename )
 	return false ;
 }
 
+// get realpath of the filename
+function vfile_basename( $filename )
+{
+	@ $st = vfile_stat( $filename ) ;
+	if( !empty($st['basename']) ) {
+		return $st['basename'];
+	}
+	return basename( $filename );
+}
+
 function vfile_glob( $filename )
 {
 	if( vfile_remote() ) {

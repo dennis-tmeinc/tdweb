@@ -44,10 +44,12 @@ function findvideo( &$chctx, $channel, $busname )
 	if( empty($st) ) {
 		$st=new DateTime("2000-01-01");
 	}
-	
+
 	// find video ending after $chctx['ve']
 	$sql = "SELECT time_start, time_end, TIMESTAMPDIFF(SECOND, time_start, time_end ) AS length, path FROM videoclip WHERE vehicle_name = '$busname' AND channel = $channel AND time_end > '$searchtime' ORDER BY time_start" ;
 
+	header("X-log-findvideo: ".$sql);
+	
 	if( $result = $conn->query($sql, MYSQLI_USE_RESULT) ) {
 		while( $row=$result->fetch_array() ) {
 			if( vfile_exists ( $row['path'] ) ) {
@@ -153,7 +155,7 @@ function videodata( &$chctx, &$data, &$vheaddata )
 		vfile_seek( $vfile, $chctx['no'] );
 		
 		// frame size
-		$framesize = 512*1024 ;			// max 512k
+		$framesize = 2*1024*1024 ;			// max 512k
 		if( $chctx['ko'] > 0 ) {
 			if( ($kfile = vfile_open($chctx['k'])) ) {
 				vfile_seek( $kfile, $chctx['ko'] );
@@ -375,6 +377,9 @@ switch ( $_REQUEST['cmd'] ) {
 				}
 			}
 			else {
+				
+				header("X-log1: start a new sess");
+				
 				// start a new reading
 				$chctx = array();
 				if( empty( $_SESSION['playlist']['headersize'] ) ) {
@@ -390,8 +395,18 @@ switch ( $_REQUEST['cmd'] ) {
 				if( !empty($_REQUEST['size'] ) ) {
 					$chctx['rs'] = $_REQUEST['size'] ;
 				}
+				
+				$x = 2 ;
+				
 				while( findvideo( $chctx, $channel, $busname )  ) {
+					
+					
 					$vlength = videodata( $chctx, $vdata, $vheaddata );
+
+					header("X-log".$x.": $busname-$channel-$vlength");
+					$x++;
+
+
 					if( $vlength > 0 ) {
 						break ;
 					}

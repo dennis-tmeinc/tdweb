@@ -93,13 +93,12 @@
 				$lastpos = $fsize -1 ;
 			}
 
+			ob_clean();			// so to output exact $len contents
 			$len = $lastpos - $startpos + 1 ;
-			header( "Content-Length: $len" );
-			ob_flush();
-			flush();
+			// header( "Content-Length: $len" );
 
 			while( $len > 0 ) {
-				set_time_limit(30);
+				set_time_limit(15);
 				$r = $len ;
 				if( $r > 256*1024 ) {
 					$r = 256*1024 ;
@@ -108,8 +107,6 @@
 				if( strlen( $da ) > 0 ) {
 					echo $da ;
 					$len -= $r ;
-					ob_flush();
-					flush();
 					if( connection_aborted () ) break;
 				}
 				else {
@@ -118,6 +115,8 @@
 			}
 			
 			vfile_close( $f );
+			
+			return ;
 		}
 	}
 ?>

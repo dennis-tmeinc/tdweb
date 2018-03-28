@@ -29,12 +29,17 @@
 			$resp['res']=1;
 
 			// flush out contents
-			$content = json_encode($resp);
-			header( "Content-Length: ".strlen($content) );
+			ob_clean();
+
+			ob_start();
+			echo json_encode($resp);
+			header( "Content-Length: ". ob_get_length() );
 			header( "Connection: close" );
-			echo $content ;
+			ob_end_flush();
+			
 			ob_flush();
 			flush();
+			ignore_user_abort( true );		
 			
 			require 'backuprestorefunction.php' ;
 			$backupname = $backup_path."/bk".urlencode( $_REQUEST['backupname'] );

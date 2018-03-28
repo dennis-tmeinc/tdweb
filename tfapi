@@ -302,13 +302,19 @@ function listlivevehicle()
 				$res[ 'vehicle_list' ] = array() ;
 				
 				if( isset( $vehicle_list['dvrid'] )) {
-					$vehicle_list['name'] = $vehicle_list['dvrid'] ;
-					$res[ 'vehicle_list' ][] = $vehicle_list ;
+					$vi = $vehicle_list ;
+					if( empty( $vi['status'] ) || $vi['status'] != "standby" ) {
+						$vi['name'] = $vi['dvrid'] ;
+						$res[ 'vehicle_list' ][] = $vi ;
+					}
 				}
 				else {
 					for( $v=0; $v<count($vehicle_list); $v++ ) {
-						$$vehicle_list[$v]['name'] = $$vehicle_list[$v]['dvrid'] ;
-						$res[ 'vehicle_list' ][] = $vehicle_list[$v] ;
+						$vi = $vehicle_list[$v] ;
+						if( empty( $vi['status'] ) || $vi['status'] != "standby" ) {
+							$vi['name'] = $vi['dvrid'] ;
+							$res[ 'vehicle_list' ][] = $vi ;
+						}
 					}
 				}
 				$res[ 'status' ] = "OK";

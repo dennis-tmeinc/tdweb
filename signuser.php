@@ -140,12 +140,7 @@ else {
 done:	
 	session_write() ;
 
-	// flush contents before do more cleaning jobs
-	$content = json_encode($resp);
-	header( "Content-Length: ".strlen($content) );
-	echo $content ;
-	ob_flush();
-	flush();
+	echo json_encode($resp) ;
 	
 	// clean old session files
 	$xt = time() ;

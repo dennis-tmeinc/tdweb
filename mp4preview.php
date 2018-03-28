@@ -72,7 +72,7 @@
 				$preview_file = $vcachedir.$dirc."v".$hash.".mp4" ;
 				$preview_tmpfile = $vcachedir.$dirc."t".$hash.".mp4" ;
 				$preview_file_pattern = $vcachedir.$dirc."*.mp4" ;
-				$preview_lockfile = session_save_path().$dirc.'sess_lock'.$hash ;
+				$preview_lockfile = session_save_path().'/sess_lock'.$hash ;
 				
 				if( vfile_size( $preview_file ) < 100 ) {
 				
@@ -127,6 +127,11 @@
 					header( "Accept-Ranges: bytes" );
 					vfile_seek( $f, 0, SEEK_END );
 					$fs = vfile_tell( $f );
+					if( empty( $mp4preloadsize ) ) {
+						$mp4preloadsize = 102400 ;		// 100 K
+					}
+					
+					$partial = false ;
 
 					if( !empty( $_SERVER['HTTP_RANGE'] ) ) {
 						$range = sscanf($_SERVER['HTTP_RANGE'] , "bytes=%d-%d");
@@ -138,33 +143,39 @@
 							$lastpos = $range[1] ;
 						}
 						$offset = $range[0] ;
+						if( $offset<0 ) $offset = 0 ;
 						$len = $lastpos + 1 - $offset ;
-						header("Content-Length: $len" );
-						header( sprintf("Content-Range: bytes %d-%d/%d", $offset, $lastpos, $fs ));
-						header( "HTTP/1.1 206 Partial Content" );
+						$partial = true ;
 					}
 					else {
 						$len = $fs ;
 						$offset = 0 ;
-						header("Content-Length: $len" );
-						// test for only return partial contents
-						if( empty( $mp4preloadsize ) ) {
-							$mp4preloadsize = 102400 ;		// 100 K
-						}
-						if( $mp4preloadsize < $fs ) {
+						// only to output partial contents
+						if( $len > $mp4preloadsize ) {
 							$len = $mp4preloadsize ;
-							$lastpos = $len - 1 ;	
-							header( sprintf("Content-Range: bytes %d-%d/%d", $offset, $lastpos, $fs ));
-							header( "HTTP/1.1 206 Partial Content" );								
+							$partial = true ;
 						}
 					}
 
 					if( $len>0 ) {
+						if( $partial ){
+							if( $len > 256*1024 ) {
+								$len = 256*1024 ;
+							}
+							$lastpos = $offset + $len - 1 ;	
+							header("Content-Length: $len" );
+							header( sprintf("Content-Range: bytes %d-%d/%d", $offset, $lastpos, $fs ));
+							header( "HTTP/1.1 206 Partial Content" );
+						}
+						
 						// header("Connection: close");
 						vfile_seek( $f, $offset );
 
 						while( $len > 0 ) {
 							set_time_limit(30);
+							
+							usleep(200000);				// throttle download speed
+
 							$r = $len ;
 							if( $r > 256*1024 ) {
 								$r = 256*1024 ;
@@ -179,9 +190,6 @@
 								break;
 							}
 						}
-					}
-					else {
-						header("Content-Length: 0" );
 					}
 					
 					vfile_close( $f );

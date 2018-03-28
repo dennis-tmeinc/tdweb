@@ -166,6 +166,10 @@ var vlt_pidx = 0 ;
 // avlp : position message, clean: clean same type of pushpin
 function showpin( avlp, id, iconimg, clean ) 
 {
+	if( avlp.pos2 ) {
+		avlp.pos = avlp.pos2;
+		avlp.utc = true ;
+	}
 	if( avlp.pos.length ) {
 		
 		var e,i ;
@@ -291,6 +295,9 @@ function showpin( avlp, id, iconimg, clean )
 			var dsec = dt.getSeconds() ;
 			if( dsec < 10 ) dsec = "0" + dsec ;
 			var desc = dyear + "-" + dmon + "-" + ddate + ' ' + dhour + ":" + dmin + ":" + dsec ;
+			if( avlp.utc ) {
+				desc += " UTC" ;
+			}
 			var lines = 1 ;
 			
 			// speed
@@ -378,6 +385,22 @@ function showpin( avlp, id, iconimg, clean )
 	}
 }
 
+// update vlt dvr list table
+function update_dvrlist()
+{
+	var options='';
+	for( var id in vltlist ) {
+		var name = vltlist[id].dvrid ;
+		if(  vltlist[id].status == 'standby'  ) {
+			options += "<option style=\"color:gray;background-image:url(res/standby.png);background-repeat: no-repeat;background-position: right;\" >"+name+"</option>" ;
+		}
+		else {
+			options += "<option>"+name+"</option>" ;
+		}
+	}
+	$("select[name='vltvehicle']").html( options );	
+}
+
 function tdwebc_message( tdwebc )
 {
 	if( tdwebc instanceof Array )
@@ -402,11 +425,7 @@ function tdwebc_message( tdwebc )
 				}
 			}
 			// update vlt list
-			var options='';
-			for( var id in vltlist ) {
-				options += "<option>"+id+"</option>" ;
-			}
-			$("select[name='vltvehicle']").html( options );					
+			update_dvrlist();
 		}
 		else if( cmd == '20' ) {	// AVL_IP_REPORT(20)
 			if( !avlp.ip || avlp.ip == '0.0.0.0' ) {
@@ -416,11 +435,7 @@ function tdwebc_message( tdwebc )
 				vltlist[ avlp.dvrid ] = avlp ;
 			}
 			// update vlt list
-			var options='';
-			for( var id in vltlist ) {
-				options += "<option>"+id+"</option>" ;
-			}
-			$("select[name='vltvehicle']").html( options );			
+			update_dvrlist();
 		}
 		else if( cmd == '27' || cmd == '28' ) {	//AVL_CURRENT_DATA_QUERY(27) AVL_CURRENT_DATA_REPORT(28)
 			if( tdwebc[i].source.dvrs && tdwebc[i].source.dvrs.dvr ) {
@@ -532,12 +547,17 @@ $.getJSON("vltdvrlist.php", vltparam, function(v){
 // getcurrentpos button
 $( "button[name='getcurrentpos']" ).click(function(e){
 	e.preventDefault();
-	var sel = $("select[name='vltvehicle']")[0].selectedIndex;
-	if( sel>=0 ) {
+	var v = $("select[name='vltvehicle']").val();
+	if( v ) {
+		var dvrdetail = vltlist[v] ;
+		if( dvrdetail && dvrdetail.status == 'standby' ) {
+			alert( "Vehicle " + dvrdetail.name + " is in standby mode." );
+			return ;
+		}
+		
 		vltparam.vltserial++;
 		var form = vltparam ;
-		form['dvrid[]'] = [] ;
-		form['dvrid[]'] = $("select[name='vltvehicle']").val() ;
+		form['dvrid[]'] = v ;
 		$.getJSON("vltgetlocation.php", form, function(resp){
 			if( resp.res && resp.tdwebc ) {
 				tdwebc_message( resp.tdwebc );
@@ -1097,7 +1117,7 @@ function vlt_autoreport( start )
 		param.start = start ;
 	else 
 		param.start = 0 ;
- 	$.getJSON("vltautoreport.php", param, function(resp){
+	$.getJSON("vltautoreport.php", param, function(resp){
 		if( resp.res ) {
 			if( resp.stop ) {
 				alert("Auto-report stopped!");
