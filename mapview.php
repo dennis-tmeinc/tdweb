@@ -586,6 +586,10 @@ function loadvlmap()
 	fdata.serial=++vlmap_serial;
 	$.getJSON("vlmap.php", fdata, function(resp){
 		if( resp.res == 1 && resp.serial>=vlmap_serial ) {
+			
+			// set records number for current map icons
+			$("td#gen_count").text( resp.record );
+			
 			// map events (icons) successfully loaded
 			mapevent = resp.mapevent ;
 			

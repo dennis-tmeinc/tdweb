@@ -38,7 +38,7 @@
 		$startTime=$startTime->format("Y-m-d H:i:s");	    		// MYSQL format
 		$endTime=$endTime->format("Y-m-d H:i:s");	    			// MYSQL format
 
-		// secaped sql values
+		// escaped sql values
 		$esc_req=array();		
 		foreach( $_REQUEST as $key => $value ){
 			$esc_req[$key]=$conn->escape_string($value);
