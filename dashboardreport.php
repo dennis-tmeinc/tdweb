@@ -85,17 +85,6 @@
 			$result->free();
 		}
 
-		// Veh.Checked-In List
-		$sql = "SELECT de_vehicle_name, de_datetime FROM dvr_event WHERE de_event = 1 AND de_datetime BETWEEN '$date_begin' AND '$date_end' ORDER BY de_datetime DESC";
-		$result=$conn->query($sql);
-		$resp['report']['list_Vehicles_Checkedin_day'] = array() ;
-		if( $result ){
-			while( $row = $result->fetch_array(MYSQLI_ASSOC) ){
-				$resp['report']['list_Vehicles_Checkedin_day'][] = $row ;
-			}
-			$result->free();
-		}
-		
 		// Veh. Uploaded
 		$sql = "SELECT count(DISTINCT vehicle_name) FROM `videoclip` WHERE time_upload BETWEEN '$date_begin' AND '$date_end' ;";
 		$result=$conn->query($sql);

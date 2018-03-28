@@ -19,7 +19,12 @@
 		if($result=$conn->query($sql)) {
 			if( $row=$result->fetch_array(MYSQLI_ASSOC) ) {
 				$resp['tag'] = $row ;
-				$resp['tag']['channels'] = new SimpleXMLElement( "<emg>" . $row['Video_Files'] . "</emg>" );
+				if( isset($row['Video_Files']) ){
+					$resp['tag']['channels'] = new SimpleXMLElement( "<emg>" . $row['Video_Files'] . "</emg>" );
+				}
+				else if( isset($row['video_files']) ) {
+					$resp['tag']['channels'] = new SimpleXMLElement( "<emg>" . $row['video_files'] . "</emg>" );
+				}
 				unset( $resp['tag']['Video_Files'] ) ;
 				$resp['id'] = $_REQUEST[id] ;
 				$resp['res'] = 1 ;

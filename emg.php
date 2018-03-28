@@ -40,7 +40,7 @@ $("#tag_list").jqGrid({
 	height: 380,
 	width: 1024,
 	caption: 'Emergency Events',
-    colNames:['Date/Time', 'Client ID', 'Bus ID', 'Sensor Status', 'Event Type' ],
+    colNames:['Date/Time', 'Client ID', 'Vehicle ID', 'Sensor Status', 'Event Type' ],
     colModel :[
       {name:'Date_Time', index:'Date_Time', width:180, sortable: true },
       {name:'Client_Id', index:'Client_Id', width:180, sortable: true }, 
@@ -91,15 +91,26 @@ $( ".dialog#dialog_emgvideo" ).dialog({
 					// setup camera select
 					var camopts = [] ;
 					var camopt = "" ;
-					if( resp.tag.channels.channel.length )
-					for( var ch = 0 ; ch < resp.tag.channels.channel.length; ch++ ) {
-						// set lpr1
-						var name = "camera"+(ch+1) ;
-						if( resp.tag.channels.channel[ch].name ) {
-							name = resp.tag.channels.channel[ch].name ;
+					if( resp.tag.channels.channel ) {
+						if( resp.tag.channels.channel.length ) {
+							for( var ch = 0 ; ch < resp.tag.channels.channel.length; ch++ ) {
+								// set lpr1
+								var name = "camera"+(ch+1) ;
+								if( resp.tag.channels.channel[ch].name ) {
+									name = resp.tag.channels.channel[ch].name ;
+								}
+								camopts[ch] = name ;
+								camopt += "<option value=\"" + ch +"\">"+name+"</option>" ;
+							}
 						}
-						camopts[ch] = name ;
-						camopt += "<option>"+name+"</option>" ;
+						else if(resp.tag.channels.channel.video){
+							var name = "camera1" ;
+							if( resp.tag.channels.channel.name ) {
+								name = resp.tag.channels.channel.name ;
+							}
+							camopts[0] = name ;
+							camopt += "<option value=\"0\">"+name+"</option>" ;
+						}
 					}
 					$("select[name='emgvideocam']").html( camopt ); 
 					$("select[name='emgvideocam']").data("tag", resp.id );
@@ -234,6 +245,19 @@ $("button#showmap").click(function(event){
 	$( ".dialog#dialog_map" ).dialog("open");
 });
 
+var x ;
+$("button#showPanic").click(function(event){
+	event.preventDefault();
+
+	
+});
+
+$("button#showCrash").click(function(event){
+	event.preventDefault();
+
+	
+});
+
 // current zoom level
 var mapzoom = 15 ;
 var mapcoor = "37.778297,-122.417297" ;
@@ -358,9 +382,24 @@ $("#rcontainer").show('slow');
 <table id="tag_list"></table> 
 <div id="tag_list_pager"></div>
 </div>
-<button id="Video">Video</button>
+<p>
+<button id="Video">Play Video</button>
 <button id="showmap">Show Map</button>
-
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 
+&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+<!--
+<button id="showPanic">Panic Event</button>
+<button id="showCrash">Crash Event</button>
+-->
+</p>
 <p/>
 
 </div>

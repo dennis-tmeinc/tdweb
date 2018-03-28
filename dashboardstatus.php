@@ -164,8 +164,10 @@ $("#list_Vehicles_In_Service").jqGrid({
 });
 
 $("#list_Vehicles_Checkedin_day").jqGrid({        
-	scroll: true,
-	datatype: "local",
+	scroll: 1,
+	url:'dashboardreportcheckingrid.php',
+	datatype: "json",
+	gridview: true,
 	height: 240,
 	width: 600,
 	colNames:['Vehicle Name','Last Check-In'],
@@ -173,7 +175,10 @@ $("#list_Vehicles_Checkedin_day").jqGrid({
 	  {name:'de_vehicle_name', width:180, sortable: true }, 
 	  {name:'de_datetime', width:180, sortable: true }
 	],
-	rownumbers: true
+	sortname: "de_datetime",
+	sortorder: "desc",
+	rownumbers: true,
+	rownumWidth: 50
 });
 
 $("#list_Vehicles_Uploaded_day").jqGrid({        

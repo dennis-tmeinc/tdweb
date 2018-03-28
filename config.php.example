@@ -75,9 +75,6 @@
 	$avlcbserver = "http://localhost:80" ;
 	$avlcbapp = "vltevent.php" ;
 	
-	// Emergency Event Support
-	// $support_emg = 1 ;
-	
 	// setup time zone
 	date_default_timezone_set($timezone) ;	
 	if(	$database_persistent ) {

@@ -939,10 +939,12 @@ bus2 : high tempterature
 		<tr>
 			<td>Recipients: (Separated by semi-colon)</td>
 			<td>Send Alert Mail To: (Separated by semi-colon)</td>
+			<td>Send Panic Alert To: (Separated by semi-colon)</td>
 		</tr>
 		<tr>
 			<td><textarea cols="35" name="recipient" rows="10"></textarea></td>
 			<td><textarea cols="35" name="alertRecipients" rows="10"></textarea></td>
+			<td><textarea cols="35" name="panicAlertRecipients" rows="10"></textarea></td>
 		</tr>
 	</tbody>
 </table>

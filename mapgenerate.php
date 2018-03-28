@@ -203,13 +203,56 @@
 		}
 	
 		// Drive By Event
-		if( !empty($_REQUEST['bDriveby']) ) {
+		if( !empty($_REQUEST['bDriveBy']) ) {
 			if( strlen( $filter_event )>0 ) {
 				$filter_event .= " OR " ;
 			}
 			$filter_event .= "( vl_incident = 40 )" ;
 		}
 	
+		// TVS events
+		if( !empty($_REQUEST['bDoorOpen']) && $_REQUEST['bDoorOpen']!="0" ) {
+			if( strlen( $filter_event )>0 ) {
+				$filter_event .= " OR " ;
+			}
+			$filter_event .= "( vl_incident = 10 )" ;
+		}
+		
+		if( !empty($_REQUEST['bDoorClose']) && $_REQUEST['bDoorClose']!="0" ) {
+			if( strlen( $filter_event )>0 ) {
+				$filter_event .= " OR " ;
+			}
+			$filter_event .= "( vl_incident = 11 )" ;
+		}
+		
+		if( !empty($_REQUEST['bIgnitionOn']) && $_REQUEST['bIgnitionOn']!="0" ) {
+			if( strlen( $filter_event )>0 ) {
+				$filter_event .= " OR " ;
+			}
+			$filter_event .= "( vl_incident = 12 )" ;
+		}
+		
+		if( !empty($_REQUEST['bIgnitionOff']) && $_REQUEST['bIgnitionOff']!="0" ) {
+			if( strlen( $filter_event )>0 ) {
+				$filter_event .= " OR " ;
+			}
+			$filter_event .= "( vl_incident = 13 )" ;
+		}
+		
+		if( !empty($_REQUEST['bMeterOn']) && $_REQUEST['bMeterOn']!="0" ) {
+			if( strlen( $filter_event )>0 ) {
+				$filter_event .= " OR " ;
+			}
+			$filter_event .= "( vl_incident = 41 )" ;
+		}
+		
+		if( !empty($_REQUEST['bMeterOff']) && $_REQUEST['bMeterOff']!="0" ) {
+			if( strlen( $filter_event )>0 ) {
+				$filter_event .= " OR " ;
+			}
+			$filter_event .= "( vl_incident = 42 )" ;
+		}
+		
 		// g-force filter
 		$filter_gforce = '';
 		

@@ -21,6 +21,74 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 // start up 
 var map ;
 
+// const external 
+pinicons = {
+		1:"res/map_icons_stop.png",
+		2:"route_icon.php?",
+		4:"res/map_icons_idle.png",
+		10:"res/map_icons_dooropen.png",
+		11:"res/map_icons_doorclose.png",
+		12:"res/map_icons_ignitionon.png",
+		13:"res/map_icons_ignitionoff.png",
+		16:"res/map_icons_g.svg",
+		17:"res/map_icons_desstop.png",
+		18:"res/map_icons_park.png",
+		23:"res/map_icons_mevent.png" ,
+		40:"res/map_icons_driveby.png" ,
+		41:"res/map_icons_meteron.png" ,
+		42:"res/map_icons_meteroff.png" ,
+		100:"speed_icon.php?",
+		101:"res/map_icons_fi.png" ,
+		102:"res/map_icons_ri.png" ,
+		103:"res/map_icons_si.png" ,
+		104:"res/map_icons_hb.png" ,
+		105:"res/map_icons_rs.png" ,
+		106:"res/map_icons_ht.png" ,
+		107:"res/map_icons_br.png" 
+		};
+
+pintitles = {
+	1:"Stopping",
+	2:"Route",
+	4:"Idling",
+	10:"Door Open",
+	11:"Door Close",
+	12:"Ignition On",
+	13:"Ignition Off",
+	16:"G Sensor Event",
+	17:"Bus Stop",
+	18:"Parking",
+	23:"M.Events" ,
+	40:"Drive By" ,
+	41:"Meter On" ,
+	42:"Meter Off" ,
+	100:"Speeding",
+	101:"Front Impact" ,
+	102:"Rear Impact" ,
+	103:"Side Impact" ,
+	104:"Hard Brake" ,
+	105:"Racing Start" ,
+	106:"Hard Turn" ,
+	107:"Bumpy Ride" 
+};
+		
+// mapevent: [id,icon,direction,lat,lon]
+function getEventIcon( mapevent )
+{		
+	var iconimg = pinicons[mapevent[1]];
+	if( mapevent[1] == 2 || mapevent[1] == 100 ) {
+		var direction = ((parseInt(mapevent[2])+5)/10).toFixed()*10;
+		iconimg += "deg="+direction ;
+	}
+	return iconimg ;
+}
+
+// eventType: (icon type)
+function getEventTitle(eventType)
+{
+	return pintitles[eventType] ;
+}
+
 $(function(){
 
 $("button").button();
@@ -94,37 +162,14 @@ $("input[name='txtaddress']").on("keypress", function(e){
 		$("button#btaddress").click();
 	}
 });
-
+				
+// mapevent: [id,icon,direction,lat,lon]
 function showsyncicon( mapevent )
 {
 	map.entities.clear();
 
-	var pinicons = {
-		1:"res/map_icons_stop.png",
-		2:"route_icon.php?",
-		4:"res/map_icons_idle.png",
-		16:"res/map_icons_g.svg",
-		17:"res/map_icons_desstop.png",
-		18:"res/map_icons_park.png",
-		23:"res/map_icons_mevent.png" ,
-		40:"res/map_icons_driveby.png" ,
-		100:"speed_icon.php?",
-		101:"res/map_icons_fi.png" ,
-		102:"res/map_icons_ri.png" ,
-		103:"res/map_icons_si.png" ,
-		104:"res/map_icons_hb.png" ,
-		105:"res/map_icons_rs.png" ,
-		106:"res/map_icons_ht.png" ,
-		107:"res/map_icons_br.png" 
-		};
-
-	// mapevent: [id,icon,direction,lat,lon]
 	// place pushpins
-	var iconimg = pinicons[mapevent[1]];
-	if( mapevent[1] == 2 || mapevent[1] == 100 ) {
-		var direction = ((parseInt(mapevent[2])+5)/10).toFixed()*10;
-		iconimg += "deg="+direction ;
-	}
+	var iconimg = getEventIcon(mapevent);
 
 	var pushpinOptions = {icon:iconimg, width: 24, height: 24, anchor: new Microsoft.Maps.Point(12,12) }; 
 	var pinlocation = new Microsoft.Maps.Location( mapevent[3], mapevent[4] );
@@ -392,38 +437,16 @@ function loadvlmap()
 			var speedLimit = map_search.speedLimit * 1.609334 ;			// convert to KMh
 			var save = new Object ;		// saved value for reducing displayed event ;
 
-			var pinicons = {
-				1:"res/map_icons_stop.png",
-				2:"route_icon.php?",
-				4:"res/map_icons_idle.png",
-				16:"res/map_icons_g.svg",
-				17:"res/map_icons_desstop.png",
-				18:"res/map_icons_park.png",
-				23:"res/map_icons_mevent.png" ,
-				40:"res/map_icons_driveby.png" ,
-				100:"speed_icon.php?",
-				101:"res/map_icons_fi.png" ,
-				102:"res/map_icons_ri.png" ,
-				103:"res/map_icons_si.png" ,
-				104:"res/map_icons_hb.png" ,
-				105:"res/map_icons_rs.png" ,
-				106:"res/map_icons_ht.png" ,
-				107:"res/map_icons_br.png" 
-				};
-	
 			for(i=0;i<len;i++) {
 				// mapevent: [id,icon,direction,lat,lon]
-				// place pushpins
-				var iconimg = pinicons[mapevent[i][1]];
-				if( mapevent[i][1] == 2 || mapevent[i][1] == 100 ) {
-					var direction = ((parseInt(mapevent[i][2])+5)/10).toFixed()*10;
-					iconimg += "deg="+direction ;
-				}
 				
 				// don't insert the pushpin with infobox
 				if( mapevent[i][0] == infoindex ) {
 					continue ;
 				}
+
+				// place pushpins
+				var iconimg = getEventIcon( mapevent[i] );
 				
 				var pushpinOptions = {icon:iconimg, width: 24, height: 24, anchor: new Microsoft.Maps.Point(12,12), text: mapevent[i][0], textOffset: new Microsoft.Maps.Point(50, 50) }; 
 				var pinlocation = new Microsoft.Maps.Location( mapevent[i][3], mapevent[i][4] );
@@ -438,17 +461,20 @@ function loadvlmap()
 					}
 					// e.target.setOptions( {zIndex: 10 } );		// to prevent Infobox flashing
 					var loc=e.target.getLocation() ;
-
-
 			
 					eventInfobox.setLocation( loc );
 					var icon = e.target.getIcon() ;
-					eventInfobox.setOptions( { title:'', description:"Loading...", actions: [], id: vl_id, visible: true,  zIndex: 10 } );
+					eventInfobox.setOptions( { title:'<img src="'+icon+'" />', description:"Loading...", actions: [], id: vl_id, visible: true,  zIndex: 10 } );
 					
 					$.getJSON("vllist.php?vl_id="+vl_id, function(v){
 						if( v.res == 1 && v.vl.vl_id == vl_id ) {
 							var ititle = '<img src="'+icon+'" /> '+v.vl.vl_vehicle_name ;
- 							var desc = 'Event Time: '+v.vl.vl_datetime ;
+							var dtitle = getEventTitle(v.vl.vl_incident) ;
+							var desc = "";
+							if( dtitle ) {
+								desc += "Event: "+dtitle+"<br/>" ;
+							}
+ 							desc += 'Event Time: '+v.vl.vl_datetime ;
 							if( v.vl.vl_speed>0 ) {
 								desc += "<br/>Speed: "+(v.vl.vl_speed/1.609334).toFixed(1) ;
 							}
@@ -460,12 +486,12 @@ function loadvlmap()
 								if( s<10 ) s='0'+s ;
 								desc += "<br/>Duration: "+h+':'+m+':'+s;
 							}
-							var iheight=130 ;
+							var iheight=145 ;
 							if( v.vl.vl_impact_x != 0 || v.vl.vl_impact_y != 0 || v.vl.vl_impact_z != 0 ) {
 								desc += "<br/>X: "+v.vl.vl_impact_x +
 										" Y: "+v.vl.vl_impact_y +
 										" Z: "+v.vl.vl_impact_z ;
-								iheight = 145 ;
+								iheight = 160 ;
 							}
 							function iplayvideo() 
 							{ 
@@ -487,8 +513,6 @@ function loadvlmap()
 				
 				Microsoft.Maps.Events.addThrottledHandler(pushpin, 'mouseover', pin_info, 200 );  
 				Microsoft.Maps.Events.addThrottledHandler(pushpin, 'click', pin_info, 200 );  
-
-
 
 				map.entities.push(pushpin);
 			}

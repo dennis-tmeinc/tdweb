@@ -129,7 +129,7 @@
 			$videofile = $channels[ $_REQUEST['ch'.$i] ] ;
 			$imgfile = $driveby_eventdir."/frame".md5($videofile.$pos).".jpg" ;
 			$pos += 0.03 ;
-			$cmdline = "bin\\ffmpeg.exe -ss $pos -i $videofile -frames 1 $imgfile" ;
+			$cmdline = "bin\\ffmpeg.exe -ss $pos -i ".escapeshellarg($videofile)." -frames 1 $imgfile" ;
 			$eoutput = array();
 			$eret = 1 ;
 			vfile_exec( $cmdline, $eoutput, $eret ) ;

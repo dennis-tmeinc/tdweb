@@ -52,10 +52,13 @@
 						$filter .= " AND" ;
 					}
 					if( $f == 'Event_Code' ) {
-						if( $_REQUEST[$f][0] == 'E' ) {		// Event Marker
+						if( $_REQUEST[$f][0] == 'E' || 
+							$_REQUEST[$f][0] == 'e' ||
+							$_REQUEST[$f][0] == 'p' ||
+							$_REQUEST[$f][0] == 'P' ) {		// Event Marker, or Panic
 							$filter .= " `$f` = 1" ;
 						}
-						else if( $_REQUEST[$f][0] == 'C' ) {	// Crash
+						else if( $_REQUEST[$f][0] == 'C' || $_REQUEST[$f][0] == 'c' ) {	// Crash
 							$filter .= " `$f` = 2" ;
 						}
 						else {
@@ -94,7 +97,7 @@
 		$start = $_REQUEST['rows'] * ($resp['page']-1) ;
 		$sql .= " LIMIT $start, $_REQUEST[rows]" ;
 		if($result=$conn->query($sql)) {
-			$event_code = array( "Unknown", "Event Marker", "Crash" ) ;
+			$event_code = array( "Unknown", "Panic", "Crash" ) ;
 			while( $row=$result->fetch_array(MYSQLI_ASSOC) ) {
 				$cell = array() ;
 				$cell['id'] = $row['idx'] ;

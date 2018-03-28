@@ -69,7 +69,7 @@
 								  ( 'method' => 'GET', 'timeout' => 0.3 )
 								));
 								// add live tun register url
-								$phone = rawurlencode( $phone."&u=" . dirname($_SERVER['SCRIPT_NAME']). "/livetun.php"  );
+								$phonereg = $phone."&u=".rawurlencode(dirname($_SERVER['SCRIPT_NAME']). "/livetun.php"  );
 								@file_get_contents("http://tdlive.darktech.org/vlt/vltreg.php?$phonereg", false, $ctx ) ;
 							}
 							

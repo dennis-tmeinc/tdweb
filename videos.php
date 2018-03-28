@@ -447,7 +447,7 @@ Vehicles &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="selectallvehicle">Select All<
 <table id="videolist"></table> 
 <div id="videopager"></div> 
 <p>
-<form id="formplayvideo" enctype="application/x-www-form-urlencoded" method="get" action="playvideo.php" target="_blank" >
+<form id="formplayvideo" enctype="application/x-www-form-urlencoded" method="get" action="playvideo.php" >
 <input name="index" type="hidden" />
 <input name="vehicle_name" type="hidden"  />
 </form>

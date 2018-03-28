@@ -21,6 +21,7 @@ if( !empty( $session_id ) ) {
 if( !empty($_REQUEST[session_name()]) ) {
 	session_id ($_REQUEST[session_name()]);
 }
+
 session_start();
 
 // load client config

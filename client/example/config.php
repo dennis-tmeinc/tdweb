@@ -69,7 +69,7 @@
 	$avlservice = "http://localhost:40520/avlservice" ;
 	$avlcbserver = "http://localhost:80" ;
 	$avlcbapp = "vltevent.php" ;
-	izes
+
 	// setup time zone
 	date_default_timezone_set($timezone) ;	
 	$smart_server = $smart_host ;

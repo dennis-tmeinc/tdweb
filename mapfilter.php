@@ -78,18 +78,26 @@
 			<td><input checked="checked" name="bStop" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_stop.png" /> Stopping </td>
 			<td><input name="stopDuration" size="6" type="text" /> s </td>
 		</tr>
+		
+<?php if( empty($tvs_filter) ) { ?>
 		<tr>
 			<td><input checked="checked" name="bDesStop" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_desstop.png" /> Bus Stops&nbsp;</td>
 			<td><input name="desStopDuration" size="6" type="text" /> s </td>
 		</tr>
+<?php } ?>
+		
 		<tr>
 			<td><input checked="checked" name="bIdling" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_idle.png" /> Idling </td>
 			<td><input name="idleDuration" size="6" type="text" /> s </td>
 		</tr>
+
+<?php if( empty($tvs_filter) ) { ?>
 		<tr>
 			<td><input checked="checked" name="bParking" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_park.png" /> Parking </td>
 			<td><input name="parkDuration" size="6" type="text" /> s </td>
 		</tr>
+<?php } ?>
+
 		<tr>
 			<td colspan="2"><input checked="checked" name="bSpeeding" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_speed.png" /> Speeding Limit: <input maxlength="10" name="speedLimit" size="2" type="text" value="0" /> mph</td>
 		</tr>
@@ -99,9 +107,30 @@
 		<tr>
 			<td colspan="2"><input checked="checked" name="bEvent" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_mevent.png" /> M.Events </td>
 		</tr>
+		
+<?php if( empty($tvs_filter) ) { ?>
 		<tr>
-			<td colspan="2"><input checked="checked" name="bDriveby" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_driveby.png" /> Drive By </td>
+			<td colspan="2"><input checked="checked" name="bDriveBy" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_driveby.png" /> Drive By </td>
 		</tr>
+<?php } ?>
+		
+<?php if( !empty($tvs_filter) ) { ?>
+		<tr>
+			<td><input name="bDoorOpen" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_dooropen.png" />Door Open</td>
+			<td><input name="bDoorClose" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_doorclose.png" />Door Close</td>
+		</tr>
+
+		<tr>
+			<td><input name="bIgnitionOn" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_ignitionon.png" />Ignition On</td>
+			<td><input name="bIgnitionOff" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_ignitionoff.png" />Ignition Off</td>
+		</tr>
+		
+		<tr>
+			<td><input name="bMeterOn" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_meteron.png" />Meter On</td>
+			<td><input name="bMeterOff" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_meteroff.png" />Meter Off</td>
+		</tr>
+<?php } ?>
+		
 	</tbody>
 </table>
 
@@ -268,7 +297,12 @@ function filterform_data()
 		formd[$(this).attr("name")]=0;
 	});
 	for( var i=0; i<fdata.length; i++ ) {
-		formd[ fdata[i].name ] = fdata[i].value ;
+		if(fdata[i].value == 'on') {
+			formd[ fdata[i].name ] = 1 ;
+		}
+		else {
+			formd[ fdata[i].name ] = fdata[i].value ;
+		}
 	}
 	formd.ts=new Date().getTime();    // time stamp
 	return formd ;

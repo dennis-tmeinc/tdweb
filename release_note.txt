@@ -1,6 +1,10 @@
 Touch Down Center 
 Release Notes
 
+V3.7.17 (2015-06-26)
+	Some improvement in Emergency Event pages.  Add $support_emg=1;  to enable "Emergency" ;
+	Close live setup connection instead of keep connection and send trunk data
+
 V3.7.16 (2014-07-29) (by Dennis)
 	Add Emergency Event page, (for tvs emergency , event marker, crashes ) 
 	Fix driveby report email contents 

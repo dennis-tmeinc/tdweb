@@ -1339,7 +1339,8 @@ $('#rcontainer').show('slow', showup );
 <?php if( $_SESSION['user_type'] == "admin" ) { ?>
 <div style="text-align: center;"><button style="min-width:14em;" name="setupdvr">Setup DVR</button></div>
 <?php } ?>
-<form id="liveviewform" action="vltliveview.php" target="_blank" method="post" >
+
+<form id="liveviewform" enctype="application/x-www-form-urlencoded" method="get" action="vltliveview.php" >
 <input type="hidden" name="info"/>
 </form>
 

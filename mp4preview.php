@@ -72,6 +72,7 @@
 				$preview_tmpfile = $vcachedir.$dirc."t".$hash.".mp4" ;
 				$preview_file_pattern = $vcachedir.$dirc."*.mp4" ;
 				$preview_lockfile = session_save_path().$dirc.'sess_lock'.$hash ;
+				
 				if( vfile_size( $preview_file ) < 100 ) {
 				
 					// exclude other process do the converting
@@ -106,6 +107,25 @@
 						unlink( $preview_lockfile );
 				}
 
+				if( !empty( $preview_file ) ) {
+					$vstat = vfile_stat( $preview_file ) ;
+				}
+	
+				// enable cache 
+				if( !empty($vstat['mtime']) ) {
+					$expires=24*3600;		// expired in 1 day
+					header('Cache-Control: public, max-age='.$expires);
+					$lastmodtime = gmdate('D, d M Y H:i:s ', $vstat['mtime']).'GMT';
+					$etag = hash('md5', $videofile.$fsize.$vstat['mtime'] );
+					header('Expires: '.gmdate('D, d M Y H:i:s ', $_SERVER['REQUEST_TIME']+$expires).'GMT');
+					if( (isset($_SERVER['HTTP_IF_NONE_MATCH']) && $_SERVER['HTTP_IF_NONE_MATCH']==$etag ) ) {
+						header("HTTP/1.1 304 Not Modified");
+						die;
+					}
+					header('Etag: '.$etag);
+					header('Last-Modified: '.$lastmodtime);
+				}
+				
 				if( $f = vfile_open( $preview_file ) ) {
 					header( "Accept-Ranges: bytes" );
 					vfile_seek( $f, 0, SEEK_END );
@@ -143,7 +163,7 @@
 					}
 
 					if( $len>0 ) {
-						header("Connection: close");
+						// header("Connection: close");
 						vfile_seek( $f, $offset );
 
 						while( $len > 0 ) {

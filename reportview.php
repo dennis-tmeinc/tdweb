@@ -80,14 +80,20 @@ $("#vllist").jqGrid({
 		var i ;
 		var pinicons = {
 			1:"res/map_icons_stop.png",
-			2:"route_icon.php",
+			2:"route_icon.php?",
 			4:"res/map_icons_idle.png",
+			10:"res/map_icons_dooropen.png",
+			11:"res/map_icons_doorclose.png",
+			12:"res/map_icons_ignitionon.png",
+			13:"res/map_icons_ignitionoff.png",
 			16:"res/map_icons_g.svg",
 			17:"res/map_icons_desstop.png",
 			18:"res/map_icons_park.png",
 			23:"res/map_icons_mevent.png" ,
 			40:"res/map_icons_driveby.png" ,
-			100:"speed_icon.php",
+			41:"res/map_icons_meteron.png" ,
+			42:"res/map_icons_meteroff.png" ,
+			100:"speed_icon.php?",
 			101:"res/map_icons_fi.png" ,
 			102:"res/map_icons_ri.png" ,
 			103:"res/map_icons_si.png" ,
@@ -95,7 +101,8 @@ $("#vllist").jqGrid({
 			105:"res/map_icons_rs.png" ,
 			106:"res/map_icons_ht.png" ,
 			107:"res/map_icons_br.png" 
-		};		
+		};
+	
 		for( i=0; i<len; i++ ) {
 			var icon = null ;
 			var nicon = data.rows[i].cell[2] ;

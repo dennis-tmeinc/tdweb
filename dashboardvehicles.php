@@ -81,7 +81,8 @@
 			
 			// Last Check-in
 			$vehicle[1]='';
-			$sql = "SELECT MAX(de_datetime) FROM dvr_event WHERE de_vehicle_name = '$v_in_service[$i]' AND de_event = 1 AND de_datetime BETWEEN '$date_begin' AND '$date_end' ";
+			// $sql = "SELECT MAX(de_datetime) FROM dvr_event WHERE de_vehicle_name = '$v_in_service[$i]' AND de_event = 1 AND de_datetime BETWEEN '$date_begin' AND '$date_end' ";
+			$sql = "SELECT MAX(de_datetime) FROM dvr_event WHERE de_vehicle_name = '$v_in_service[$i]' AND de_event = 1 AND de_datetime < '$date_end' ";
 			if( $result = $conn->query($sql) ) {
 				if( $row = $result->fetch_array() ) {
 					if( $row[0] )

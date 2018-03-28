@@ -18,17 +18,15 @@ if( !empty( $_REQUEST['c'] ) ) {
 		$starttime = time() ;
 		$stime = $starttime ;
 		$xtime = $stime ;
-		$timeout = 110 ;
+		$timeout = 100 ;
 		
-		while( ($xtime-$starttime)<500 && ($xtime-$stime) < $timeout ) {
+		while( ($xtime-$starttime)<1800 && ($xtime-$stime) < $timeout ) {
 			set_time_limit( 30 );
 			flock( $flvc, LOCK_EX ) ;		// exclusive lock
 
-			$r=false ;
 			$o=false ;
 			fseek( $flvc, 0, SEEK_SET );
 			while( $line = fgets( $flvc ) ) {
-				$r = true ;
 				$x = explode( ',', $line );
 				if( count( $x )>= 4 && ($xtime - $x[0]) < 30 ) {
 					echo 'c '.trim($x[1]).' '.trim($x[2]).' '.trim($x[3])."\r\n" ; 
@@ -36,20 +34,21 @@ if( !empty( $_REQUEST['c'] ) ) {
 				}
 			}
 			
-			if( $r ) {							// clean init file
+			if( $o ) {							// clean init file
 				ftruncate( $flvc, 0 );
 				fflush( $flvc ) ;              	// flush before release the lock
 			}
 			flock( $flvc, LOCK_UN ) ;		// unlock ;
 			
 			if( $o ) {							// contents? flush out buffer, and clean the init file
+				break ;
 				// flush buffers
-				ob_flush();
-				flush();
-				$stime = time() ;				// extent time out
+				//ob_flush();
+				//flush();
+				//$stime = time() ;				// extent time out
 			}
-				
-			usleep(20000);
+	
+			usleep(50000);
 			$xtime = time() ;
 		}
 		fclose( $flvc );
@@ -58,18 +57,27 @@ if( !empty( $_REQUEST['c'] ) ) {
 	else if( $_REQUEST['c'] == 'g' && !empty($_REQUEST['t']) ) {		// GET, WCURL
 		$rport = 0 ;
 		// check if dvr with phone number is ready
-		$rfile = fopen( $session_path.'/sess_lvr_'.$_REQUEST['t'], "r" );
+		$rfilename = $session_path.'/sess_lvr_'.$_REQUEST['t'] ;
+		$rfile = fopen( $rfilename, "r" );
 		if( $rfile ) {
 			fscanf( $rfile, "%d", $rport );
 			fclose( $rfile );
 		}
+		else {
+			$rport = 0 ;
+		}
+		
 		if( $rport ) {
 			$conn = stream_socket_client("tcp://127.0.0.1:".$rport, $errno, $errstr, 30);
 			if( $conn ) {
 				fwrite( $conn, 'g' );		// Get data
-				
+
 				$msgtype = fread( $conn, 1 ) ;
-				if( $msgtype == 'd' ) {			// data incoming
+ 
+				if( $msgtype === false || strlen($msgtype) == 0 ) {
+					header( "X-Webt-Connection: close" );
+				}
+				else if( $msgtype == 'd' ) {			// data incoming
 					while( true ) {
 						$data = fread( $conn, 65536 ) ;
 						if( $data === false || strlen($data) == 0 ) {
@@ -79,7 +87,16 @@ if( !empty( $_REQUEST['c'] ) ) {
 					}
 				}
 				else if( $msgtype == 'e' ) {	// end of output data
-					header( "X-Webt-Connection: gend" );	// GET END
+					// header( "X-Webt-Connection: gend" );	// GET END, *** not used, could cause webtun run into deadloop
+					
+					// wait 10 sec or until rfile removed
+					for( $d=0; $d<10; $d++ ) {
+						if( !file_exists( $rfilename ) ) {
+							header( "X-Webt-Connection: close" );
+							break;
+						}
+						sleep(1);
+					}
 				}
 				
 				fclose( $conn );
@@ -101,6 +118,10 @@ if( !empty( $_REQUEST['c'] ) ) {
 			fscanf( $rfile, "%d", $rport );
 			fclose( $rfile );
 		}
+		else {
+			$rport = 0 ;
+		}
+		
 		if( $rport ) {
 			$length = 500000000 ;		// an impossible max length
 			if( !empty( $_SERVER['CONTENT_LENGTH'] ) ) {
