@@ -108,17 +108,29 @@
 		}
 		
 		// Marked Events
-		$sql = "SELECT count(*) FROM `vl` WHERE vl_incident = '23' AND vl_datetime BETWEEN '$date_begin' AND '$date_end' ;";
-		$result=$conn->query($sql);
-		if( $result ){
-			if( $row = $result->fetch_array(MYSQLI_NUM) ){
-				$resp['report']['marked_events'] = $row[0] ;
-			}
-			$result->free();
-		}
-
+		// $sql = "SELECT count(*) FROM `vl` WHERE vl_incident = '23' AND vl_datetime BETWEEN '$date_begin' AND '$date_end' ;";
+		// $result=$conn->query($sql);
+		// if( $result ){
+		//	if( $row = $result->fetch_array(MYSQLI_NUM) ){
+		//		$resp['report']['marked_events'] = $row[0] ;
+		//	}
+		//	$result->free();
+		// }
+		
 		// Marked events list
-		$sql = "SELECT vl_vehicle_name, vl_datetime FROM `vl` WHERE vl_incident = '23' AND vl_datetime BETWEEN '$date_begin' AND '$date_end' ;";
+		// $sql = "SELECT vl_vehicle_name, vl_datetime FROM `vl` WHERE vl_incident = '23' AND vl_datetime BETWEEN '$date_begin' AND '$date_end' ;";
+		// $result=$conn->query($sql);
+		// $resp['report']['list_marked_events'] = array() ;
+		// if( $result ){
+		// 	while( $row = $result->fetch_array(MYSQLI_ASSOC) ){
+		// 		$resp['report']['list_marked_events'][] = $row ;
+		// 	}
+		// 	$result->free();
+		// }
+		
+		// Use panic alert as Marked Events ( remove bug report that consider they are diffferent )
+		// Marked events list (use panic alert instead, to remove bug report that consider they are diffferent )
+		$sql = "SELECT dvr_name as vl_vehicle_name, date_time as vl_datetime FROM `td_alert` WHERE alert_code = '11' AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
 		$result=$conn->query($sql);
 		$resp['report']['list_marked_events'] = array() ;
 		if( $result ){
@@ -127,6 +139,7 @@
 			}
 			$result->free();
 		}
+		$resp['report']['marked_events'] = count( $resp['report']['list_marked_events'] );
 		
 		// System Alerts
 
@@ -147,15 +160,6 @@
 			);
 		$system_alert_type = "2,3,4,5,7,8" ;
 		
-		$sql = "SELECT count(*) FROM `td_alert` WHERE  alert_code in ($system_alert_type) AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
-		$result=$conn->query($sql);
-		if( $result ){
-			if( $row = $result->fetch_array(MYSQLI_NUM) ){
-				$resp['report']['system_alerts'] = $row[0] ;
-			}
-			$result->free();
-		}
-			
 		$sql = "SELECT dvr_name, description, alert_code, date_time FROM `td_alert` WHERE  alert_code in ($system_alert_type) AND date_time BETWEEN '$date_begin' AND '$date_end' ORDER BY `date_time` DESC ";
 		$resp['report']['list_system_alerts'] = array() ;
 		$result=$conn->query($sql);
@@ -168,6 +172,7 @@
 			}
 			$result->free();
 		}
+		$resp['report']['system_alerts'] = count( $resp['report']['list_system_alerts'] );
 		
 		$resp['res'] = 1 ;
 	}

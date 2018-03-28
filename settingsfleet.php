@@ -225,6 +225,7 @@ $.getJSON("vehiclefields.php",function(resp){
 	}
 });
 
+
 $( "#dialog_delete" ).dialog({
 	autoOpen: false,
 	width:"auto",
@@ -676,9 +677,13 @@ buttons: {
 	"Yes": function() {
 		if( groupopts.selectedIndex>=0) {
 			var newname = $(".tdcdialog#dialog_renamegroup input#newgroupname").val();
+			if( newname == "" ) {
+				message_box("Please enter new group name." );
+				return ;
+			}
 			for( var j=0; j<groupopts.length; j++) {
 				if( newname == groupopts[j].text ) {
-					alert("Group name '"+newname+"' is in use, please enter another group name.");
+					message_box("Group name '"+newname+"' is in use, please enter another group name.");
 					return ;
 				}
 			}
@@ -1011,6 +1016,23 @@ buttons: {
 }
 });
 
+$( ".tdcdialog#dialog_message" ).dialog({
+	autoOpen: false,
+	width:"auto",
+	modal: true,
+	buttons: {
+		"Ok": function() {
+			$( this ).dialog( "close" );
+		}
+	}
+});
+
+function message_box( msg )
+{
+	$("p#alert_message").text( msg );
+	$( ".tdcdialog#dialog_message" ).dialog("open");
+}
+
 $("button#mapsearch").click(function(){
 	$( ".tdcdialog#dialog_mapsearch" ).dialog("open");
 });
@@ -1113,8 +1135,7 @@ text-align: center;
 	</style>
 </head>
 <body><div id="container">
-<div id="header" style="text-align: right;"><span style="color:#006400;"><span style="font-size: 14px;"><span>Welcome </span></span></span><span style="color:#2F4F4F;"><span style="font-size: 14px;margin-right:24px;"><?php echo $_SESSION['welcome_name'] ;?></span></span><span><a href="logout.php" style="background-color:#98bf21;text-decoration:none;text-align:center;"> Logout </a></span><span  id="servertime" style="color:#800080;font-size: 11px; margin-left:30px;margin-right:30px;"></span><span style="color:#B22222;"><span style="font-size: 12px;"><span><?php echo $product_name . "  " .  $_SESSION['release']; ?></span></span></span></div>
-
+<?php include 'header.php'; ?>
 <div id="lpanel"><?php if( !empty($support_viewtrack_logo) ){ ?>
 	<img alt="index.php" src="res/side-VT-logo-clear.png" />
 <?php } else if( !empty($support_fleetmonitor_logo) ){ ?>
@@ -1480,6 +1501,12 @@ if( $_SESSION['user'] == 'admin' ) {
 <input id="mapquery" type="text" size="50" />
 </div>
 
+<!-- message dialog -->
+<div class="tdcdialog" id="dialog_message" title="Message">
+<p id="alert_message"> Warning </p>
+<!-- message dialog -->
+</div>
+
 </div>
 </div>
 <!-- workarea --></div>
@@ -1489,9 +1516,7 @@ if( $_SESSION['user'] == 'admin' ) {
 <div id="footer">
 <hr />
 <div id="footerline" style="padding-left:24px;padding-right:24px">
-<div style="float:left"><span  id="servertime" style="color:#800080;font-size: 11px;"><?php
-echo date("Y-m-d H:i") ;
-?> </span></div>
+<div style="float:left"></div>
 
 <p style="text-align: right;"><span style="font-size: 11px;"><a href="http://www.247securityinc.com/" style="text-decoration: none;">247 Security Inc.</a></span></p>
 </div>

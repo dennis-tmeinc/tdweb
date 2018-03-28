@@ -71,6 +71,7 @@
 		$resp['errormsg'] = "Company ID can not be empty!" ;
 		goto done ;
 	}
+	else 
 
 	if( empty($_REQUEST['RootFolder']) ) {
 		$resp['errormsg'] = "Root folder can not be empty!" ;
@@ -147,38 +148,33 @@
 			}
 		}
 		else {
-			if( !vfile_exists( $company_root ) ) {
-				vfile_mkdir( $company_root );
-				if( vfile_put_contents( $company_root."/companyinfo.xml", $companyinfo->asXML() ) ) {
-					// may need to do more cleaning on company root directory and database
+			vfile_mkdir( $company_root );
+			if( vfile_put_contents( $company_root."/companyinfo.xml", $companyinfo->asXML() ) ) {
+				// may need to do more cleaning on company root directory and database
 
-					$output = array();
-					$ret = 1;
-						
-					// create new company instance
-					if( !empty( $td_new ) ) {
-						//@chdir( $company_root );
-						// script execution : <script> <company id> <company root directory> <database name>
-						$cmd = $td_new." $_REQUEST[CompanyId] \"$company_root\" $_REQUEST[Database]" ;
-						vfile_exec($cmd, $output, $ret) ;
-					}
+				$output = array();
+				$ret = 1;
 					
-					$resp['tdnewoutput']=$output ;
-					if( $ret != 0 ) {
-						$resp['errormsg']='Creating database failed' ;
-						$resp['res'] = 0 ;
-					}
-					else {
-						$resp['errormsg']='success' ;
-						$resp['res'] = 1 ;
-					}
+				// create new company instance
+				if( !empty( $td_new ) ) {
+					//@chdir( $company_root );
+					// script execution : <script> <company id> <company root directory> <database name>
+					$cmd = $td_new." \"$_REQUEST[CompanyId]\" \"$company_root\" \"$_REQUEST[Database]\"" ;
+					vfile_exec($cmd, $output, $ret) ;
+				}
+				
+				$resp['tdnewoutput']=$output ;
+				if( $ret != 0 ) {
+					$resp['errormsg']='Creating database failed' ;
+					$resp['res'] = 0 ;
 				}
 				else {
-					$resp['errormsg']='Failed to create configuration file.' ;
+					$resp['errormsg']='success' ;
+					$resp['res'] = 1 ;
 				}
 			}
 			else {
-				$resp['errormsg']='Root directory exists!' ;
+				$resp['errormsg']='Failed to create configuration file.' ;
 			}
 		}
 	}

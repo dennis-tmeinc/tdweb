@@ -25,6 +25,9 @@ if( empty($product_name) ) {
 	$product_name = "TOUCH DOWN CENTER" ;
 }
 
+if( empty($td_conf) )
+	$td_conf = "C:\\SmartSvrApps\\tdconfig.conf" ;
+
 session_start();
 
 // load client config

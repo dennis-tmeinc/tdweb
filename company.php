@@ -248,13 +248,56 @@ $( "#dialog_removeverify" ).dialog({
 	}
 });
 
+// email server setting dialog
+$( "#dialog_emailserver" ).dialog({
+	autoOpen: false,
+	width:"auto",
+	modal: true,
+	open: function( event, ui ) {
+		$("form#emailserversetting")[0].reset();
+		$.getJSON("emailserverload.php", function(data){
+			if( data.res == 1 ) {
+				for (var field in data.email ) {
+					var elm=$("form#emailserversetting [name='"+field+"']");
+					if( elm.length>0 ) {
+						if( elm.prop("type")=="checkbox" ) {
+							elm.prop("checked", (data.email[field]=='1')||(data.email[field]=='y'));
+						}
+						else if( elm.prop("type")=="radio" ) {
+							elm.filter("[value='"+data.email[field]+"']").prop("checked",true);
+						}
+						else {
+							elm.val(data.email[field]);
+						}
+					}
+				}
+			}
+		});		
+	},
+	buttons:{
+		"Save": function() {
+		    $.getJSON("emailserversave.php", $('form#emailserversetting').serializeArray(), function(data){
+
+			});
+			$( "#dialog_emailserver" ).dialog("close");
+		},
+		Cancel: function() {
+			$( "#dialog_emailserver" ).dialog("close");
+		}
+	}
+});
+
+// Open Email Setting
+$("button#emailsettings").click(function(e){
+	e.preventDefault();
+	$( "#dialog_emailserver" ).dialog("open");
+});
+
 });
 </script>
 </head>
 <body><div id="container">
-<div id="header" style="text-align: right;"><span style="color:#006400;"><span style="font-size: 14px;"><span>Welcome </span></span></span><span style="color:#2F4F4F;"><span style="font-size: 14px;margin-right:24px;"><?php echo $_SESSION['welcome_name'] ;?></span></span><span><a href="logout.php" style="background-color:#98bf21;text-decoration:none;text-align:center;"> Logout </a></span><span  id="servertime" style="color:#800080;font-size: 11px; margin-left:30px;margin-right:30px;"></span><span style="color:#B22222;"><span style="font-size: 12px;"><span><?php echo $product_name . "  " .  $_SESSION['release']; ?></span></span></span></div>
-
-
+<?php include 'header.php'; ?>
 <div id="mcontainer">
 <p id="title" style="text-align: center;">
 <strong><span style="font-size:26px;">Company Management</span></strong></p>
@@ -419,6 +462,51 @@ foreach( $timezonelist as $tz ) {
 
 <div>
 	<button id="btchangepasswd" >Change Password</button>
+	<button id="emailsettings">Email Server Settings</button>	
+</div>
+
+<!-- Dialog Email Server -->
+<div id="dialog_emailserver" title="Email Server Setting" style="display:none">
+<form id="emailserversetting">
+
+<table border="0" cellpadding="0" cellspacing="1">
+	<tbody>
+		<tr>
+			<td style="text-align: right;">Mail Server (SMTP):</td>
+			<td><input name="smtpServer" type="text" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: right;">Port:</td>
+			<td><input name="smtpServerPort" value="25" type="text" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: right;">Security Type:</td>
+			<td><input name="security" value="2" type="radio" />SSL <input name="security"  value="1" type="radio" />TLS <input name="security" type="radio" checked="checked" value="0" />None</td>
+		</tr>
+		<tr>
+			<td style="text-align: right;">Sender E-mail Addr:</td>
+			<td><input name="senderAddr" type="text" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: right;">Sender Name:</td>
+			<td><input name="senderName" type="text" /></td>
+		</tr>
+		<tr>
+			<td>Authentication:</td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
+			<td style="text-align: right;">User Name:</td>
+			<td><input name="authenticationUserName" type="text" /></td>
+		</tr>
+		<tr>
+			<td style="text-align: right;">Password:</td>
+			<td><input name="authenticationPassword" type="password" /></td>
+		</tr>
+	</tbody>
+</table>
+
+</form>
 </div>
 
 <!-- Dialog Verify Password for removing company -->
@@ -436,9 +524,7 @@ foreach( $timezonelist as $tz ) {
 <div id="footer">
 <hr />
 <div id="footerline" style="padding-left:24px;padding-right:24px">
-<div style="float:left"><span  id="servertime" style="color:#800080;font-size: 11px;"><?php
-echo date("Y-m-d H:i") ;
-?> </span></div>
+<div style="float:left"></div>
 
 <p style="text-align: right;"><span style="font-size:11px;"><a href="http://www.247securityinc.com/" style="text-decoration:none;">247 Security Inc.</a></span></p>
 </div>

@@ -374,26 +374,6 @@ $("td.system_alert").click(function(e){
 	$("div#dialog_solo_alerts").dialog("open");
 });
 
-$( "#status_type" ).buttonset();
-
-$( "input[name='status_type']" ).change(function() {
-	if( $( "input#status_simple" ).prop("checked") ) {
-		$("div#summary_simple").show("slow");
-		$("div#summary_mss").hide("slow");
-		$("div#summary_advance").hide("slow");
-	}
-	else if( $( "input#status_mss" ).prop("checked") ) {
-		$("div#summary_simple").hide("slow");
-		$("div#summary_mss").show("slow");
-		$("div#summary_advance").hide("slow");
-	}	
-	else if( $( "input#status_advanced" ).prop("checked") ){
-		$("div#summary_simple").hide("slow");
-		$("div#summary_mss").hide("slow");
-		$("div#summary_advance").show("slow");
-	}
-}).change();
-
 var mssmap = null ;
 var mssloc = new Microsoft.Maps.Location(0, 0) ;
 $("#mss_status").jqGrid({        
@@ -453,9 +433,10 @@ $("div#dialog_mss_location").dialog({
 	}
 });
 
-$("div#summary_mss").hide();
-$("div#summary_advance").hide();
-		
+$( "#status_type_tabs" ).tabs({
+	active: 0
+});	
+
 $("#rcontainer").show('slow');	
 });
         
@@ -463,8 +444,7 @@ $("#rcontainer").show('slow');
 </head>
 <body>
 <div id="container">
-<div id="header" style="text-align: right;"><span style="color:#006400;"><span style="font-size: 14px;"><span>Welcome </span></span></span><span style="color:#2F4F4F;"><span style="font-size: 14px;margin-right:24px;"><?php echo $_SESSION['welcome_name'] ;?></span></span><span><a href="logout.php" style="background-color:#98bf21;text-decoration:none;text-align:center;"> Logout </a></span><span  id="servertime" style="color:#800080;font-size: 11px; margin-left:30px;margin-right:30px;"></span><span style="color:#B22222;"><span style="font-size: 12px;"><span><?php echo $product_name . "  " .  $_SESSION['release']; ?></span></span></span></div>
-
+<?php include 'header.php'; ?>
 <div id="lpanel"><?php if( !empty($support_viewtrack_logo) ){ ?>
 	<img alt="index.php" src="res/side-VT-logo-clear.png" />
 <?php } else if( !empty($support_fleetmonitor_logo) ){ ?>
@@ -577,17 +557,12 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 <!-- end mss map dialog -->
 <h2><?php echo $title_type; ?>Status Summary</h2> 
 
-<form>
-<div id="status_type">
-<input type="radio" id="status_simple" name="status_type" checked="checked"/><label for="status_simple">Simple</label>
-<input type="radio" id="status_advanced" name="status_type" /><label for="status_advanced">Advanced</label>
-<input type="radio" id="status_mss" name="status_type" /><label for="status_mss">MSS</label>
-</div>
-</form>
-
-<div id="summary_mss">
-<table id="mss_status"></table> 
-</div>
+<div id="status_type_tabs">
+<ul>
+	<li><a href="#summary_simple">Simple</a></li>
+	<li><a href="#summary_advance">Advanced</a></li>
+	<li><a href="#summary_mss">MSS</a></li>
+</ul>
 
 <div id="summary_simple">
 <table border="1" class="summarytable" id="summary_table">
@@ -624,6 +599,11 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Partial_Storage_Failure_day"></td>
 			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Partial_Storage_Failure_avg"></td>
 		</tr>		
+		<tr>
+			<td class="system_alert" alertcode="2" >High Temperature Alerts</td>
+			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Fan_Filter_Alerts_day"></td>
+			<td style="text-align: right; background-color: rgb(255, 204, 255);" id="Fan_Filter_Alerts_avg"></td>
+		</tr>				
 		<tr>
 			<td class="system_alert" alertcode="11" >Panic Alerts</td>
 			<td style="text-align: right; background-color: rgb(204, 255, 255);" id="Panic_Alerts_day"></td>
@@ -729,6 +709,12 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 </div>
 </div>
 
+<div id="summary_mss">
+<table id="mss_status"></table> 
+</div>
+
+</div>
+<p></p>
 </div>
 <!-- workarea --></div>
 <!-- mcontainer --></div>
@@ -737,9 +723,7 @@ type="radio" /><label for="btlive"> Live Status Report </label>
 <div id="footer">
 <hr />
 <div id="footerline" style="padding-left:24px;padding-right:24px">
-<div style="float:left"><span  id="servertime" style="color:#800080;font-size: 11px;"><?php
-echo date("Y-m-d H:i") ;
-?> </span></div>
+<div style="float:left"></div>
 
 <p style="text-align: right;"><span style="font-size:11px;"><a href="http://www.247securityinc.com/" style="text-decoration:none;">247 Security Inc.</a></span></p>
 </div>

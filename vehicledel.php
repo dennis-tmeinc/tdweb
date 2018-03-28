@@ -23,7 +23,8 @@
 		}
 		else if( $_SESSION['user_type'] == "admin" ) {	// admin 
 			// MySQL connection
-			$vehicle_name = $_REQUEST['vehicle_name'] ;
+			$vehicle_name = $conn->escape_string( $_REQUEST['vehicle_name'] ) ;
+			$sql="SELECT * FROM vehicle WHERE vehicle_name = '$vehicle_name';";
 			$sql="DELETE FROM vehicle WHERE vehicle_name='$vehicle_name';" ;
 			if( $conn->query($sql) ) {
 				$resp['res']=1 ;	// success

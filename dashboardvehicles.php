@@ -102,7 +102,16 @@
 			$vehicle[2] = "$h:$m:$s" ;
 		   
 			// M.Events
-			$sql= "SELECT count(*) FROM `vl` WHERE vl_vehicle_name = '$v_in_service[$i]' AND vl_incident = '23' AND vl_datetime BETWEEN '$date_begin' AND '$date_end' ;";
+			// $sql= "SELECT count(*) FROM `vl` WHERE vl_vehicle_name = '$v_in_service[$i]' AND vl_incident = '23' AND vl_datetime BETWEEN '$date_begin' AND '$date_end' ;";
+			// if( $result = $conn->query($sql) ) {
+			// 	if( $row = $result->fetch_array(MYSQLI_NUM) ) {
+			// 		$vehicle[4]=$row[0];
+			// 	}
+			// 	$result->free();
+			// }
+			
+			// M.Events (use panic alerts from td_alert instead)
+			$sql = "SELECT count(*) FROM `td_alert` WHERE  dvr_name = = '$v_in_service[$i]' AND alert_code = '11' AND date_time BETWEEN '$date_begin' AND '$date_end' ;";
 			if( $result = $conn->query($sql) ) {
 				if( $row = $result->fetch_array(MYSQLI_NUM) ) {
 					$vehicle[4]=$row[0];

@@ -192,9 +192,7 @@ if (typeof(Storage) !== "undefined") {
 <div id="footer">
 <hr />
 <div id="footerline" style="padding-left:24px;padding-right:24px">
-<div style="float:left"><span  id="servertime"  style="color:#800080;font-size: 11px;"><?php
-echo date("Y-m-d H:i") ;
-?> </span></div>
+<div style="float:left"></div>
 
 <p style="text-align: right;"><span style="font-size:11px;"><a href="http://www.247securityinc.com/" style="text-decoration:none;">247 Security Inc.</a></span></p>
 </div>

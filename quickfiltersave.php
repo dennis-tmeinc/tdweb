@@ -42,7 +42,7 @@
 			'bParking',
 			'bDoorOpen',
 			'bDoorClose',
-			'bIgnitionOff',
+			'bIgnitionOn',
 			'bIgnitionOff',
 			'bMeterOn',
 			'bMeterOff' );
@@ -136,8 +136,25 @@
 			$_REQUEST[bRearImpact],
 			$_REQUEST[bSideImpact],
 			$_REQUEST[bBumpyRide],
-$_REQUEST[stopDuration], $_REQUEST[idleDuration], $_REQUEST[parkDuration], $_REQUEST[desStopDuration], $_REQUEST[speedLimit], $_REQUEST[gRacingStart], $_REQUEST[gHardBrake], $_REQUEST[gHardTurn], $_REQUEST[gFrontImpact], $_REQUEST[gRearImpact], $_REQUEST[gSideImpact], $_REQUEST[gBumpyRide],
-$_REQUEST[bDriveBy], $_REQUEST[bDoorOpen], $_REQUEST[bDoorClose], $_REQUEST[bIgnitionOn], $_REQUEST[bIgnitionOff], $_REQUEST[bMeterOn], $_REQUEST[bMeterOff]
+			$_REQUEST[stopDuration], 
+			$_REQUEST[idleDuration], 
+			$_REQUEST[parkDuration], 
+			$_REQUEST[desStopDuration], 
+			$_REQUEST[speedLimit], 
+			$_REQUEST[gRacingStart], 
+			$_REQUEST[gHardBrake], 
+			$_REQUEST[gHardTurn], 
+			$_REQUEST[gFrontImpact], 
+			$_REQUEST[gRearImpact], 
+			$_REQUEST[gSideImpact], 
+			$_REQUEST[gBumpyRide],
+			$_REQUEST[bDriveBy], 
+			$_REQUEST[bDoorOpen], 
+			$_REQUEST[bDoorClose],
+			$_REQUEST[bIgnitionOn],
+			$_REQUEST[bIgnitionOff], 
+			$_REQUEST[bMeterOn], 
+			$_REQUEST[bMeterOff]
 );"	;
 		}
 		
