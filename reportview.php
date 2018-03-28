@@ -172,15 +172,14 @@ $( "#eventmapdialog" ).dialog({
  
 $("button#reportexport").click(function(){
 	var xtd = $("table#reportsummary td");
-	var action = "reportexport.php" ;
 	var q = {} ;
 	for( var i=0; i<xtd.length; i+=2 ) {
-		if( xtd[i].innerText.length>2 ) {
-			q[xtd[i].innerText] = xtd[i+1].innerText ;
+		var t = $( xtd[i] ).text();
+		if( t.length>2 ) {
+			q[t] = $( xtd[i+1] ).text() ;
 		}
 	}
-	action  += "?" + $.param( q );
-	window.open(action);
+	window.open( "reportexport.php?" + $.param( q ) );
 });
 
 $(window).unload(function() {

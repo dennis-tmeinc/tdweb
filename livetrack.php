@@ -335,6 +335,11 @@ function tdwebc_message( tdwebc )
 				showpin( avlp, "DI__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_sensor.png", false );
 			}
 		}
+		else if( cmd == "22" ) {      // AVL_EVENT_REPORT(22)
+			if( tdwebc[i].source.dvrs.dvr ) {
+				showpin( avlp, "EV__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_mevent.png", false );
+			}		
+		}	
 		else if( cmd == "33" ) {      // AVL_SYSTEMP_EVENT(33)
 			if( tdwebc[i].source.dvrs.dvr ) {
 				showpin( avlp, "TM__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_mevent.png", false );

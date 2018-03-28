@@ -1,12 +1,18 @@
 Touch Down Center 
 Release Notes
 
+V3.7.5 (2013-12-19)
+	Fix report view export failed on Firefox browser
+	Add live track command 22 (event) icon display
+
 V3.7 (2013-12-18)
 	Report View export to .csv file
 	Some typo corrected
 	Some adjusts on map filter options
 	Add support of "Drive By" events
 	Fix unable to save "Storage&Bacup" options, (Caused by trailing backslash in directory options)
+	Video preview feature removed
+
 	
 V3.6 (2013-12-17)
 	Add target="_blank" to all file downloading links, to fix incompatibility between IE and other web browser

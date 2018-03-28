@@ -31,7 +31,7 @@
 			$_SESSION['welcome_name'] = $savesess['welcome_name'];
 			$_SESSION['clientid']=$_SERVER['REMOTE_ADDR'] ;
 			$_SESSION['xtime'] = $_SERVER['REQUEST_TIME'] ;
-			$_SESSION['release']="V3.7" ;
+			$_SESSION['release']="V3.7.5" ;
 
 			// restore user theme
 			if( empty( $user_path ) ) {
