@@ -44,8 +44,24 @@
 			$rstatus = "Pending" ;
 			if( $row[4] != 0 ) {
 				$rstatus = "Requested" ;
+
 				// check if video available
-				$sql = "SELECT count(*) FROM `videoclip` WHERE `vehicle_name`='$row[1]' AND `time_start` <= '$row[7]' AND `time_end` >= '$row[2]' ;" ;
+				$sql = "SELECT count(*) FROM `videoclip` WHERE `vehicle_name`='$row[1]' AND `time_start` <= '$row[7]' AND `time_end` >= '$row[2]' " ;
+
+				$channels = explode(',', $row['vmq_channel']) ;
+				if( count( $channels ) < 1 || $channels[0] == 'A' ||  $channels[0] == 'ALL' ||  $channels[0] == 'a' || $channels[0] == 'all' ) {
+				}
+				else {
+					$sql .= "AND ( " ;
+					for( $i=0; $i<count( $channels ) ; $i++ ) {
+						if( $i > 0 ) {
+							$sql .= "OR" ;
+						}
+						$sql .= " `channel` = $channels[$i] " ;
+					}
+					$sql .= " ) " ;
+				}
+				
 				if( $xresult=$conn->query($sql) ) {
 					$xrow = $xresult->fetch_array( MYSQLI_NUM ) ;
 					$xresult->free();

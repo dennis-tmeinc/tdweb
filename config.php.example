@@ -8,8 +8,8 @@
 
 	// List of timezone: http://php.net/manual/en/timezones.php
 	$timezone = "US/Eastern" ;
-	
-	// number of icons on map , acture number of icons may get doubled
+
+	// expected number of icons on map
 	$map_icons=100;
 	
 	// MSS configure file
@@ -39,8 +39,8 @@
 	// zone moving mode, "cross" or "center"
 	// $zone_mode = "cross" ;
 	
-	// bing map
-	$map_credentials="AnC6aHa2J8jWAluq14HQu6HDH1cDshGtPEPrYiotanIf-q6ZdoSiVGd96wzuDutw" ;
+	// bing map credentials, for each tdweb installation, please head to https://www.bingmapsportal.com/  and get a new bing map key
+	$map_credentials="AqH8jpFgh8cOPZNsTLo0wcOQNGji0uwHgiGyBXOxJvzDySVjKN36y6t_TU1o33e-" ;
 
 	// Default map location, comment it to auto detect
 	$map_area="Toronto" ;
@@ -59,6 +59,7 @@
 	// new td live support
 	$liveplay_protocol = "relay" ;
 	$liveplay_host = "200.200.200.200" ;		// this is td live relay server's public ip address
+	$support_https_playback = True;
 					
 	// live track server (AVL Service)
 	$avlservice = "http://localhost:40520/avlservice" ;

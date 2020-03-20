@@ -88,12 +88,12 @@
 				$line[] = vl_icon($row);
 				$line[] = $row['vl_datetime'];
 				$line[] = $row['vl_time_len'];
-				$line[] = $row['vl_speed'];
+				$line[] = round( $row['vl_speed'] * 0.621371, 1) ;			// convert to mph, and set precision to 1 digit after the decimal point
 				$line[] = $row['vl_lat'].' '.$row['vl_lon'];
 				fputcsv ( $output , $line );
 			}
 			$result->free();
-		}			
+		}
 		fputs($output,"\r\n\r\nSummary\r\n");
 		foreach( $_REQUEST as $key => $value ){
 			$line=array();

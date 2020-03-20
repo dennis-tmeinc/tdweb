@@ -45,26 +45,27 @@ function net_sendpack( $s, $data )
 // read packet ( send ack )
 function net_readpack( $s )
 {
-	$data = '';
-	if( $s ) {
+	if( $s && !feof($s) ) {
 		$hlen = strlen( pack('ii', 0, 0) );
 		$packheader = fread( $s, $hlen );
 		if( strlen($packheader)==$hlen ) {
+			$data = '';
 			$packlen = unpack( 'iz', $packheader)['z'] ;
 			while( $packlen > 0 ) {
 				$r = fread( $s, $packlen ) ;
 				$rlen = strlen($r);
 				if( $r===false || $rlen==0 ) {
-					return '';
+					return false;
 				}
 				$data .= $r ;
 				$packlen -= $rlen ;
 			}
 			// send ack
 			fwrite( $s, $packheader ) ;
+			return $data ;
 		}
 	}
-	return $data ;
+	return false;
 }
 
 ?>

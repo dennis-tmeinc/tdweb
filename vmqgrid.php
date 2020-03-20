@@ -38,14 +38,33 @@
 		}		
 		$start = $_REQUEST['rows'] * ($grid['page']-1) ;
 
-		$sql="SELECT  vmq_id, vmq_vehicle_name, vmq_start_time, TIMEDIFF( `vmq_end_time`, `vmq_start_time`) AS duration, vmq_comp, vmq_ins_user_name, vmq_description, vmq_end_time, vmq_ins_time FROM vmq ORDER BY $_REQUEST[sidx] $_REQUEST[sord] LIMIT $start, $_REQUEST[rows] ;";
+		// vmq_channel
+		//   a, all, empty:   all channel request
+		//   0,1,2,3: 
+		$sql="SELECT  vmq_id, vmq_vehicle_name, vmq_start_time, TIMEDIFF( `vmq_end_time`, `vmq_start_time`) AS duration, vmq_comp, vmq_ins_user_name, vmq_description, vmq_end_time, vmq_ins_time, vmq_channel FROM vmq ORDER BY $_REQUEST[sidx] $_REQUEST[sord] LIMIT $start, $_REQUEST[rows] ;";
 		if( $result=$conn->query($sql) )
 		while( $row=$result->fetch_array() ) {
 			$rstatus = "Pending" ;
-			if( $row[4] != 0 ) {
+			if( $row[4] != 0 ) {	// vmq_comp
 				$rstatus = "Requested" ;
+				
 				// check if video available
-				$sql = "SELECT count(*) FROM `videoclip` WHERE `vehicle_name`='$row[1]' AND `time_start` <= '$row[7]' AND `time_end` >= '$row[2]' ;" ;
+				$sql = "SELECT count(*) FROM `videoclip` WHERE `vehicle_name`='$row[1]' AND `time_start` <= '$row[7]' AND `time_end` >= '$row[2]' " ;
+
+				$channels = explode(',', $row['vmq_channel']) ;
+				if( count( $channels ) < 1 || $channels[0] == 'A' ||  $channels[0] == 'ALL' ||  $channels[0] == 'a' || $channels[0] == 'all' ) {
+				}
+				else {
+					$sql .= "AND ( " ;
+					for( $i=0; $i<count( $channels ) ; $i++ ) {
+						if( $i > 0 ) {
+							$sql .= "OR" ;
+						}
+						$sql .= " `channel` = $channels[$i] " ;
+					}
+					$sql .= " ) " ;
+				}
+				
 				if( $xresult=$conn->query($sql) ) {
 					$xrow = $xresult->fetch_array( MYSQLI_NUM ) ;
 					$xresult->free();
@@ -65,14 +84,13 @@
 				}
 			}
 			$grid['rows'][] = array(
-					"id" => $row[0],
-					"cell" => array( 
-						$row[1], $row[2], $row[3], $rstatus, $row[5], $row[6] 
-					)
-					);
+				"id" => $row[0],
+				"cell" => array( 
+					$row[1], $row[2], $row[3], $rstatus, $row[5], $row[6] 
+				)
+			);
 		}
 		echo json_encode( $grid );
-
 	}
 	else {
 		echo "[]";

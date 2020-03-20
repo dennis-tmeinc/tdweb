@@ -11,10 +11,14 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
-		$sql="SELECT smtpServer,smtpServerPort,security,recipient,authenticationUserName,senderAddr,alertRecipients,panicAlertRecipients,sendSummaryDaily,senderName,tmSendDaily FROM tdconfig ;" ;
+		// $sql="SELECT smtpServer,smtpServerPort,security,recipient,authenticationUserName,senderAddr,alertRecipients,panicAlertRecipients,sendSummaryDaily,senderName,tmSendDaily FROM tdconfig ;" ;
+		$sql="SELECT * FROM tdconfig" ;
 		if( $result=$conn->query($sql) ) {
 			$resp['email'] = $result->fetch_assoc() ;
-			$resp['email']['authenticationPassword'] = '********' ;	// empty password
+			// $resp['email']['authenticationPassword'] = '********' ;	// empty password
+			if( !empty( $resp['email']['authenticationPassword'] ) ) {
+				$resp['email']['authenticationPassword'] = base64_decode( $resp['email']['authenticationPassword'] );
+			}
 			if( !empty($resp['email']['tmSendDaily']) ) {
 				$tmSendDaily = new DateTime( $resp['email']['tmSendDaily'] );
 				$resp['email']['tmSendDaily'] = $tmSendDaily->format("H:i");

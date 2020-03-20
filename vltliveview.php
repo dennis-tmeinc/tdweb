@@ -55,7 +55,7 @@
 				if( $server['protocol'] == "relay" ) {
 					$info['support_relay'] = 1 ;
 					if( empty( $server['host'] ) ) {
-						$server['host'] = file_get_contents("http://tdlive.darktech.org/vlt/myip.php");
+						$server['host'] = file_get_contents("http://tdlive.ignorelist.com/vlt/myip.php");
 					}
 				}
 			}

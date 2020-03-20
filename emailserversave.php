@@ -18,20 +18,6 @@
 		if( !$tdconf ) {
 			$tdconf = new SimpleXMLElement( "<tdconfig></tdconfig>" );
 		}
-		
-		if( !empty( $tdconf -> emailserver ) ) {
-			@$xpassword = (string)($tdconf -> emailserver -> authenticationPassword ) ;
-			unset( $tdconf -> emailserver );
-		}
-	
-		if( !empty( $_REQUEST['authenticationPassword'] ) && $_REQUEST['authenticationPassword'] == '********' ) {
-			if( empty( $xpassword ) ) {
-				$_REQUEST['authenticationPassword'] = "" ;
-			}
-			else {
-				$_REQUEST['authenticationPassword'] = $xpassword ;
-			}
-		}
 
 		foreach( $_REQUEST as $key => $value )
 		{

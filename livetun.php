@@ -172,65 +172,70 @@ if( !empty( $_REQUEST['c'] ) ) {
 		}
 
 	}
-	else if( $_REQUEST['c'] == 't' && !empty($_REQUEST['u']) ) {		// RCURL
-		$target = stream_socket_client( $_REQUEST['u'] );
+	else if( $_REQUEST['c'] == 't' && !empty($_REQUEST['t']) ) {		// RCURL
+		$target = stream_socket_client( $_REQUEST['t'] );
 		if( $target ) {
-			if( isset( $_REQUEST['d'] ) && strlen( $_REQUEST['d'] )>0 ) {
-				fwrite( $target, $_REQUEST['d']);
-			}
-			
-			$ssend = stream_socket_server("tcp://localhost:0");
-			if( $ssend ) {
-				$sport = parse_url( "tcp://" .stream_socket_get_name($ssend, false) )['port'] ;
+			$sserver = stream_socket_server("tcp://localhost:0");
+			if( $sserver ) {
+				$sport = parse_url( "tcp://" .stream_socket_get_name($sserver, false) )['port'] ;
 				header( "X-Webt: ready");
 				header( "X-Webt-Id: $sport");
-				_output( "p$sport" );
+				
+				echo 'p'. $sport . "\n" ;		
+				ob_flush();
+				flush();
 				
 				$sdat = NULL ;
-				while( !feof( $target ) ){
-					$reads = array( $target, $ssend );
+				while( $target ){
 					if( $sdat ) {
-						$reads[] = $sdat ;
+						$reads = array( $target, $sdat );
+					}
+					else {
+						$reads = array( $target, $sserver );
+						$reads = array( $target, $sdat );
 					}
 					$writes = NULL ;
 					$exs = NULL ;
 					set_time_limit(200) ;
-					if( stream_select($reads, $writes, $exs, 180)>0 ) {
+					if( stream_select($reads, $writes, $exs, 182)>0 ) {
 						if( in_array( $target, $reads, true) ) {
-							$data = fread( $target, 100000 ) ;
+							$data = fread( $target, 8192 );
 							if( $data===false || strlen($data)==0 ) {
-								// error ? or end of stream
+								// end of stream or error!
 								break ;
 							}
 							else {
-								_output( $data );
+								echo 'a'.$address.'\n' . 's'.strlen($data).'\n';
+								echo $data ;
+								ob_flush();	flush();
 							}
 						}
 						
-						if( $sdat && in_array( $sdat, $reads, true) ) {
+						if( in_array( $sserver, $reads, true) ) {
+							if( $sdat ) {
+								fclose($sdat);
+							}
+							$sdat = stream_socket_accept( $sserver );
+						}
+						else if( $sdat && in_array( $sdat, $reads, true) ) {
 							if( feof( $sdat ) ) {
 								fclose($sdat);
 								$sdat = NULL ;							
 							}
 							else {
-								$data = net_readpack( $sdat );
-								if( strlen($data)>0 ) {
-									fwrite( $target, $data );
+								$data = fgets($sdat, 20);
+								@$dlen = strlen($data);
+								if( $data === false || $dlen < 2 || $data[0] != 's' ) {
+									fclose($sdat);
+									$sdat = NULL ;							
 								}
 								else {
+									$dlen = fread( 
 									fclose($sdat);
-									$sdat = NULL ;
+									$sdat=null;
 								}
 							}
 						}
-
-						if( in_array( $ssend, $reads, true) ) {
-							if( $sdat ) {
-								fclose($sdat);
-							}
-							$sdat = stream_socket_accept( $ssend );
-						}
-
 					}
 					else {
 						break;
@@ -239,170 +244,75 @@ if( !empty( $_REQUEST['c'] ) ) {
 
 				if( $sdat ) {
 					fclose($sdat);
-				}				
-				fclose($ssend);
+				}
+				fclose($sserver);
 			}
 			
-			fclose($target);
+			if( $target )
+				fclose($target);
 		}
 		else {
+			header( $_SERVER['SERVER_PROTOCOL']." 404 Not Found" );
 			header( "X-Webt: error");
 		}
 	}
-	else if( $_REQUEST['c'] == 's' && !empty($_REQUEST['p']) ) {		// send data
-		$conn = stream_socket_client("tcp://localhost:".$_REQUEST['p']);
-		if( $conn ) {
-			$err = false ;
-			if( isset( $_REQUEST['d'] ) && strlen( $_REQUEST['d'] )>0 ) {
-				if( !net_sendpack( $conn, $_REQUEST['d'] ) ) {
-					$err = true ;
-				}
-			}
-			
-			$inputdata = fopen("php://input", "r");
-			if( $inputdata ) {
-				// transfer data 
-				while( !feof($inputdata) && ($sl = fgets( $inputdata, 100 )) ) {
-					if( strlen($sl)<3 || $sl[0] != 's' ) {
-						break ;
-					}
-					$sl = (int) substr( $sl, 1 );
-					if( $sl > 0 ) {
-						$data = '' ;
-						while( $sl > 0 ) {
-							$rdata =  fread($inputdata, $sl) ;
-							@$rlen = strlen($rdata);
-							if( $rdata === false || $rlen == 0 ) {		// eof
-								$err = true ;
-								break;
-							}
-							$data .= $rdata ;
-							$sl -= $rlen ;
-						}
-						if( $err || !net_sendpack( $conn, $data ) ) {
-							$err = true ;
-							break;
-						}
-					}
-				}
-				fclose($inputdata);
-			}
-			fclose($conn);
-			if( $err ) {
-				header( "X-Webt: error");
-				header( "X-Webt-Connection: close" );
-			}
+	else if( $_REQUEST['c'] == 's' ) {		// send data
+		$conn = false ;
+		$tport = 0 ;
+		if( !empty($_REQUEST['t'] ) ) {
+			$tport = (int)$_REQUEST['t']			
+			$conn = stream_socket_client("tcp://localhost:".$tport );
 		}
-		else {
-			header( "X-Webt-Connection: close" );
-		}
-	}
-	else if( $_REQUEST['c'] == 'u' && !empty($_REQUEST['u']) ) {		// U CURL
-		@$target = stream_socket_client( $_REQUEST['u'] );
-		if( !empty( $target ) ) {
-			if( isset( $_REQUEST['d'] ) && strlen( $_REQUEST['d'] )>0 ) {
-				fwrite( $target, $_REQUEST['d']);
-			}
-			
-			$ssend = stream_socket_server("udp://localhost:0", $errno, $errstr, STREAM_SERVER_BIND );
-			if( $ssend ) {
-				$sport = parse_url( "udp://" .stream_socket_get_name($ssend, false) )['port'] ;
-				header( "X-Webt: ready");
-				header( "X-Webt-Id: $sport");
-				_output( "p$sport" );
-				
-				while( !feof( $target ) ){
-					$reads = array( $target, $ssend );
-					$writes = NULL ;
-					$exs = NULL ;
-					set_time_limit(200) ;
-					if( stream_select($reads, $writes, $exs, 180)>0 ) {
-						if( in_array( $target, $reads, true) ) {
-							$data = fread( $target, 100000 ) ;
-							if( strlen($data)>0 ) {
-								_output( $data );
-							}
-						}
 
-						if( in_array( $ssend, $reads, true) ) {
-							$data = fread( $ssend, 100000 ) ;
-							if( strlen($data)>0 ) {
-								fwrite( $target, $data );
-							}
-							else {
-								break ;
-							}
-						}
-					}
-					else {
-						break;
-					}
-				}
-				fclose($ssend);
-			}
-			
-			fclose($target);
-		}
-		else {
-			header( "X-Webt: error");
-		}
-	}
-	else if( $_REQUEST['c'] == 'z' ) {		// s u data
-		if( !empty($_REQUEST['p']) ) {
-			$p=(int)$_REQUEST['p'] ;
-			$conn = stream_socket_client("udp://localhost:$p");
-		}
-		$err = false ;
-		if( !empty($conn) && isset( $_REQUEST['d'] ) && strlen( $_REQUEST['d'] )>0 ) {
-			fwrite( $conn, $_REQUEST['d'] );
-		}
-			
 		$inputdata = fopen("php://input", "r");
 		if( $inputdata ) {
 			// transfer data 
-			while( !feof($inputdata) && ($l = fgets( $inputdata, 100 )) ) {
-				if( strlen($l)<3 ) {
-					break ;
-				}
+			while( !feof($inputdata) && ($data = fgets( $inputdata, 20 )) ) {
 				$sl = 0 ;
-				if( $l[0] == 'p' ) {
-					if( !empty($conn) )
-						fclose( $conn );
-					$p=(int)substr( $l, 1 );
-					$conn = stream_socket_client("udp://localhost:$p");
-				}
-				else if( $l[0] == 's' ) {
-					$sl = (int) substr( $l, 1 );
+				if( strlen($data)>2 ) {
+					if(  $data[0] == 'p' ) {	// port
+						$np = (int) substr( $sl, 1 ) ;
+						if( $np != $tport ) {
+							if( $conn ) {
+								fclose($conn);
+							}
+							$tport = $np ;
+							$conn = stream_socket_client("tcp://localhost:".$tport );
+						}
+						continue ;
+					}
+					else if( $data[0] == 's' ) {	// size
+						$sl = (int) substr( $data, 1 );
+					}
+					else {
+						break;	// error!
+					}
 				}
 				else {
-					break ;
+					break;
 				}
-				if( $sl > 0 ) {
-					$data = '' ;
+				
+				if( $conn ) {
+					fwrite( 's'.$sl."\n" );
 					while( $sl > 0 ) {
-						$rdata =  fread($inputdata, $sl) ;
-						@$rlen = strlen($rdata);
-						if( $rdata === false || $rlen == 0 ) {		// eof
-							$err = true ;
+						$data =  fread($inputdata, $sl) ;
+						@$dlen = strlen($data);
+						if( $data === false || $dlen == 0 ) {		// eof
 							break;
 						}
-						$data .= $rdata ;
-						$sl -= $rlen ;
-					}
-					if( !$err && strlen($data)>0 && !empty($conn) ) {
-						fwrite( $conn, $data );
+						$w=0;
+						while( $w < $dlen ) {
+							$w += fwrite( $conn, substr($data,$w) );
+						}
+						$sl -= $dlen ;
 					}
 				}
 			}
 			fclose($inputdata);
 		}
-
-		if( !empty($conn) )
+		if( $conn )
 			fclose($conn);
-		if( $err ) {
-			header( "X-Webt: error");
-		}
-	}	
+	}
 }
 
 return ;

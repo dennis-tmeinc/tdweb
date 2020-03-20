@@ -3,9 +3,10 @@
 	// $smart_host="50.242.127.167" ;
 	// $smart_host="207.112.107.196" ;
 	// $smart_host="99.35.219.116" ;
-	$smart_host="173.167.112.105";
+//	$smart_host="173.167.112.105";
 //	$smart_host="tdlive.darktech.org" ;
 
+	$smart_host="192.168.42.188";
 	$smart_user="server" ;
 	$smart_password="password" ;
 	$smart_database="smart" ;
@@ -27,7 +28,7 @@
 	$dashboard_conf="C:\\SmartSvrApps\\dashboardoption.config" ;
 	
 	// Touchdown server configure file (include email server configure)
-	$td_conf="D:\\tdconfig.conf";
+	$td_conf="R:\\tdconfig.conf";
 	
 	// backup file location, 
 	$backup_path="\\TouchDownCenter\\www\\tdc\\smartbackup" ;
@@ -50,8 +51,8 @@
 	// zone moving mode, "cross" or "center"
 	// $zone_mode = "cross" ;
 
-	// bing map credentials
-	$map_credentials="AqN7VXE7SneFf4yMEtqf445UNMqOZK2wCJUkKUvdVi4F9IEdUVZkU_TLizVcUvpL" ;
+	// bing map credentials, for each tdweb installation, please head to https://www.bingmapsportal.com/  to get a new bing map key
+	$map_credentials="AqH8jpFgh8cOPZNsTLo0wcOQNGji0uwHgiGyBXOxJvzDySVjKN36y6t_TU1o33e-" ;
 
 	// Default map location, comment it to auto detect
 	$map_area="Toronto" ;
@@ -78,12 +79,13 @@
 	// new td live support
 	$liveplay_protocol = "relay" ;
 	$liveplay_host = "209.167.16.254" ;			// this is td live relay server's public ip address
+	$support_https_playback = True;
 					
 	// live track server (AVL Service)
 	$avlservice = "http://$smart_host:40520/avlservice" ;
 
 	// multi company support
-	$support_multicompany = 1 ;
+	$support_multicompany = 0 ;
 	// script/excutable to create/remove com
 	$td_new    = "C:\\SmartSvrApps\\tdnew.exe create " ;
 	$td_clean  = "C:\\SmartSvrApps\\tdnew.exe remove " ;

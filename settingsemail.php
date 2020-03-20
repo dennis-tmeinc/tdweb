@@ -36,6 +36,48 @@ $(".btset input").change(function(){
    location=$(this).attr("href");
 });
 
+$( ".tdcdialog#dialog_message" ).dialog({
+	autoOpen: false,
+	width:"auto",
+	modal: true,
+	buttons:{
+		"Ok": function() {
+			$( this ).dialog( "close" );
+		}
+	}
+});
+
+$( ".tdcdialog#dialog_testemail" ).dialog({
+	autoOpen: false,
+	width:"auto",
+	modal: true,
+	buttons:{
+		"Cancel": function() {
+			$( this ).dialog( "close" );
+		},
+		"Send": function() {
+			var form = $('form#emailsetup').serializeArray();
+			form.forEach( function(v) {
+				if( v.name == "recipient" ) {
+					v.value=$("input#testreceiver").val();
+				}
+			});
+			$.getJSON("emailtest.php", form, function(data){
+				if( data.res == 1 ) {
+					$( ".tdcdialog#dialog_message #message" ).text(data.msg);
+				}
+				$( ".tdcdialog#dialog_message" ).dialog("open");
+			});
+			$( this ).dialog( "close" );
+		}
+	}
+});
+
+// Email Server Test
+$("button#emailtest").click(function(e){
+	e.preventDefault(); 
+	$( ".tdcdialog#dialog_testemail" ).dialog("open");
+});
 
 // Email tab
 $("button#emailsave").click(function(){
@@ -81,6 +123,7 @@ $("button#emailreset").click(function(){
 		}
 	});
 });
+
 $("button#emailreset").click();
 
 $("form#emailsetup input[name='tmSendDaily']").timepicker({
@@ -203,6 +246,10 @@ bus2 : high tempterature
 			<td style="text-align: right;">Password:</td>
 			<td><input name="authenticationPassword" type="password" /></td>
 		</tr>
+		<tr>
+			<td style="text-align: right;"></td>
+			<td><button id="emailtest">Test</button></td>
+		</tr>		
 	</tbody>
 </table>
 </fieldset>
@@ -233,6 +280,22 @@ bus2 : high tempterature
 
 </div>
 <!-- workarea --></div>
+
+<!-- message box -->
+<div class="tdcdialog" id="dialog_message" title="Message">
+<p id="message">Are you OK?</p>
+
+<p>&nbsp;</p>
+</div>
+
+<div class="tdcdialog" id="dialog_testemail" title="Send Testing Email">
+
+<p>Enter email receiver:</p>
+<input name="testreceiver", id="testreceiver" type="email" />
+
+<p>&nbsp;</p>
+</div>
+
 </div>
 <!-- mcontainer -->
 

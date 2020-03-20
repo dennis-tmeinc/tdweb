@@ -14,13 +14,30 @@
 	if( $logon ) {
 		
 		if( $_SESSION['user_type'] == 'admin' ) {
-			$sql="DELETE FROM `videoclip` WHERE `index` = '$_REQUEST[index]' ;" ;
-			if( $conn->query($sql) ) {
-				$resp['res']=1 ;	// success
+
+			if( count( $_REQUEST[index] ) > 0 ) {
+				
+				$od = false ;
+				$sql = "DELETE FROM `videoclip` WHERE (" ;
+				foreach( $_REQUEST[index] as $id ) {
+					if( $od ) {
+						$sql .= " OR " ;
+					}
+					$sql .= "( `index` = $id )" ;
+					$od = true ;
+				}
+				$sql .=  ");" ;
+				
+				$resp['sql'] = $sql ;
+				
+				if( $conn->query($sql) ) {
+					$resp['res']=1 ;	// success
+				}
+				else {
+					$resp['errormsg']='SQL error: '.$conn->error ;
+				}
 			}
-			else {
-				$resp['errormsg']='SQL error: '.$conn->error ;
-			}			
+
 		}
 		else {
 			$resp['errormsg']='Not allowed';

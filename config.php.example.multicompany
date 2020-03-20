@@ -9,7 +9,7 @@
 	// List of timezone: http://php.net/manual/en/timezones.php
 	$timezone = "US/Eastern" ;
 	
-	// number of icons on map , acture number of icons may get doubled
+	// expected number of icons on map
 	$map_icons=100;
 	
 	// MSS configure file
@@ -74,4 +74,4 @@
 	$disable_mss = false ;
 		
 	return ;
-?>	
+?>

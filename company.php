@@ -313,6 +313,9 @@ $( "#dialog_emailserver" ).dialog({
 		});		
 	},
 	buttons:{
+		"Test": function() {
+			$( ".tdcdialog#dialog_testemail" ).dialog("open");
+		},
 		"Save": function() {
 		    $.getJSON("emailserversave.php", $('form#emailserversetting').serializeArray(), function(data){
 
@@ -321,6 +324,40 @@ $( "#dialog_emailserver" ).dialog({
 		},
 		Cancel: function() {
 			$( "#dialog_emailserver" ).dialog("close");
+		}
+	}
+});
+
+
+$( ".tdcdialog#dialog_message" ).dialog({
+	autoOpen: false,
+	width:"auto",
+	modal: true,
+	buttons:{
+		"Ok": function() {
+			$( this ).dialog( "close" );
+		}
+	}
+});
+
+$( ".tdcdialog#dialog_testemail" ).dialog({
+	autoOpen: false,
+	width:"auto",
+	modal: true,
+	buttons:{
+		"Cancel": function() {
+			$( this ).dialog( "close" );
+		},
+		"Send": function() {
+			var form = $("form#emailserversetting").serializeArray();
+			form.push( {name:"recipient",value:$("input#testreceiver").val()} );
+			$.getJSON("emailtest.php", form, function(data){
+				if( data.res == 1 ) {
+					$( ".tdcdialog#dialog_message #message" ).text(data.msg);
+				}
+				$( ".tdcdialog#dialog_message" ).dialog("open");
+			});
+			$( this ).dialog( "close" );
 		}
 	}
 });
@@ -589,6 +626,21 @@ foreach( $timezonelist as $tz ) {
 	<p>Verify Password:</p>
 	<input name="input_passwordverify" type="password" />
 </form>
+</div>
+
+<!-- message box -->
+<div class="tdcdialog" id="dialog_message" title="Message">
+<p id="message">Are you OK?</p>
+
+<p>&nbsp;</p>
+</div>
+
+<div class="tdcdialog" id="dialog_testemail" title="Send Testing Email">
+
+<p>Enter email receiver:</p>
+<input name="testreceiver", id="testreceiver" type="email" />
+
+<p>&nbsp;</p>
 </div>
 
 <!-- workarea --></div>

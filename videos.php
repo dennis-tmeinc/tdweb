@@ -65,6 +65,7 @@ $("#videolist").jqGrid({
     sortorder: 'desc',
     viewrecords: true,
     gridview: true,
+	multiselect: true,
     caption: 'Video Clips List'
 }); 
 
@@ -93,13 +94,19 @@ $( ".tdcdialog#dialog_delete" ).dialog({
 
 $('#deletevideo').click(function(e){
 	e.preventDefault();
-	var id=$("#videolist").jqGrid('getGridParam','selrow') ;
-	if( id == null ) {
-		alert("Please select one video clip!");
+	var id=$("#videolist").jqGrid('getGridParam','selarrrow') ;
+	if( id == null || id.length < 1 ) {
+		alert("Please select at lease one video clip!");
 		return ;
 	}
-	$( ".tdcdialog#dialog_delete #deletemsg" ).text("Please confirm to delete this video clip?") ;
-	$( ".tdcdialog#dialog_delete #deletename" ).text( $("#videolist").jqGrid('getCell', id, 4 ) );
+	if( id.length > 1 ) {
+		$( ".tdcdialog#dialog_delete #deletemsg" ).text("Please confirm to delete these video clips?") ;
+		$( ".tdcdialog#dialog_delete #deletename" ).text( " " );
+	}
+	else {
+		$( ".tdcdialog#dialog_delete #deletemsg" ).text("Please confirm to delete this video clip?") ;
+		$( ".tdcdialog#dialog_delete #deletename" ).text( $("#videolist").jqGrid('getCell', id, 4 ) );
+	}
 	$( "#dialog_vehicle" ).dialog( "option", "title", "Delete Video Clip?" );
 	$( ".tdcdialog#dialog_delete" ).data("yesfunction", function(){
 		var fdata=new Object ;

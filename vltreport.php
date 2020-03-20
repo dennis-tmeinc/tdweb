@@ -70,7 +70,7 @@
 								));
 								// add live tun register url
 								$phonereg = $phone."&u=".rawurlencode(dirname($_SERVER['SCRIPT_NAME']). "/livetun.php"  );
-								@file_get_contents("http://tdlive.darktech.org/vlt/vltreg.php?$phonereg", false, $ctx ) ;
+								@file_get_contents("http://tdlive.ignorelist.com/vlt/vltreg.php?$phonereg", false, $ctx ) ;
 							}
 							
 						}

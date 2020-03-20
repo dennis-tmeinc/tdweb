@@ -17,7 +17,7 @@
 			$tdconf = new SimpleXMLElement( "<tdconfig></tdconfig>" );
 		}
 		if( !empty( $tdconf -> emailserver ) ) {
-			$tdconf -> emailserver ->authenticationPassword = '********' ;
+			// $tdconf -> emailserver ->authenticationPassword = '********' ;
 			$resp['email'] = array();
 			foreach ($tdconf -> emailserver->children() as $key => $value) {
 				$resp['email'][(string)$key] = (string)$value ;
