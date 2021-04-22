@@ -6,12 +6,19 @@
 //	$smart_host="173.167.112.105";
 //	$smart_host="tdlive.darktech.org" ;
 
-	$smart_host="192.168.42.188";
-	$smart_user="server" ;
-	$smart_password="password" ;
-	$smart_database="smart" ;
-	
+//	$smart_host="64.40.243.195";
+//	$smart_user="admin" ;
+//	$smart_password="Smart247" ;
+//	$smart_database="abc001" ;
+
+	$smart_host="dennispc.us.to";
+	$smart_user="dennis" ;
+	$smart_password="dennisdb" ;
+	$smart_database="abc001" ;
+
 	$database_persistent=true ;
+
+	$jqver = "3.6.0" ;
 	
 	$product_name = "TD FLEET MONITOR" ;
 
@@ -56,22 +63,22 @@
 
 	// Default map location, comment it to auto detect
 	$map_area="Toronto" ;
-	$mapmode="limit" ;
+	$mapmode="grid" ;
 	
 	// session timeout (max half hour)
 	$session_timeout=900 ;
 	
-	$session_path= "R:\\td\\SESSION";
+	$session_path= "session";
 	$session_idname = "touchdownid";
-	$remote_fileserver = "http://${smart_host}/tdc/fileservice.php" ;	
+	// $remote_fileserver = "http://${smart_host}/tdc/fileservice.php" ;	
 	
-	$cache_dir="R:\\td\\cache" ;
+	$cache_dir="cache" ;
 
 	// avaialbe ui: ui-lightness ui-darkness smoothness start redmond sunny 
 	//              overcast le-frog flick pepper-grinder eggplant dark-hive
 	//              cupertino south-street blitzer humanity hot-sneaks excite-bike 
 	//              vader dot-luv mint-choc black-tie trontastic swanky-purse
-	$default_ui_theme = "smoothness" ;
+	//	$default_ui_theme = "smoothness" ;
 	
 	// Maximum videos cache size in Mega Bytes
 	$webplay_cache_size = 10000 ;
@@ -82,29 +89,39 @@
 	$support_https_playback = True;
 					
 	// live track server (AVL Service)
-	$avlservice = "http://$smart_host:40520/avlservice" ;
+	//$avlservice = "http://$smart_host:40520/avlservice" ;
+	$avlservice = "http://64.40.243.195:40520/avlservice" ;
+	$avlcbserver = "http://dennishome.us.to:25618" ;		
+	$avlcbapp = "vltevent.php" ;
+
+	$avllog = "avl.log" ;
 
 	// multi company support
 	$support_multicompany = 0 ;
 	// script/excutable to create/remove com
 	$td_new    = "C:\\SmartSvrApps\\tdnew.exe create " ;
 	$td_clean  = "C:\\SmartSvrApps\\tdnew.exe remove " ;
+	// IVUSetup.exe -register xxxxxxxxxxxxxxxxxxxx abc001  , xx: ivu id, abc001: clientid
+	$td_ivu_setup = "C:\\SmartSvrApps\\IVUSetup.exe -register " ;
 	
 	$enable_videos = true ;
 	// drive by demo
-	$support_driveby = 1 ;
+	$support_driveby = 0 ;
 	$driveby_eventdir = "\\TouchDownCenter\\drivebydemo1" ;
-
 	$webplay_support = 1 ;						// enable web video playback
 	$enable_livetrack = 1 ;						// enable or disable live track
 	$support_viewtrack_logo = false ;
 	$support_fleetmonitor_logo = true ;
-	$support_livepreview = true ;
+	$support_livepreview = false ;
 	$support_liveaudio = true ;
 	$show_vehicles_uploaded = true ;
 	$use_conv266 = true ;
 	$disable_mss = false ;
 	$support_videoviacellular = true ;
+
+	$avl_log = "d:\\tmp\\avl.log";
 	
+	$vehicle_status_valid_time = 60*24*30*10 ;
+
 	return ;
 ?>

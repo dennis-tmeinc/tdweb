@@ -19,6 +19,11 @@ if( empty($_REQUEST['xml']) ) {
 	goto done ;
 }
 
+// log avl event
+if ( !empty ($avl_log) ) {
+	file_put_contents ( $avl_log , "EVT: " . $_REQUEST['xml'] . "\n", FILE_APPEND );
+}		
+
 @$tdwebc = new SimpleXMLElement($_REQUEST['xml']) ;
 
 if( empty( $tdwebc->session ) ) {
@@ -91,11 +96,11 @@ if( !empty( $tdwebc->avlp ) ) {
 			$vlt['events'][] = $tdwebc ;
 			
 			fseek( $fvlt, 0, SEEK_SET );
+			ftruncate( $fvlt, 0 );
 			fwrite( $fvlt, json_encode( $vlt ) );
-			$xmlresp->status='OK' ;
-						
-			ftruncate( $fvlt, ftell( $fvlt ) );
 			fflush( $fvlt );
+
+			$xmlresp->status='OK' ;
 		}
 			
 		flock( $fvlt, LOCK_UN );

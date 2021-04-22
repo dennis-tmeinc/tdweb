@@ -23,8 +23,13 @@
 	
 		$xml = new SimpleXMLElement('<tdwebc></tdwebc>') ;
 		// clientid support
-		if( !empty( $_SESSION['clientid'] ) )
+		if( !empty( $_SESSION['clientid'] ) ) {
 			$xml->company = $_SESSION['clientid'] ;
+		}
+		else {
+			// no client support? may be use database name is a good idea?
+			$xml->company = $smart_database ;  // only for testing
+		}			
 		
 		$xml->session = $vltsession ;
 		@$xml->serialno = $_REQUEST['vltserial'] ;
@@ -32,7 +37,10 @@
 		$xml->avlp='' ;
 		$xml->command='9999' ; 		// AVL_AUTO_REPORT_CONF(26)
 		@$avlxml = file_get_contents( $avlservice.'?xml='.rawurlencode($xml->asXML()) );	
-		
+		if ( !empty ($avl_log) ) {
+			file_put_contents ( $avl_log , "REQ: " . $xml->asXML() . "\nANS: ". $avlxml. "\n", FILE_APPEND  );
+		}
+
 		// clear vlt session file
 		$fvltname = session_save_path().'/sess_vlt_'.$vltsession ;
 		$fvlt = fopen( $fvltname, "r+" );

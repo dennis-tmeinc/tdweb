@@ -141,22 +141,51 @@ done:
 	session_write() ;
 
 	echo json_encode($resp) ;
-	
+
 	// forced close connection
 	header( "Content-Length: ". ob_get_length() );
 	header( "Connection: close" );
-	
+
 	ob_flush();
 	flush();
 	ignore_user_abort( true );
 	
-	// clean old session files
+	// clean up
+	$session_path = session_save_path () ;
 	$xtime = time() ;
-	// clean old session files
-	foreach (glob($session_path.'/sess_*') as $filename) {
-		if( $xtime - fileatime($filename) > 86420 ) {
-			@unlink($filename);
+	$cleanfile = $session_path.'/sess_clk7l9eln8hvg27th3bdsmtvql' ;
+	@$ptime = file_get_contents( $cleanfile );
+	if( empty($ptime) ) { 
+		$ptime = $xtime - 7*24*3600 ;
+	}
+
+	if( $xtime - $ptime >= 24*3600 ) {
+		
+		// clean old session files
+		foreach (glob($session_path.'/sess_*') as $filename) {
+			if( $xtime - fileatime($filename) > 7*24*3600 ) {
+				@unlink($filename);
+			}
 		}
+
+		// rotate logs
+		foreach (glob($_SERVER["DOCUMENT_ROOT"] . "/../Apache/logs/*log*" ) as $filename) {
+			if( $xtime - fileatime($filename) > 7*24*3600 ) {
+				@unlink($filename);
+			} 
+			else if( filesize( $filename ) > 64*1024 ) {
+				$f = fopen($filename,"r+");
+				fseek($f, -48*1024, SEEK_END );
+				fgets($f);  // skip a line
+				$buf = fread($f, 128*1024);
+				fseek($f,0);
+				ftruncate($f,0);
+				fwrite($f,$buf);
+				fclose($f);
+			}
+		}
+
+		file_put_contents($cleanfile, strval($xtime));
 	}
 
 ?>

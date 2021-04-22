@@ -10,12 +10,12 @@
 // By Dennis Chen @ TME	 - 2013-10-29
 // Copyright 2013 Toronto MicroElectronics Inc.
 //
- 
+
 include_once 'session.php' ;
 include_once 'playercontext.php' ;
 	
 if( $logon ){
-	
+
 	if( !empty($_REQUEST['index']) ) {
 		$dpl = playbackcontext( $_REQUEST['index'], null, null );
 	}
@@ -33,7 +33,7 @@ if( $logon ){
 	else {
 		header("Content-Type: application/json");
 	}
-		
+
 	echo json_encode( $dpl ) ;
 }
 else {

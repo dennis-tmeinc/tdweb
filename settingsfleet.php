@@ -11,7 +11,7 @@ session_save('settingpage', $_SERVER['REQUEST_URI'] );
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta content="Touch Down Center by TME" name="description" />
 	<meta content="Dennis Chen @ TME, 2013-05-15" name="author" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 
 	option.dirty {
@@ -25,11 +25,13 @@ session_save('settingpage', $_SERVER['REQUEST_URI'] );
 $(document).ready(function(){
 				
 $("button").button();	
-$(".btset").buttonset();
+$(".btset").controlgroup();
 
 $(".xbutton").button();	
 
-$(".btset input").change(function(){
+$(".btset input").checkboxradio({
+      icon: false
+}).change(function(){
    location=$(this).attr("href");
 });		
 		
@@ -1222,6 +1224,12 @@ text-align: center;
 			<td style="text-align: right;">Max Upload Time</td>
 			<td><input name="vehicle_max_upload_time" type="text" value="60" /></td>
 		</tr>
+		<tr>
+			<td style="text-align: right;">IVU ID:</td>
+			<td><input name="vehicle_ivuid" size="30" type="text" /></td>
+			<td style="text-align: right;"></td>
+			<td></td>
+		</tr>		
 		<tr>
 			<td style="text-align: right;">Phone:</td>
 			<td><input name="vehicle_phone" size="30" type="text" /></td>

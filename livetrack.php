@@ -12,7 +12,13 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 <meta name="description" content="Touch Down Center by TME">
 <meta name="author" content="Dennis Chen @ TME, 2013-05-15">		
-<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
+<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script>
+<link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" />
+<link rel="stylesheet" href="//code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script>
+<script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
+<script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
+<link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
 <style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	select#webplay_camera {
 	min-width: 100px ;
@@ -30,14 +36,16 @@ var map  ;
 $(document).ready(function(){
 
 $("button").button();
-$(".btset").buttonset();
+$( "input#tableview" ).checkboxradio({
+      icon: false
+    });
 
 $("#workarea").height( 680 );
 var timer_resize = null ;
 function trigger_resize()
 {
 	if( timer_resize == null ) {
-		timer_resize = setTimeout(function(){
+		timer_resize = setTimeout(()=>{
 			timer_resize = null ;
 			$workarea = $("#workarea");
 //			var nh = window.innerHeight - $workarea.offset().top -$("#footer").outerHeight() ;
@@ -47,7 +55,7 @@ function trigger_resize()
 			if( nh != $workarea.height() ) {	// height changed
 				$workarea.height( nh );
 			}
-		},50);
+		},100);
 	}
 }
 
@@ -148,6 +156,14 @@ var hexch = "0123456789abcdefghijklmnopqrstuvwxyz" ;
 var vltparam = {} ;
 vltparam.vltserial = 100 ;
 vltparam.vltpage = '' ;
+vltparam.obd = 0;
+if( sessionStorage ) {
+	vltparam.obd = sessionStorage.getItem("obdselections");
+	if(! vltparam.obd) {
+		vltparam.obd = 0 ;
+	}
+}
+
 for( var i=0; i<6; i++ ) {
   vltparam.vltpage += hexch.charAt(Math.random()*36);
 }
@@ -165,6 +181,37 @@ function load_sensors()
 	});
 }
 load_sensors();
+
+var obd_codes = [
+	"Engine speed (rpm)",
+	"Wheel-Based Vehicle Speed (km/h)",
+	"Trip Distance (km)", 
+	"Total Distance (km)",
+	"Fuel Level (%)", 
+	"Engine Oil Level (%)",
+	"Engine Coolant Temperature", 
+	"Engine Oil Temperature", 
+	"Engine Fuel Temperature", 
+	"Transmission Selected Gear", 
+	"Parking Brake Switch", 
+	"Brake Power (kw)", 
+	"Accelerator Pedal Position (%)", 
+	"Engine Percent Load (%)", 
+	"Engine Percent Torque (%)", 
+	"Idling State", 
+	"Steering Wheel Angle", 
+	"Door State", 
+	"Seat Belt State", 
+	"Turn", 
+	"Right Turn Light", 
+	"Left Turn Light", 
+	"Engine Status",
+	"Battery Voltage (mV)"
+];
+var obd_engine_status = ["Stopped","Pre Start","Starting","Warm Up","Running","Cool Down","Stopping","Post Run"];
+var obd_state_onoff=["Off","On"];
+var obd_state_openclose=["Closed","Open"];
+var obd_state_turn=["Right","Left"];
 
 var vlt_pins = {} ;
 
@@ -375,6 +422,41 @@ function showpin( avlp, id, iconimg, clean )
 				desc += "<br/>Ignition: " + ( (avlp.ign==1)?"ON":"OFF") ;
 				lines ++ ;
 			}
+
+			
+			// lets start obd lines here
+			if( avlp.obd && avlp.obd.i ) {
+				var ia ;
+				if( avlp.obd.i instanceof Array ) {
+					ia = avlp.obd.i ;
+				}
+				else {	// single value i
+					ia = [avlp.obd.i] ;
+				}
+				var i;
+				var v;
+				for( i=0; i<ia.length; i++ ) {
+					var obdi=ia[i].split(",");
+					if( obdi.length > 1 && obdi[0]<obd_codes.length ){
+						v = obdi[1] ;
+						// translate some integer to text
+						if( obdi[0] == 10 || obdi[0] == 15 || obdi[0] == 18 || obdi[0] == 20 || obdi[0] == 21  ){		// for on/off
+							v = obd_state_onoff[v] ;
+						}
+						else if( obdi[0] == 17 ){		// for open/close
+							v = obd_state_openclose[v] ;
+						}
+						else if( obdi[0] == 19 ){		// for right/left 
+							v = obd_state_turn[v] ;
+						}
+						else if( obdi[0] == 22 ) {		// for engine status
+							v = obd_engine_status[v] ;
+						}
+						desc += "<br/>" + obd_codes[obdi[0]] + ":" + v;
+						lines ++ ;
+					}
+				}
+			}
 			
 			var iheight=92+18*lines  ;
 			
@@ -439,15 +521,13 @@ function tdwebc_message( tdwebc )
 			if( avlp.list && avlp.list.item ) {
 				vltlist = {} ;
 				var dvrlist = avlp.list.item ;
-				if( dvrlist instanceof Array  ) {
-					for( var i=0; i<dvrlist.length; i++ ) {
-						if( dvrlist[i].dvrid ) {
-							vltlist[dvrlist[i].dvrid] = dvrlist[i] ;
-						}
-					}
+				if( ! dvrlist instanceof Array  ) {	// make it an array
+					dvrlist = [dvrlist] ; 
 				}
-				else if( dvrlist.dvrid ) {
-					vltlist[dvrlist.dvrid] = dvrlist ;
+				for( var i=0; i<dvrlist.length; i++ ) {
+					if( dvrlist[i].dvrid ) {
+						vltlist[dvrlist[i].dvrid] = dvrlist[i] ;
+					}
 				}
 			}
 			// update vlt list
@@ -554,7 +634,7 @@ function pquery()
 			window.location.assign("logout.php");
 		}
 		else {
-			pquery();
+			setTimeout( pquery, 800);
 		}
 	}});
 }
@@ -594,9 +674,22 @@ $( "button[name='getcurrentpos']" ).click(function(e){
 
 // Clear All Icons button
 $( "button[name='clearallicons']" ).click(function(e){
+	for(var did in vlt_pins) {
+   		// remove old pin/infobox
+		if( vlt_pins[did].vinfobox ) {
+			// map.entities.remove(vlt_pins[did].vinfobox);
+			vlt_pins[did].vinfobox.setMap(null);
+			delete vlt_pins[did].vinfobox ;
+		}
+		if( vlt_pins[did].vpushpin ) {
+			map.entities.remove(vlt_pins[did].vpushpin);
+			delete vlt_pins[did].vpushpin ;
+		}
+	}
 	map.entities.clear();
 	vlt_pins = {} ;
 });
+
 
 // Sensor Config Dialog
 $( ".tdcdialog#dialog_sensorconfig" ).dialog({
@@ -604,9 +697,33 @@ $( ".tdcdialog#dialog_sensorconfig" ).dialog({
 	width:"auto",
 	modal: true,
 	open: function( event, ui ) {
+		var selOpt=
+		"<option>Door Open</option>" + 
+		"<option>Door Close</option>" +
+		"<option>Stop Arm On</option>" +
+		"<option>Stop Arm Off</option>" +
+		"<option>Amber Light On</option>" +
+		"<option>Amber Light Off</option>" +
+		"<option>Event Marker On</option>" +
+		"<option>Event Market Off</option>" +
+		"<option>Brake On</option>" +
+		"<option>Brake Off</option>" +
+		"<option>Left Turn On</option>" +
+		"<option>Left Turn Off</option>" +
+		"<option>Right Turn On</option>" +
+		"<option>Right Turn Off</option>" +
+		"<option>Emergency Door Open</option>" +
+		"<option>Emergency Door Close</option>" ;
+
 		var tb = "";
 		for( var i=0 ; i<vltsensor.length ; i++ ) {
-			tb += '<tr><td>'+vltsensor[i].sensor_index+'</td><td><input name="' + vltsensor[i].sensor_index + '" value="' + vltsensor[i].sensor_name + '" type="text"/></td></tr>' ;
+			//tb += '<tr><td>'+vltsensor[i].sensor_index+'</td><td><input name="' + vltsensor[i].sensor_index + '" value="' + vltsensor[i].sensor_name + '" type="text"/></td></tr>' ;
+			tb += '<tr><td>' + 
+			vltsensor[i].sensor_index + 
+			'</td><td><select name="' + vltsensor[i].sensor_index + 
+			'" value="' + vltsensor[i].sensor_name + '" >' +  
+			selOpt + 
+			'</select></td></tr>' ;
 		}
 		$("table#vltsensortable").html(tb);
 	},	
@@ -630,6 +747,50 @@ $( ".tdcdialog#dialog_sensorconfig" ).dialog({
 
 $( "button[name='sensorconfig']" ).click(function(){
 	$( ".tdcdialog#dialog_sensorconfig" ).dialog("open");
+});
+
+// OBD Config Dialog
+$( ".tdcdialog#dialog_obdconfig" ).dialog({
+	autoOpen: false,
+	width:"auto",
+	modal: true,
+	open: function( event, ui ) {
+		var i ;
+		for(i=0; i<32; i++) {
+			$( "form[name='obdconfig'] input#obd" + i ).prop("checked", (vltparam.obd & (1<<i)) != 0 );
+		}
+	},
+	buttons:{
+		"Select All": function() {
+			for(i=0; i<32; i++) {
+				$( "form[name='obdconfig'] input#obd" + i ).prop("checked", true );
+			}
+		},
+		"Clear All": function() {
+			for(i=0; i<32; i++) {
+				$( "form[name='obdconfig'] input#obd" + i ).prop("checked", false );
+			}
+		},
+		Cancel: function() {
+			$( this ).dialog( "close" );
+		},
+		"OK": function() {
+			var i;
+			vltparam.obd = 0;
+			for(i=0; i<32; i++) {
+				if( $( "form[name='obdconfig'] input#obd" + i ).prop("checked") ) {
+					vltparam.obd += (1<<i);
+				}
+			}
+			sessionStorage.setItem("obdselections", vltparam.obd);
+			$( this ).dialog( "close" );
+		}
+	}
+});
+
+//OBD config button
+$( "button[name='obdconfig']" ).click(function(){
+	$( ".tdcdialog#dialog_obdconfig" ).dialog("open");
 });
 
 $( "form#vltreportconfig input[name='vlt_geo']" ).change(function() {
@@ -743,7 +904,7 @@ $( ".tdcdialog#dialog_reportconfig" ).dialog({
 		if( vltsensor_reload ) {
 			var selectalarm = "";
 			for( var i=0 ; i<vltsensor.length ; i++ ) {
-				if( vltsensor[i].sensor_name.length > 0 ) {
+				if( vltsensor[i].sensor_name && vltsensor[i].sensor_name.length > 0 ) {
 					selectalarm += '<input name="vlt_gpio_' + i + '" type="checkbox" /> ' + vltsensor[i].sensor_name + ' <br />' ;
 				}
 			}
@@ -1209,6 +1370,140 @@ $( "button[name='playback']" ).click(function(e){
 	}
 });
 
+var tableview=false ;
+var tableinit=false ;
+var tableTimer=false;
+
+// table view button
+$( "input#tableview" ).click(function(e){
+
+	if( $(this).prop("checked") ) {
+
+		tableview=true;
+
+		$("div#tdcmap").hide(200, function() {
+			$("div#tdctable").show(200);
+
+			if( !tableinit ) {
+				tableinit = true ;
+
+var sOpts = {
+	sopt: ['eq','ne','lt','le','gt','ge','bw','bn','in','ni','ew','en','cn','nc']
+};
+var sOptsT = {
+	sopt: ['eq','ne','cn','nc']
+};
+var sOptsN = {
+	sopt: ['eq','ne','lt','le','gt','ge']
+};
+var sOptsOnOff = {
+	sopt: ['eq','ne'],
+	value:{0:'Off',1:'On'}
+};
+var sOptsOpenClose = {
+	sopt: ['eq','ne'],
+	value:{0:'Close',1:'Open'}
+};
+var sOptsYesNo = {
+	sopt: ['eq','ne'],
+	value:{0:'No',1:'Yes'}
+};
+
+$("table#vlttable").jqGrid({
+    rowNum:50,
+    rowList:[20, 50, 100, 200],
+    url:'vlttableviewgrid.php',
+    datatype: 'json',
+    mtype: 'GET',
+    colModel :[ 
+      {label: "Vehicle ID", name:'vehicle_id', index:'vehicle_id', sortable: true, searchoptions: sOptsT, width:100}, 
+      {label: 'OBD Data', name: '_obd_data', index:'obd_data', stype:'select', searchoptions: sOptsYesNo, width:80, sortable: true}, 
+      {label: 'IVU Power Source', name: 'ivu_power_src', index:'ivu_power_src', width:110, searchoptions: sOptsT, sortable: true}, 
+      {label: 'Engine Status', name: 'engine_status', index:'engine_status', width:120, sortable: true, search: true, searchoptions: sOptsN }, 
+      {label: 'Ignition', name: '_ignition', index:'ignition', width:80, sortable: true,stype:'select', searchoptions: sOptsOnOff }, 
+      {label: 'Vehicle Status', name: 'vehicle_status', index:'vehicle_status', width:110, sortable: true,searchoptions: sOptsT }, 
+      {label: 'TRIP DISTANCE', name: '_trip_distance', index:'trip_distance', width:100, sortable: true,searchoptions: sOptsN}, 
+      {label: 'Total Distance', name: '_total_distance', index:'total_distance', width:110, sortable: true, searchoptions: sOptsN}, 
+      {label: 'Fuel Level', name: 'fuel_level', index:'fuel_level', width:110, sortable: true, searchoptions: sOptsN}, 
+      {label: 'Engine Oil Level', name: 'engine_oil_level', index:'engine_oil_level', width:110, sortable: true,searchoptions: sOptsN}, 
+      {label: 'Engine Coolant Temperature', name: 'coolant_temp', index:'coolant_temp', width:140, sortable: true, searchoptions: sOptsN}, 
+      {label: 'Engine Oil Temperature', name: 'oil_temp', index:'oil_temp', width:120, sortable: true, searchoptions: sOptsN}, 
+      {label: 'Transmission', name: 'transmission', index:'transmission', width:110, sortable: true, searchoptions: sOptsT}, 
+      {label: 'Parking Break', name: '_parking_break', index:'parking_break', width:110, sortable: true, stype:'select', searchoptions: sOptsOnOff}, 
+      {label: 'Brake Power', name: 'brake_power', index:'brake_power', width:100, sortable: true, searchoptions: sOptsN}, 
+      {label: 'Gas Pedal', name: 'gas_pedal', index:'gas_pedal', width:100, sortable: true, searchoptions: sOptsN}, 
+      {label: 'Engine Load', name: 'engine_load', index:'engine_load', width:110, sortable: true, searchoptions: sOptsN}, 
+      {label: 'Idling Status', name: '_idling_status', index:'idling_status', width:110, sortable: true, stype:'select', searchoptions: sOptsYesNo }, 
+      {label: 'Door Status', name: '_door_status', index:'door_status', width:100, sortable: true, stype:'select', searchoptions: sOptsOpenClose },  
+      {label: 'Seat Belt Status', name: '_seat_belt', index:'seat_belt', width:120, sortable: true, stype:'select', searchoptions: sOptsOnOff },  
+      {label: "Battery Voltage", name:'_battery', index:'battery', width:120, sortable: true, searchoptions: sOptsN }  
+    ],
+	height: '420',
+    sortname: 'vehicle_id',
+    sortorder: 'asc',
+    viewrecords: true,
+    gridview: true,
+	pager: '#pagervlttable',
+    caption:"Table View",
+	search : {
+     caption: "Search.1..",
+     Find: "Find",
+     Reset: "Reset",
+     odata : ['equal', 'not equal', 'less', 'less or equal','greater','greater or equal', 'begins with','does not begin with','is in','is not in','ends with','does not end with','contains','does not contain'],
+     groupOps: [ { op: "AND", text: "all" }, { op: "OR", text: "any" } ],
+     matchText: " match",
+     rulesText: " rules"
+   },
+	// events
+	loadComplete: function(){
+		if( tableview ) {
+			waitForStatus();
+		}
+   },
+}); 
+
+$("table#vlttable").jqGrid('navGrid','#pagervlttable',{edit:false,add:false,del:false});
+
+$("table#vlttable").jqGrid('navButtonAdd', '#pagervlttable', {
+	caption: "",
+	buttonicon: "ui-icon-calculator",
+	title: "Choose columns",
+	onClickButton: function () {
+		$(this).jqGrid('columnChooser');
+	}
+});
+			}
+			else {
+				$("table#vlttable").trigger("reloadGrid");
+			}
+		});
+
+	}
+	else {
+		tableview=false ;
+
+		$("div#tdctable").hide(200, function(){
+			$("div#tdcmap").show(200);
+		});
+
+	}
+});
+
+var waitForStatusRun = false ;
+function waitForStatus() {
+	if( !waitForStatusRun ) {
+		waitForStatusRun = true ;
+		$.getJSON("vlttableviewwait.php", function(data){
+			waitForStatusRun = false ;
+			if( data.res )  {
+				$("table#vlttable").trigger("reloadGrid");
+			}
+			else if( tableview && data.to ) {
+				setTimeout(waitForStatus,1000);
+			}
+		});
+	}
+}
 
 // live setup button
 $( "button[name='setupdvr']" ).click(function(e){
@@ -1312,7 +1607,7 @@ else {
 	$( "button[name='livepreview']" ).hide();
 }
 
-$( window ).unload( function(){
+$( window ).on( "unload", function(){
 	// save map position
 	if( sessionStorage ) {
 		var localsession = {} ;
@@ -1442,7 +1737,7 @@ $('#rcontainer').show('slow', showup );
  
 </pre>
 </div>
-<strong><span style="font-size:26px;">LIVE TRACK</span></strong>
+<strong><span style="font-size:26px;" id="ltTitle">LIVE TRACK</span></strong>
 </div>
 
 <div id="rcontainer">
@@ -1469,17 +1764,19 @@ $('#rcontainer').show('slow', showup );
 <?php if( $_SESSION['user_type'] == "admin" ) {	?>
 <div style="text-align: center;"><button style="min-width:14em;" name="sensorconfig">Sensor Config...</button></div>
 <?php } ?>
+<div style="text-align: center;"><button style="min-width:14em;" name="obdconfig">OBD Configuration</button></div>
 <div style="text-align: center;"><button style="min-width:14em;" name="reportconfiguration">Report Configuration...</button></div>
 <div style="text-align: center;"><button style="min-width:14em;" name="startautoreort">Start Auto Report</button></div>
-<div style="text-align: center;"><button style="min-width:14em;" name="stopautoreport">Stop Auto Report</button></div>
 <div style="text-align: center;"><button style="min-width:14em;" name="liveview">Live View</button></div>
 <div style="text-align: center;"><button style="min-width:14em;" name="playback">Play Back</button></div>
-<?php if( $_SESSION['user_type'] == "admin" ) { ?>
+<?php if( $_SESSION['user_type'] == "xxxxx" ) { ?>
 <div style="text-align: center;"><button style="min-width:14em;" name="setupdvr">Setup DVR</button></div>
 <?php } ?>
-<?php if( !empty($support_livepreview) ){ ?>
-<div style="text-align: center;"><button style="min-width:14em;" id="livepreview" name="livepreview">Live Preview</button></div>
-<?php } ?>
+<div style="text-align: center;">
+<label for="tableview">Table View</label>
+<input type="checkbox" style="min-width:14em;" name="tableview" id="tableview">
+</div>
+
 <form id="liveviewform" enctype="application/x-www-form-urlencoded" method="get" action="vltliveview.php" >
 <input type="hidden" name="info"/>
 </form>
@@ -1518,6 +1815,39 @@ $('#rcontainer').show('slow', showup );
 </form>
 
 </div>
+
+<!-- OBD Config Dialog -->
+<div class="tdcdialog" title="OBD Config" id="dialog_obdconfig">
+<p>Select OBD reports</p>
+<div style="overflow: auto;width:400px;max-height:300px;">
+<form name="obdconfig">
+  <input type="checkbox" id="obd0" name="obd0" ><label for="obd0">Engine Speed</label><br>
+  <input type="checkbox" id="obd1" name="obd1" ><label for="obd1">Wheel-Based Vehicle Speed</label><br>
+  <input type="checkbox" id="obd2" name="obd2" ><label for="obd2">Trip Distance</label><br>
+  <input type="checkbox" id="obd3" name="obd3" ><label for="obd3">Total Distance</label><br>
+  <input type="checkbox" id="obd4" name="obd4" ><label for="obd4">Fuel Level</label><br>
+  <input type="checkbox" id="obd5" name="obd5" ><label for="obd5">Engine Oil Level</label><br>
+  <input type="checkbox" id="obd6" name="obd6" ><label for="obd6">Engine Coolant Temperature</label><br>
+  <input type="checkbox" id="obd7" name="obd7" ><label for="obd7">Engine Oil Temperature</label><br>
+  <input type="checkbox" id="obd8" name="obd8" ><label for="obd8">Engine Fuel Temperature</label><br>
+  <input type="checkbox" id="obd9" name="obd9" ><label for="obd9">Transmission Selected Gear</label><br>
+  <input type="checkbox" id="obd10" name="obd10" ><label for="obd10">Parking Brake Switch</label><br>
+  <input type="checkbox" id="obd11" name="obd11" ><label for="obd11">Brake Power</label><br>
+  <input type="checkbox" id="obd12" name="obd12" ><label for="obd12">Accelerator Pedal Position</label><br>
+  <input type="checkbox" id="obd13" name="obd13" ><label for="obd13">Engine Percent Load</label><br>
+  <input type="checkbox" id="obd14" name="obd14" ><label for="obd14">Engine Percent Torque</label><br>
+  <input type="checkbox" id="obd15" name="obd15" ><label for="obd15">Idling State</label><br>
+  <input type="checkbox" id="obd16" name="obd16" ><label for="obd16">Steering Wheel Angle</label><br>
+  <input type="checkbox" id="obd17" name="obd17" ><label for="obd17">Door State</label><br>
+  <input type="checkbox" id="obd18" name="obd18" ><label for="obd18">Seat Belt State</label><br>
+  <input type="checkbox" id="obd19" name="obd19" ><label for="obd19">Turn</label><br>
+  <input type="checkbox" id="obd20" name="obd20" ><label for="obd20">Right Turn Light</label><br>
+  <input type="checkbox" id="obd21" name="obd21" ><label for="obd21">Left Turn Light</label><br>
+  <input type="checkbox" id="obd22" name="obd22" ><label for="obd22">Engine Status</label><br>
+  <input type="checkbox" id="obd23" name="obd23" ><label for="obd23">Battery Voltage</label><br>
+</form>
+</div>
+</div> 
 
 <!-- Report Config Dialog -->
 <div class="tdcdialog" title="Report Configuration" id="dialog_reportconfig">
@@ -1653,6 +1983,10 @@ Pre-Defined Zone:
 
 <div id="workarea">
 <div id="tdcmap">Maps</div>
+<div id="tdctable" style="display: none;" > 
+<table id="vlttable"></table> 
+<div id="pagervlttable"></div>
+</div>
 </div>
 
 </div>

@@ -13,7 +13,14 @@
 <p/>
 
 <form action="#" id="filterform">
-<fieldset><legend>Quick Filter</legend> <input id="quickfilter" name="name" maxlength="45" type="text" style="background: white url(res/triangle_s.png) right no-repeat; padding-right: 12px; 
+<fieldset><legend>Quick Filter</legend>
+
+<div class="ui-widget" style="display:none;" >
+<select id="cbBox" size="8">
+</select>
+</div>
+
+<input id="quickfilter" name="name" maxlength="45" type="text" style="background: white url(res/triangle_s.png) right no-repeat; padding-right: 12px; 
 " /><p />
 <button id="savequickfilter">Save</button><button id="deletequickfilter">Delete</button></fieldset>
 
@@ -246,6 +253,136 @@ $("#filterform input[name='timeType']").change(function(e){
 	}
 });
 
+$.widget( "custom.combobox", {
+      _create: function() {
+        this.wrapper = $( "<span>" )
+          .addClass( "custom-combobox" )
+          .insertAfter( this.element );
+ 
+        this.element.hide();
+        this._createAutocomplete();
+        this._createShowAllButton();
+      },
+ 
+      _createAutocomplete: function() {
+        var selected = this.element.children( ":selected" ),
+          value = selected.val() ? selected.text() : "";
+ 
+        this.input = $( "<input>" )
+          .appendTo( this.wrapper )
+          .val( value )
+          .attr( "title", "" )
+          .addClass( "custom-combobox-input ui-widget ui-widget-content ui-state-default ui-corner-left" )
+          .autocomplete({
+            delay: 0,
+            minLength: 0,
+            source: $.proxy( this, "_source" )
+          })
+          .tooltip({
+            classes: {
+              "ui-tooltip": "ui-state-highlight"
+            }
+          });
+ 
+        this._on( this.input, {
+          autocompleteselect: function( event, ui ) {
+            ui.item.option.selected = true;
+            this._trigger( "select", event, {
+              item: ui.item.option
+            });
+          }
+        });
+      },
+ 
+      _createShowAllButton: function() {
+        var input = this.input,
+          wasOpen = false;
+ 
+        $( "<a>" )
+          .attr( "tabIndex", -1 )
+          .attr( "title", "Show All Items" )
+          .tooltip()
+          .appendTo( this.wrapper )
+          .button({
+            icons: {
+              primary: "ui-icon-triangle-1-s"
+            },
+            text: false
+          })
+          .removeClass( "ui-corner-all" )
+          .addClass( "custom-combobox-toggle ui-corner-right" )
+          .on( "mousedown", function() {
+            wasOpen = input.autocomplete( "widget" ).is( ":visible" );
+          })
+          .on( "click", function() {
+            input.trigger( "focus" );
+ 
+            // Close if already visible
+            if ( wasOpen ) {
+              return;
+            }
+ 
+            // Pass empty string as value to search for, displaying all results
+            input.autocomplete( "search", "" );
+          });
+      },
+ 
+      _source: function( request, response ) {
+        var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
+        response( this.element.children( "option" ).map(function() {
+          var text = $( this ).text();
+          if ( this.value && ( !request.term || matcher.test(text) ) )
+            return {
+              label: text,
+              value: text,
+              option: this
+            };
+        }) );
+      },
+ 
+      _removeIfInvalid: function( event, ui ) {
+ 
+        // Selected an item, nothing to do
+        if ( ui.item ) {
+          return;
+        }
+ 
+        // Search for a match (case-insensitive)
+        var value = this.input.val(),
+          valueLowerCase = value.toLowerCase(),
+          valid = false;
+        this.element.children( "option" ).each(function() {
+          if ( $( this ).text().toLowerCase() === valueLowerCase ) {
+            this.selected = valid = true;
+            return false;
+          }
+        });
+ 
+        // Found a match, nothing to do
+        if ( valid ) {
+          return;
+        }
+ 
+        // Remove invalid value
+        this.input
+          .val( "" )
+          .attr( "title", value + " didn't match any item" )
+          .tooltip( "open" );
+        this.element.val( "" );
+        this._delay(function() {
+          this.input.tooltip( "close" ).attr( "title", "" );
+        }, 2500 );
+        this.input.autocomplete( "instance" ).term = "";
+      },
+ 
+      _destroy: function() {
+        this.wrapper.remove();
+        this.element.show();
+      }
+});
+
+//$( "#cbBox" ).combobox();
+
 function quickfilter_load()
 {
     var fd=new Object ;
@@ -263,9 +400,12 @@ function quickfilter_load()
 		var qfl=qfl.filterlist;
 		if( qfl.length>0 ) {
 			var quickfilterlist = [];
+			var options="";
 			for(var i=0; i< qfl.length; i++){
 				quickfilterlist[i]=qfl[i].name ;
+				options += "<option>" + qfl[i].name + "</option>" ;
 			}
+			$("#cbBox").html(options);
 			$("input#quickfilter").picker(quickfilterlist, function(v){
 				// load quick filter
 				$.getJSON("quickfilterlist.php?name="+v, function(quickfilter){
@@ -309,6 +449,9 @@ function filterform_data()
 // button "Save Quick Filter"
 $("button#savequickfilter").click(function(e){
 	e.preventDefault();
+
+	//$("#quickfilter").val( $("#cbBox").parent().find("input").val() );
+
 	var fdata = filterform_data();
 	if( fdata.name.length<1 ) {
 		alert("Please enter a name for quick filter!");
@@ -333,6 +476,9 @@ $("button#savequickfilter").click(function(e){
 // button "Delete Quick Filter"
 $("button#deletequickfilter").click(function(e){
 	e.preventDefault();
+
+	//$("#quickfilter").val( $("#cbBox").parent().find("input").val() );
+
 	var fdata = filterform_data();
 	if( fdata.name.length<1 ) {
 		alert("Please select one quick filter!");
@@ -501,7 +647,7 @@ if( sessionStorage ) {
 		filter = localsession.mapfilter ;
 		filterform_load( filter );
 	}
-	$(window).unload(function(){
+	$(window).on( "unload", function(){
 		var tdsess = sessionStorage.getItem('tdsess');
 		var localsession = {} ;
 		if( tdsess ) {

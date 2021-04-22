@@ -48,9 +48,14 @@
 		$xml = new SimpleXMLElement('<tdwebc></tdwebc>') ;
 
 		// clientid support
-		if( !empty( $_SESSION['clientid'] ) )
+		if( !empty( $_SESSION['clientid'] ) ) {
 			$xml->company = $_SESSION['clientid'] ;
-		
+		}
+		else {
+			// no client support? may be use database name is a good idea?
+			$xml->company = $smart_database ;  // only for testing
+		}
+
 		if( empty($avlcbserver) ) {
 			if( empty($_SERVER['REQUEST_SCHEME']) ) {
 				$avlcbserver = "http" ;
@@ -69,6 +74,7 @@
 	
 		// require dvr phone list
 		$sql = "SELECT DISTINCT `vehicle_phone` FROM `vehicle` WHERE `vehicle_phone` <> '' ;";
+		// $sql = "SELECT DISTINCT `vehicle_ivuid` FROM `vehicle` WHERE `vehicle_ivuid` <> '' ;";
 		if( $result = $conn->query($sql) ) {
 			while( $row=$result->fetch_array() ) {
 				$xml->avlp->dvrlist->dvritem[] = $row['vehicle_phone'] ;
@@ -86,6 +92,9 @@
 			$resp['errormsg'] = "AVL Service error, no contents!" ;
 			goto done ;
 		}
+		if ( !empty ($avl_log) ) {
+			file_put_contents ( $avl_log , "REQ: " . $xml->asXML() . "\nANS: ". $avlxml. "\n", FILE_APPEND  );
+		}				
 
 		@$tdwebc = new SimpleXMLElement($avlxml) ;
 		
@@ -121,7 +130,7 @@
 		$resp['res'] = 1 ;
 		
 done:
-			
+			;
 	}
 
 	echo json_encode($resp);

@@ -3,7 +3,7 @@
 <smtpServer>smtp.gmail.com</smtpServer>
 <smtpServerPort>465</smtpServerPort>
 <security>2</security>
-<authenticationUserName>tongruitme</authenticationUserName>
+<authenticationUserName>tongruitme@yahoo.com</authenticationUserName>
 <authenticationPassword>smart247</authenticationPassword>
 <senderName>tongrui</senderName>
 <senderAddr>tongruitme@yahoo.com</senderAddr>

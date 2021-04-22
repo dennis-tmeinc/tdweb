@@ -230,8 +230,6 @@ if( !empty( $_REQUEST['c'] ) ) {
 									$sdat = NULL ;							
 								}
 								else {
-									$dlen = fread( 
-									fclose($sdat);
 									$sdat=null;
 								}
 							}
@@ -260,7 +258,7 @@ if( !empty( $_REQUEST['c'] ) ) {
 		$conn = false ;
 		$tport = 0 ;
 		if( !empty($_REQUEST['t'] ) ) {
-			$tport = (int)$_REQUEST['t']			
+			$tport = (int)$_REQUEST['t'];
 			$conn = stream_socket_client("tcp://localhost:".$tport );
 		}
 

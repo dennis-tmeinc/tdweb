@@ -51,12 +51,6 @@
 	$session_idname = "touchdownid";
 	// $remote_fileserver = "http://209.167.16.254/tdc/fileservice.php" ;
 
-	// avaialbe ui: ui-lightness ui-darkness smoothness start redmond sunny 
-	//              overcast le-frog flick pepper-grinder eggplant dark-hive
-	//              cupertino south-street blitzer humanity hot-sneaks excite-bike 
-	//              vader dot-luv mint-choc black-tie trontastic swanky-purse
-	$default_ui_theme = "start" ;
-	
 	// web video playback
 	$webplay_support = 1 ;
 	
@@ -82,4 +76,4 @@
 	$support_videoviacellular = true ;	
 
 	return ;
-?>	
+?>

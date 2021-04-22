@@ -181,7 +181,6 @@ function avl_getlocation( $sock )
 $sock = avl_connect($avl);
 if( $sock ) {
 	$li = avl_getlist( $sock );
-	if( $li  
 	$loc = avl_getlocation( $sock );
 	fclose($sock);
 }

@@ -11,11 +11,6 @@ img {
  border:0;
 }
 
-
-/*LINH-ADDITIONS,  added web fonts */
-<link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Montserrat|Roboto+Condensed">
-
-
 :focus {
  outline:0;
 }
@@ -198,3 +193,20 @@ margin:2px 10px;
 .evicon {
 width: 16px; height: 16px;
 }
+
+.custom-combobox {
+    position: relative;
+    display: inline-block;
+  }
+.custom-combobox-toggle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    margin-left: -1px;
+    padding: 0;
+  }
+.custom-combobox-input {
+    margin: 0;
+    padding: 5px 10px;
+  }
+  

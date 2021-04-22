@@ -27,8 +27,13 @@
 		$xml = new SimpleXMLElement('<tdwebc></tdwebc>') ;
 		
 		// clientid support
-		if( !empty( $_SESSION['clientid'] ) )
+		if( !empty( $_SESSION['clientid'] ) ) {
 			$xml->company = $_SESSION['clientid'] ;
+		}
+		else {
+			// no client support? may be use database name is a good idea?
+			$xml->company = $smart_database ;  // only for testing
+		}
 		
 		if( empty($avlcbserver) ) {
 			$avlcbserver = $_SERVER['REQUEST_SCHEME'] . "://". $_SERVER['HTTP_HOST'] . ":". $_SERVER['SERVER_PORT']; 
@@ -57,6 +62,7 @@
 				
 				$xml->command='26' ; 		// AVL_AUTO_REPORT_CONF(26)
 				$xml->avlp='' ;
+
 				if( !empty($_REQUEST['start']) ) {
 					$xml->avlp->time = $vdata['vlt_time_interval'] ;
 					if( empty($vdata['vlt_dist_interval']) ) {
@@ -73,6 +79,12 @@
 					}
 					$xml->avlp->maxc = $vdata['vlt_maxcount'] ;
 					$xml->avlp->maxkb = $vdata['vlt_maxbytes'] ;
+					if( !empty($_REQUEST['obd']) ) {
+						$xml->avlp->obd = dechex($_REQUEST['obd'])  ;
+					}
+					else {
+						$xml->avlp->obd = 0  ;
+					}					
 				}
 				else {
 					$xml->avlp->time = 0;
@@ -80,10 +92,13 @@
 					$xml->avlp->speed = 0 ;
 					$xml->avlp->maxc = 0 ;
 					$xml->avlp->maxkb = 0 ;
+					$xml->avlp->obd = 0 ;
 				}
 				@$avlxml = file_get_contents( $avlservice.'?xml='.rawurlencode($xml->asXML()) );	// don't care what is returned
+				if ( !empty ($avl_log) ) {
+					file_put_contents ( $avl_log , "REQ: " . $xml->asXML() . "\nANS: ". $avlxml. "\n", FILE_APPEND  );
+				}
 
-				
 				$xml->command='29' ; 		// AVL_ALARM_CONF(29)
 				$xml->avlp='' ;
 				
@@ -118,7 +133,10 @@
 					$xml->avlp->idle = 0 ;
 				}
 				@$avlxml = file_get_contents( $avlservice.'?xml='.rawurlencode($xml->asXML()) );	// don't care what is returned
-								
+				if ( !empty ($avl_log) ) {
+					file_put_contents ( $avl_log , "REQ: " . $xml->asXML() . "\nANS: ". $avlxml. "\n", FILE_APPEND  );
+				}
+
 				$xml->command='30' ; 		// AVL_GFORCE_CONF(30)
 				$xml->avlp='' ;
 				
@@ -139,7 +157,9 @@
 					$xml->avlp->top = 0 ;
 				}
 				@$avlxml = file_get_contents( $avlservice.'?xml='.rawurlencode($xml->asXML()) );	// don't care what is returned
-
+				if ( !empty ($avl_log) ) {
+					file_put_contents ( $avl_log , "REQ: " . $xml->asXML() . "\nANS: ". $avlxml. "\n", FILE_APPEND  );
+				}
 
 				$xml->command='36' ; 		// AVL_GEOFENCE_RECT_SET(36)
 				$xml->avlp = '';
@@ -174,7 +194,9 @@
 					$resp['stop'] = 1 ;
 				}
 				@$avlxml = file_get_contents( $avlservice.'?xml='.rawurlencode($xml->asXML()) );	// don't care what is returned
-				
+				if ( !empty ($avl_log) ) {
+					file_put_contents ( $avl_log , "REQ: " . $xml->asXML() . "\nANS: ". $avlxml. "\n", FILE_APPEND  );
+				}				
 			}
 		}
 	}

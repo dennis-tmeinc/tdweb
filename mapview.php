@@ -12,7 +12,7 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">
 	<meta name="author" content="Dennis Chen @ TME, 2013-05-15">		
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
+	<script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><link rel="stylesheet" href="https://code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css"><script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><link href="tdclayout.css" rel="stylesheet" type="text/css" />
 	<script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol?key=<?php echo "$map_credentials"; ?>' ></script>
 	<script src="picker.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
@@ -95,7 +95,7 @@ function getEventTitle(eventType)
 $(function(){
 
 $("button").button();
-$(".btset").buttonset();
+$(".btset").controlgroup();
 
 $("#workarea").height( 680 );
 var timer_resize = null ;
@@ -684,9 +684,9 @@ function loadvlmap()
 							} 
 							
 							function ipreviewvideo() 
-							{ 
+							{
 								webplay_open(v.vl.videoid);
-							} 
+							}
 							var iaction = [] ;
 							if( v.vl.video > 0 ) {
 								if(navigator.platform == 'Win32' || navigator.platform == 'Win64') {

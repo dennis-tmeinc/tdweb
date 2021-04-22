@@ -3,10 +3,12 @@
 // Requests:
 //      vltserial : serial number for request
 //      vltpage : page number
+//      vlttimeout: timeout in seconds
+//      vltkeepalive: (true), keep connection alive and return chucked json data
 // Return:
 //      JSON
-// By Dennis Chen @ TME	 - 2014-07-29
-// Copyright 2013 Toronto MicroElectronics Inc.
+// By Dennis Chen @ TME	 - 2021-03-29
+// Copyright 2021 Toronto MicroElectronics Inc.
 
 	$noupdatetime = 1 ;
     require 'session.php' ;
@@ -70,7 +72,7 @@
 								));
 								// add live tun register url
 								$phonereg = $phone."&u=".rawurlencode(dirname($_SERVER['SCRIPT_NAME']). "/livetun.php"  );
-								@file_get_contents("http://tdlive.ignorelist.com/vlt/vltreg.php?$phonereg", false, $ctx ) ;
+								// @file_get_contents("http://tdlive.ignorelist.com/vlt/vltreg.php?$phonereg", false, $ctx ) ;
 							}
 							
 						}

@@ -18,7 +18,10 @@ else {
 ?>
 	<title>TouchDown&trade Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
-	<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
+	<link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+	<script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script><script src="picker.js"></script>
+  <script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script>
 	<link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
 	<link href="tdclayout.css" rel="stylesheet" type="text/css" />
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
@@ -77,8 +80,9 @@ min-width:750px;
 $(document).ready(function(){
 					
 $("button").button();	
-$(".btset").buttonset();
-
+$(".btset input").checkboxradio({
+      icon: false
+    });
 
 var btlive = <?php
 	if( $title_type == 'Live ' ) {
@@ -98,6 +102,7 @@ else {
 $(".btset input").change(function(){
    location=$(this).attr("href");
 });				
+$(".btset").controlgroup();
 
 $("#vehicle_list").jqGrid({        
     scroll: true,
@@ -494,21 +499,24 @@ $("#rcontainer").show('slow');
 
 <div id="workarea" style="width:auto;">
 <p class="btset">
-<input href="dashboardmorning.php" name="btset" id="btmorning"
+<label for="btmorning"> Morning Status Report </label> 
+<input href="dashboardmorning.php" class="btsel" name="btset" id="btmorning"
 <?php 
 	if( $title_type != 'Live ' ) {
 		echo ' checked="checked" ' ;
 	}
 ?>
-type="radio" /><label for="btmorning"> Morning Status Report </label> 
-<input href="dashboardlive.php"    name="btset" id="btlive"  
+type="radio" />
+<label for="btlive"> Live Status Report </label> 
+<input href="dashboardlive.php"  class="btsel"   name="btset" id="btlive"  
 <?php 
 	if( $title_type == 'Live ' ) {
 		echo ' checked="checked" ' ;
 	}
 ?>
-type="radio" /><label for="btlive"> Live Status Report </label> 
-<input href="dashboardoption.php"  name="btset" id="btoption" type="radio" /><label for="btoption"> Dashboard Options </label>
+type="radio" />
+<label for="btoption"> Dashboard Options </label>
+<input href="dashboardoption.php" class="btsel"  name="btset" id="btoption" type="radio" />
 </p>
 
 <h2><strong><?php echo $title_type; ?>Status Report</strong></h2>

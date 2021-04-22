@@ -9,7 +9,7 @@
 
     require 'session.php' ;
 	header("Content-Type: application/json");
-	
+
 	if( $logon ){
 
 		// to correct time

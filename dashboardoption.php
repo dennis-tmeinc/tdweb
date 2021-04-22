@@ -11,7 +11,7 @@ session_save('dashboardpage', $_SERVER['REQUEST_URI'] );
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">
 	<meta name="author" content="Dennis Chen @ TME, 2013-05-15">	
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-1.12.4.min.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	</style>
 	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
@@ -19,13 +19,15 @@ session_save('dashboardpage', $_SERVER['REQUEST_URI'] );
 // start up 
 $(document).ready(function(){
 			
-$("button").button();	
-$(".btset").buttonset();
-
+$("button").button();
+$(".btset input").checkboxradio({
+      icon: false
+    });
 $(".btset input").change(function(){
    location=$(this).attr("href");
 });				
-   
+$(".btset").controlgroup();	
+
 // generic message box   
 $( ".tdcdialog#dialog_message" ).dialog({
 	autoOpen: false,
@@ -153,9 +155,9 @@ $("#rcontainer").show(200);
 <div id="workarea" style="width:auto;">
 
 <p class="btset">
-<input href="dashboardmorning.php" name="btset" id="btmorning" type="radio" /><label for="btmorning"> Morning Status Report </label> 
-<input href="dashboardlive.php"    name="btset" id="btlive"    type="radio" /><label for="btlive"> Live Status Report </label> 
-<input href="dashboardoption.php"  name="btset" id="btoption" checked="checked" type="radio" /><label for="btoption"> Dashboard Options </label>
+<input href="dashboardmorning.php" class="btsel" name="btset" id="btmorning" type="radio" /><label for="btmorning"> Morning Status Report </label> 
+<input href="dashboardlive.php"    class="btsel" name="btset" id="btlive"    type="radio" /><label for="btlive"> Live Status Report </label> 
+<input href="dashboardoption.php"  class="btsel" name="btset" id="btoption" checked="checked" type="radio" /><label for="btoption"> Dashboard Options </label>
 </p>
 
 <h4><strong>Dashboard Options</strong></h4>

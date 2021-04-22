@@ -47,6 +47,7 @@
 					"Vehicle_report_thu='$esc_req[Vehicle_report_thu]',".
 					"Vehicle_report_fri='$esc_req[Vehicle_report_fri]',".
 					"Vehicle_report_sat='$esc_req[Vehicle_report_sat]',".
+					"vehicle_ivuid='$esc_req[vehicle_ivuid]',".
 					"vehicle_phone='$esc_req[vehicle_phone]',".
 					"vehicle_out_of_service=".(empty($esc_req['vehicle_out_of_service'])?'0':'1').
 					" WHERE vehicle_name='$esc_req[oname]';" ;
@@ -70,6 +71,7 @@
 					Vehicle_report_thu,
 					Vehicle_report_fri,
 					Vehicle_report_sat,
+					vehicle_ivuid, 
 					vehicle_phone,
 					vehicle_out_of_service
 					) VALUES (
@@ -90,6 +92,7 @@
 					'$esc_req[Vehicle_report_thu]',
 					'$esc_req[Vehicle_report_fri]',
 					'$esc_req[Vehicle_report_sat]',
+					'$esc_req[vehicle_ivuid]',
 					'$esc_req[vehicle_phone]',"
 					.(empty($esc_req['vehicle_out_of_service'])?'0':'1').
 					") ;" ;
@@ -98,6 +101,18 @@
 			
 			if( $conn->query($sql) ) {
 				$resp['res']=1 ;	// success
+				// 2021-02-26, call IVUSetup.exe -register [ivu id] [client id]
+				if( !empty($_REQUEST['vehicle_ivuid'] )) {
+					if( empty($_SESSION['clientid'])) {
+						$clientid="";
+					}
+					else {
+						$clientid=$_SESSION['clientid'];
+					}
+					$p1 = escapeshellarg( $_REQUEST['vehicle_ivuid'] );
+					$p2 = escapeshellarg( $clientid );
+					exec($td_ivu_setup." $p1 $p2");
+				}
 			}
 			else {
 				$resp['errormsg']=$conn->error;
