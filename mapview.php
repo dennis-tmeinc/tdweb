@@ -11,10 +11,9 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 	<title>Touch Down Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">
-	<meta name="author" content="Dennis Chen @ TME, 2013-05-15">		
-	<script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><link rel="stylesheet" href="https://code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css"><script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><link href="tdclayout.css" rel="stylesheet" type="text/css" />
-	<script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol?key=<?php echo "$map_credentials"; ?>' ></script>
-	<script src="picker.js"></script>
+	<meta name="author" content="Dennis Chen @ TME, 2013-05-15">	
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="//code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css"><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script>
+	<script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	</style>
 	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
@@ -40,14 +39,17 @@ pinicons = {
 		40:"res/map_icons_driveby.png" ,
 		41:"res/map_icons_meteron.png" ,
 		42:"res/map_icons_meteroff.png" ,
-		100:"speed_icon.php?",
-		101:"res/map_icons_fi.png" ,
-		102:"res/map_icons_ri.png" ,
-		103:"res/map_icons_si.png" ,
-		104:"res/map_icons_hb.png" ,
-		105:"res/map_icons_rs.png" ,
-		106:"res/map_icons_ht.png" ,
-		107:"res/map_icons_br.png" 
+		101:"res/map_icons_ignitionon.png",
+		102:"res/map_icons_ignitionoff.png",
+		103:"res/map_icons_hb.png",
+		10000:"speed_icon.php?",
+		10001:"res/map_icons_fi.png" ,
+		10002:"res/map_icons_ri.png" ,
+		10003:"res/map_icons_si.png" ,
+		10004:"res/map_icons_hb.png" ,
+		10005:"res/map_icons_rs.png" ,
+		10006:"res/map_icons_ht.png" ,
+		10007:"res/map_icons_br.png" 
 		};
 
 pintitles = {
@@ -65,21 +67,24 @@ pintitles = {
 	40:"Drive By" ,
 	41:"Meter On" ,
 	42:"Meter Off" ,
-	100:"Speeding",
-	101:"Front Impact" ,
-	102:"Rear Impact" ,
-	103:"Side Impact" ,
-	104:"Hard Brake" ,
-	105:"Racing Start" ,
-	106:"Hard Turn" ,
-	107:"Bumpy Ride" 
+	101:"Engine On",
+	102:"Engine Off",
+	103:"OBD Data",
+	10000:"Speeding",
+	10001:"Front Impact" ,
+	10002:"Rear Impact" ,
+	10003:"Side Impact" ,
+	10004:"Hard Brake" ,
+	10005:"Racing Start" ,
+	10006:"Hard Turn" ,
+	10007:"Bumpy Ride" 
 };
 		
 // mapevent: [id,icon,direction,lat,lon]
 function getEventIcon( mapevent )
 {		
 	var iconimg = pinicons[mapevent[1]];
-	if( mapevent[1] == 2 || mapevent[1] == 100 ) {
+	if( mapevent[1] == 2 || mapevent[1] == 10000 ) {
 		var direction = ((parseInt(mapevent[2])+5)/10).toFixed()*10;
 		iconimg += "deg="+direction ;
 	}
@@ -414,7 +419,7 @@ function showup()
 	}
 
 	map = new Microsoft.Maps.Map(document.getElementById("tdcmap"),
-	{
+	{credentials: <?php echo "'$map_credentials'"; ?> ,
 	center: mapcenter,
 	zoom: mapzoom,
 	enableSearchLogo: false,

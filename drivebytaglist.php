@@ -78,7 +78,7 @@
 			if( !is_dir($driveby_eventdir) )
 				@mkdir( $driveby_eventdir );
 			// to convert data from data base to local file
-			$sql = "SELECT * FROM Drive_By_Event" ;
+			$sql = "SELECT * FROM drive_by_event" ;
 			if($result=$conn->query($sql)) {
 				while( $row = $result->fetch_array(MYSQLI_ASSOC) ) {
 					set_time_limit(30);
@@ -114,7 +114,7 @@
 					
 					// indicate record as imported!
 					// $importedid = "imp-" . $row[ 'Client_Id' ] ;
-					// $sql = "UPDATE Drive_By_Event SET Client_Id = '$importedid' WHERE `idx` = '$row[idx]' " ;
+					// $sql = "UPDATE drive_by_event SET Client_Id = '$importedid' WHERE `idx` = '$row[idx]' " ;
 					// $conn->query($sql);
 					
 				}

@@ -89,6 +89,19 @@
 		$mapfilter['bSideImpact'] = !empty($_REQUEST['bSideImpact']) ;
 		$mapfilter['bBumpyRide'] = !empty($_REQUEST['bBumpyRide']) ;
 
+		// OBD search (2021-04-27)
+		$mapfilter['bEnginOn'] = !empty($_REQUEST['bEnginOn']) ;
+		$mapfilter['bEnginOff'] = !empty($_REQUEST['bEnginOff']) ;
+		$mapfilter['bFuelLevel'] = !empty($_REQUEST['bFuelLevel']) ;
+		$mapfilter['bCoolantTemperature'] = !empty($_REQUEST['bCoolantTemperature']) ;
+		$mapfilter['bEngineOilLevel'] = !empty($_REQUEST['bEngineOilLevel']) ;
+		$mapfilter['bBatteryVoltage'] = !empty($_REQUEST['bBatteryVoltage']) ;
+		
+		$mapfilter['gFuelLevel'] = $_REQUEST['gFuelLevel'] ;
+		$mapfilter['gCoolantTemperature'] = $_REQUEST['gCoolantTemperature'] ;
+		$mapfilter['gEngineOilLevel'] = $_REQUEST['gEngineOilLevel'] ;
+		$mapfilter['gBatteryVoltage'] = $_REQUEST['gBatteryVoltage'] ;
+
 		// save parameter for video clips/hours statistics
 		$mapfilter['vehiclelist'] = $vehiclelist ;
 		$mapfilter['endTime'] = $endTime ;
@@ -327,6 +340,65 @@
 		else {
 			$filter = $filter_event.$filter_gforce ;			// only one or none filter valid
 		}
+
+		// OBD filters (2021-04-29)
+		$obd_filters = "";
+
+		// quotes ( definition from Tongrui)
+		//
+		// 1)  in vl table add three event code in vl_incident:  VL_ENGINE_ON (101)
+		//		VL_ENGINE_OFF(102) VL_OBD_VALUE(103)
+
+		// 2)  in vl table add 4 fields: 
+		//		vl_fuel:	percentage(0~100%)
+		//		vl_engine_coolant: coolant temperature 
+		//		vl_engine_oil: 	percentage(0~100%)
+		//		vl_battery: mV 
+	
+		//	for all above fields if value is -10000 means the value is invalid.
+
+		$VL_ENGINE_ON = 101 ;
+		$VL_ENGINE_OFF = 102 ;
+		$VL_OBD_VALUE = 103 ;
+
+		// Engine on
+		if( $mapfilter['bEnginOn'] ) {
+			$obd_filters .= " OR vl_incident = $VL_ENGINE_ON" ;
+		}
+
+		// Engine off
+		if( $mapfilter['bEnginOff'] ) {
+			$obd_filters .= " OR vl_incident = $VL_ENGINE_OFF" ;
+		}
+
+		// Fuel Level
+		if( $mapfilter['bFuelLevel'] ) {
+			$obd_filters .= " OR ( vl_incident = $VL_OBD_VALUE AND vl_fuel >= 0 AND vl_fuel <= $mapfilter[gFuelLevel])" ;
+		}
+
+		// Coolant Temperature
+		if( $mapfilter['bCoolantTemperature'] ) {
+			// f -> c
+			// c=(f-32.0)/1.8
+			$tc = ($mapfilter['gCoolantTemperature'] - 32) / 1.8 ;
+			$obd_filters .= " OR ( vl_incident = $VL_OBD_VALUE AND vl_engine_coolant >= $tc)" ;
+		}
+
+		// Engine Oil Level
+		if( $mapfilter['bEngineOilLevel'] ) {
+			$obd_filters .= " OR ( vl_incident = $VL_OBD_VALUE AND vl_engine_oil >= 0 AND vl_engine_oil <= $mapfilter[gEngineOilLevel])" ;
+		}
+
+		// Battery Voltage
+		if( $mapfilter['bBatteryVoltage'] ) {
+			$obd_filters .= " OR ( vl_incident = $VL_OBD_VALUE AND vl_battery >= 0 AND vl_battery <= $mapfilter[gBatteryVoltage])" ;
+		}
+
+		if( empty($filter) ) {
+			$filter = "FALSE" ;
+		}
+		$filter .= $obd_filters ;
+
 		$resp['count'] = 0 ;
 		
 		if( strlen($filter)>0 ) {

@@ -44,7 +44,7 @@
 		$year = $curdate['year'] ;
 		$month = $curdate['mon'] ;
 	
-		$sql="SELECT count(*) FROM Drive_By_Event WHERE $filter " ;
+		$sql="SELECT count(*) FROM drive_by_event WHERE $filter " ;
 		
 		if( $result=$conn->query($sql) ) {
 			if( $row = $result->fetch_array( MYSQLI_NUM ) ) {

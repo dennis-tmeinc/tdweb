@@ -14,14 +14,14 @@
 			
 	if( $logon ) {
 	
-		$sql = "SELECT `report_status` FROM Drive_By_Event WHERE `idx` = $_REQUEST[tag] " ;
+		$sql = "SELECT `report_status` FROM drive_by_event WHERE `idx` = $_REQUEST[tag] " ;
 		if($result=$conn->query($sql)) {
 			if( $row=$result->fetch_array() ) {
 				if( $row[0] == 'deleted' ) {
-					$sql = "UPDATE Drive_By_Event SET `report_status` =  'trash' WHERE `idx` = $_REQUEST[tag] " ;
+					$sql = "UPDATE drive_by_event SET `report_status` =  'trash' WHERE `idx` = $_REQUEST[tag] " ;
 				}
 				else { 
-					$sql = "UPDATE Drive_By_Event SET `report_status` =  'deleted', `report_deleteby` = '$_SESSION[user]', `report_deletetime` = NOW() WHERE `idx` = $_REQUEST[tag] " ;
+					$sql = "UPDATE drive_by_event SET `report_status` =  'deleted', `report_deleteby` = '$_SESSION[user]', `report_deletetime` = NOW() WHERE `idx` = $_REQUEST[tag] " ;
 				}
 				if( $conn->query($sql) ) {
 					$resp['res'] = 1 ;

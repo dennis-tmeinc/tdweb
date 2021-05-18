@@ -12,8 +12,8 @@ session_save('mapfilter', array() );
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta content="Touch Down Center by TME" name="description" />
 	<meta content="Dennis Chen @ TME, 2013-05-15" name="author" />
-	<script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><link rel="stylesheet" href="https://code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css"><script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><link href="tdclayout.css" rel="stylesheet" type="text/css" />
-	<script type="text/javascript" src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="//code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css"><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script>
+	<script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
 	<link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	.summarytable {
@@ -93,14 +93,17 @@ $("#vllist").jqGrid({
 			40:"res/map_icons_driveby.png" ,
 			41:"res/map_icons_meteron.png" ,
 			42:"res/map_icons_meteroff.png" ,
-			100:"speed_icon.php?",
-			101:"res/map_icons_fi.png" ,
-			102:"res/map_icons_ri.png" ,
-			103:"res/map_icons_si.png" ,
-			104:"res/map_icons_hb.png" ,
-			105:"res/map_icons_rs.png" ,
-			106:"res/map_icons_ht.png" ,
-			107:"res/map_icons_br.png" 
+			101:"res/map_icons_ignitionon.png",
+			102:"res/map_icons_ignitionoff.png",
+			103:"res/map_icons_hb.png",
+			10000:"speed_icon.php?",
+			10001:"res/map_icons_fi.png" ,
+			10002:"res/map_icons_ri.png" ,
+			10003:"res/map_icons_si.png" ,
+			10004:"res/map_icons_hb.png" ,
+			10005:"res/map_icons_rs.png" ,
+			10006:"res/map_icons_ht.png" ,
+			10007:"res/map_icons_br.png" 			
 		};
 	
 		for( i=0; i<len; i++ ) {
@@ -298,7 +301,20 @@ function map_generate_x(mapevent, formdata)
 	 17:'res/map_icons_desstop.png',
 	 18:'res/map_icons_park.png',
 	 23:'res/map_icons_mevent.png',
-	 40:'res/map_icons_driveby.png'
+	 40:'res/map_icons_driveby.png',
+	 41:"res/map_icons_meteron.png" ,
+	42:"res/map_icons_meteroff.png" ,
+	101:"res/map_icons_ignitionon.png",
+	102:"res/map_icons_ignitionoff.png",
+	103:"res/map_icons_hb.png",
+	10000:"speed_icon.php?",
+	10001:"res/map_icons_fi.png" ,
+	10002:"res/map_icons_ri.png" ,
+	10003:"res/map_icons_si.png" ,
+	10004:"res/map_icons_hb.png" ,
+	10005:"res/map_icons_rs.png" ,
+	10006:"res/map_icons_ht.png" ,
+	10007:"res/map_icons_br.png" 		
 	} ;
 
 	var html="";

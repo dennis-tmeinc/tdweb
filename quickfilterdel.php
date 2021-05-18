@@ -1,7 +1,7 @@
 <?php
 // quickfilterdel.php - delete one quick filter
 // Requests:
-//      name: quick filter name
+//      quickfiltername: quick filter name
 // Return:
 //      JSON object, res=1 for success
 // By Dennis Chen @ TME	 - 2013-11-14
@@ -18,10 +18,10 @@
 			$esc_req[$key]=$conn->escape_string($value);
 		}		
 		if( $_SESSION['user_type'] == 'admin' ) {
-			$sql="DELETE FROM `quickfilter` WHERE `name` = '$esc_req[name]' ;" ;
+			$sql="DELETE FROM `quickfilter` WHERE `name` = '$esc_req[quickfiltername]' ;" ;
 		}
 		else {
-			$sql="DELETE FROM `quickfilter` WHERE `name` = '$esc_req[name]' AND `user` = '$_SESSION[user]';" ;
+			$sql="DELETE FROM `quickfilter` WHERE `name` = '$esc_req[quickfiltername]' AND `user` = '$_SESSION[user]';" ;
 		}
 		if( $conn->query($sql) && $conn->affected_rows > 0 ) {
 			$resp['res']=1 ;	// success

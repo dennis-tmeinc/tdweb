@@ -36,7 +36,7 @@
 //			}
 //		}
 		
-		$sql = "SELECT * FROM Drive_By_Event WHERE `idx` = $_REQUEST[tag] " ;
+		$sql = "SELECT * FROM drive_by_event WHERE `idx` = $_REQUEST[tag] " ;
 		$channels = array();
 		if($result=$conn->query($sql)) {
 
@@ -136,8 +136,12 @@
 			$eret = 1 ;
 			vfile_exec( $cmdline, $eoutput, $eret ) ;
 			if( $eret==0 && vfile_isfile( $imgfile ) ) {
-				$videofilelink = mcrypt_encrypt( MCRYPT_BLOWFISH, "drivebyvideolink", $videofile, "ecb" ) ;
-				$link = "http://".$_SERVER['HTTP_HOST']. dirname( $_SERVER['REQUEST_URI'] ). "/drivebyvideo.php?link=".rawurlencode(base64_encode($videofilelink)) ;
+				//$videofilelink = mcrypt_encrypt( MCRYPT_BLOWFISH, "drivebyvideolink", $videofile, "ecb" ) ;
+				$cipher="aes-128-gcm" ;
+				$iv="ivcrbydennis";
+				$tag="dennis.tmeinccom";
+				$videofilelink = openssl_encrypt ( $videofile, $cipher, "drivebyvideolink", OPENSSL_ZERO_PADDING, $iv, $tag);
+				$link = "http://".$_SERVER['HTTP_HOST']. dirname( $_SERVER['REQUEST_URI'] ). "/drivebyvideo.php?link=".rawurlencode($tag.$videofilelink) ;
 				$pdf->Image( vfile_url($imgfile), $xx, $yy, 94, 0, "JPEG", $link);
 				// delete temp img file
 				vfile_unlink( $imgfile );
@@ -194,7 +198,7 @@
 
 		// update notes if neccessary
 		// record process user, time
-		$sql = "UPDATE Drive_By_Event SET `event_status` =  'processed', `report_status` =  'report', `report_file` = '$reportname', `event_processedby` =  '$_SESSION[user]', `event_processedtime` =  NOW(), `email_status` = 'Pending', `State` = '$event[State]', `City` = '$event[City]'  WHERE `idx` = $_REQUEST[tag] " ;
+		$sql = "UPDATE drive_by_event SET `event_status` =  'processed', `report_status` =  'report', `report_file` = '$reportname', `event_processedby` =  '$_SESSION[user]', `event_processedtime` =  NOW(), `email_status` = 'Pending', `State` = '$event[State]', `City` = '$event[City]'  WHERE `idx` = $_REQUEST[tag] " ;
 		$conn->query($sql) ;
 		
 		$resp['tag'] = $_REQUEST['tag'] ;

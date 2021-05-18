@@ -61,7 +61,7 @@
 			$esc_req[$key]=$conn->escape_string($value);
 		}	
 		
-		$sql="SELECT * FROM quickfilter WHERE `name` = '$esc_req[name]';" ;
+		$sql="SELECT * FROM quickfilter WHERE `name` = '$esc_req[quickfiltername]';" ;
 		$result=$conn->query($sql) ;
 		if( $result && $result->num_rows>0 ) {	// to update
 			$sql=
@@ -106,7 +106,7 @@
  `bIgnitionOff` = $_REQUEST[bIgnitionOff],
  `bMeterOn` =$_REQUEST[bMeterOn],
  `bMeterOff` = $_REQUEST[bMeterOff]
- WHERE `name` = '$_REQUEST[name]' " ;
+ WHERE `name` = '$_REQUEST[quickfiltername]' " ;
 		
 			if( $_SESSION['user_type'] == 'admin' ) {
 				$sql .=';' ;
@@ -121,7 +121,7 @@
 			"INSERT INTO `quickfilter`( 
 				`name`, `user`, `timeType`, `startTime`, `endTime`, `vehicleType`, `vehicleGroupName`, `zoneType`, `zoneName`, `bStop`, `bIdling`, `bParking`, `bDesStop`, `bSpeeding`, `bRoute`, `bEvent`, `bRacingStart`, `bHardBrake`, `bHardTurn`, `bFrontImpact`, `bRearImpact`, `bSideImpact`, `bBumpyRide`, `stopDuration`, `idleDuration`, `parkDuration`, `desStopDuration`, `speedLimit`, `gRacingStart`, `gHardBrake`, `gHardTurn`, `gFrontImpact`, `gRearImpact`, `gSideImpact`, `gBumpyRide`, `bDriveBy`, `bDoorOpen`, `bDoorClose`, `bIgnitionOn`, `bIgnitionOff`, `bMeterOn`, `bMeterOff`
 			) VALUES ( 
-			'$_REQUEST[name]', '$_SESSION[user]', $_REQUEST[timeType], '$_REQUEST[startTime]', '$_REQUEST[endTime]', $_REQUEST[vehicleType], '$_REQUEST[vehicleGroupName]', $_REQUEST[zoneType], '$_REQUEST[zoneName]',
+			'$_REQUEST[quickfiltername]', '$_SESSION[user]', $_REQUEST[timeType], '$_REQUEST[startTime]', '$_REQUEST[endTime]', $_REQUEST[vehicleType], '$_REQUEST[vehicleGroupName]', $_REQUEST[zoneType], '$_REQUEST[zoneName]',
 			$_REQUEST[bStop], 
 			$_REQUEST[bIdling],
 			$_REQUEST[bParking],

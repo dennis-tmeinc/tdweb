@@ -10,10 +10,10 @@ session_save('settingpage', $_SERVER['REQUEST_URI'] );
 	<title>Touch Down Center</title>
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta content="Touch Down Center by TME" name="description" />
-	<meta content="Dennis Chen @ TME, 2013-05-15" name="author" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" /> <script src="jq/jquery-ui.js"></script><script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
+	<meta content="Dennis Chen @ TME, 2021-04-15" name="author" />
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="//code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css"><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script>
+	<script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
-
 	option.dirty {
 		color:#350;
 		background-color:#fee;

@@ -63,6 +63,6 @@ $.fn.picker=function(pickoptions, pickfunc)
 		if( pickfunc && typeof pickfunc == "function" && pickfunc(v) )  {
 			picker_hide();
 		}
-		else $(target).val(v);
+		target.val(v);
 	}) ;
 }

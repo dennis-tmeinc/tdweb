@@ -12,12 +12,8 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 <meta name="description" content="Touch Down Center by TME">
 <meta name="author" content="Dennis Chen @ TME, 2013-05-15">		
-<link href="tdclayout.css" rel="stylesheet" type="text/css" /><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script>
-<link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" />
-<link rel="stylesheet" href="//code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css">
-<script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script>
-<script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
-<script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
+<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="//code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css"><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script>
+<script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
 <link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
 <style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	select#webplay_camera {
@@ -151,21 +147,13 @@ $("select[name='vltvehicle']").dblclick(function(){
 	}
 });
 
-// select vltpage ;
-var hexch = "0123456789abcdefghijklmnopqrstuvwxyz" ;
 var vltparam = {} ;
 vltparam.vltserial = 100 ;
-vltparam.vltpage = '' ;
-vltparam.obd = 0;
-if( sessionStorage ) {
-	vltparam.obd = sessionStorage.getItem("obdselections");
-	if(! vltparam.obd) {
-		vltparam.obd = 0 ;
-	}
-}
-
-for( var i=0; i<6; i++ ) {
-  vltparam.vltpage += hexch.charAt(Math.random()*36);
+// select vltpage ;
+vltparam.vltpage = Math.random().toString(36).replace("0.","") ;
+vltparam.obd = localStorage.getItem("obdselections");
+if(! vltparam.obd) {
+	vltparam.obd = 0 ;
 }
 
 // saved sensor names, to be used by sensor pop-up balloon
@@ -426,34 +414,34 @@ function showpin( avlp, id, iconimg, clean )
 			
 			// lets start obd lines here
 			if( avlp.obd && avlp.obd.i ) {
-				var ia ;
-				if( avlp.obd.i instanceof Array ) {
-					ia = avlp.obd.i ;
-				}
-				else {	// single value i
-					ia = [avlp.obd.i] ;
+				var ia = avlp.obd.i ;
+				if( !( ia instanceof Array) ) {
+					// single value avlp.obd.i
+					ia = [ia] ;
 				}
 				var i;
-				var v;
 				for( i=0; i<ia.length; i++ ) {
 					var obdi=ia[i].split(",");
 					if( obdi.length > 1 && obdi[0]<obd_codes.length ){
-						v = obdi[1] ;
-						// translate some integer to text
-						if( obdi[0] == 10 || obdi[0] == 15 || obdi[0] == 18 || obdi[0] == 20 || obdi[0] == 21  ){		// for on/off
-							v = obd_state_onoff[v] ;
+						// filter obd values here, server will do any thing regarding "OBD Configure"
+						if( (vltparam.obd >> parseInt(obdi[0])) & 1 ) {
+							var v = obdi[1] ;
+							// translate some integer to text
+							if( obdi[0] == 10 || obdi[0] == 15 || obdi[0] == 18 || obdi[0] == 20 || obdi[0] == 21  ){		// for on/off
+								v = obd_state_onoff[v] ;
+							}
+							else if( obdi[0] == 17 ){		// for open/close
+								v = obd_state_openclose[v] ;
+							}
+							else if( obdi[0] == 19 ){		// for right/left 
+								v = obd_state_turn[v] ;
+							}
+							else if( obdi[0] == 22 ) {		// for engine status
+								v = obd_engine_status[v] ;
+							}
+							desc += "<br/>" + obd_codes[obdi[0]] + ":" + v;
+							lines ++ ;
 						}
-						else if( obdi[0] == 17 ){		// for open/close
-							v = obd_state_openclose[v] ;
-						}
-						else if( obdi[0] == 19 ){		// for right/left 
-							v = obd_state_turn[v] ;
-						}
-						else if( obdi[0] == 22 ) {		// for engine status
-							v = obd_engine_status[v] ;
-						}
-						desc += "<br/>" + obd_codes[obdi[0]] + ":" + v;
-						lines ++ ;
 					}
 				}
 			}
@@ -521,7 +509,7 @@ function tdwebc_message( tdwebc )
 			if( avlp.list && avlp.list.item ) {
 				vltlist = {} ;
 				var dvrlist = avlp.list.item ;
-				if( ! dvrlist instanceof Array  ) {	// make it an array
+				if( ! (dvrlist instanceof Array)) {	// make it an array
 					dvrlist = [dvrlist] ; 
 				}
 				for( var i=0; i<dvrlist.length; i++ ) {
@@ -782,7 +770,7 @@ $( ".tdcdialog#dialog_obdconfig" ).dialog({
 					vltparam.obd += (1<<i);
 				}
 			}
-			sessionStorage.setItem("obdselections", vltparam.obd);
+			localStorage.setItem("obdselections", vltparam.obd);
 			$( this ).dialog( "close" );
 		}
 	}
@@ -1485,7 +1473,6 @@ $("table#vlttable").jqGrid('navButtonAdd', '#pagervlttable', {
 		$("div#tdctable").hide(200, function(){
 			$("div#tdcmap").show(200);
 		});
-
 	}
 });
 
@@ -1983,7 +1970,7 @@ Pre-Defined Zone:
 
 <div id="workarea">
 <div id="tdcmap">Maps</div>
-<div id="tdctable" style="display: none;" > 
+<div id="tdctable" style="display: none" > 
 <table id="vlttable"></table> 
 <div id="pagervlttable"></div>
 </div>

@@ -20,10 +20,15 @@
 	header("Content-Type: video/mp4");
 	
 	if( !empty( $_REQUEST['link'] ) ) {
-		$videofile = rtrim( mcrypt_decrypt( "blowfish", "drivebyvideolink", base64_decode($_REQUEST['link']), "ecb" ), "\0" ) ;
+		//$videofile = rtrim( mcrypt_decrypt( "blowfish", "drivebyvideolink", base64_decode($_REQUEST['link']), "ecb" ), "\0" ) ;
+		$cipher="aes-128-gcm" ;
+		$iv="ivcrbydennis";
+		$tag = substr($_REQUEST['link'], 0, 16 );
+		$enc = substr($_REQUEST['link'], 16 );
+		$videofile = openssl_decrypt ($enc, $cipher, "drivebyvideolink", OPENSSL_ZERO_PADDING, $iv, $tag);
 	}
 	else if( $logon ) {
-		$sql = "SELECT * FROM Drive_By_Event WHERE `idx` = $_REQUEST[tag] " ;
+		$sql = "SELECT * FROM drive_by_event WHERE `idx` = $_REQUEST[tag] " ;
 		if($result=$conn->query($sql)) {
 			if( $row=$result->fetch_array(MYSQLI_ASSOC) ) {
 				$channels = new SimpleXMLElement( "<driveby>" . $row['Video_Files'] . "</driveby>" );

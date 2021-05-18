@@ -37,29 +37,38 @@
 			$dname='';
 			@$dname = $_SESSION['playlist']['info']['name'] ;
 
+			// special icon id ,
+			// 10000:"Speeding" ,
+			// 10001:"Front Impact" ,
+			// 10002:"Rear Impact" ,
+			// 10003:"Side Impact" ,
+			// 10004:"Hard Brake" ,
+			// 10005:"Racing Start" ,
+			// 10006:"Hard Turn" ,
+			// 10007:"Bumpy Ride" 		
 			function vl_icon($row)
 			{
 				$icon = (int)$row['vl_incident'] ;
 				if( $icon == 2 ) {			// route, check for speeding
 					if( !empty($_SESSION['mapfilter']['bSpeeding']) && $row['vl_speed'] > $_SESSION['mapfilter']['speedLimit'] ) {
-						$icon = 100 ;		// speeding icon
+						$icon = 10000 ;		// speeding icon
 					}
 				}
 				else if( $icon == 16 ) {	// g-force event
 					if( !empty($_SESSION['mapfilter']['bFrontImpact']) && $row['vl_impact_x'] <= -$_SESSION['mapfilter']['gFrontImpact'] ) 
-						$icon=101;			// fi
+						$icon=10001;			// fi
 					else if( !empty($_SESSION['mapfilter']['bRearImpact']) && $row['vl_impact_x'] >= $_SESSION['mapfilter']['gRearImpact'] ) 
-						$icon=102;			// ri
+						$icon=10002;			// ri
 					else if( !empty($_SESSION['mapfilter']['bSideImpact']) && abs($row['vl_impact_y']) >= $_SESSION['mapfilter']['gSideImpact'] )
-						$icon=103;			// si
+						$icon=10003;			// si
 					else if( !empty($_SESSION['mapfilter']['bHardBrake']) && $row['vl_impact_x'] <= -$_SESSION['mapfilter']['gHardBrake'] ) 
-						$icon=104;			// hb
+						$icon=10004;			// hb
 					else if( !empty($_SESSION['mapfilter']['bRacingStart'])  && $row['vl_impact_x'] >= $_SESSION['mapfilter']['gRacingStart'] ) 
-						$icon=105;			// rs
+						$icon=10005;			// rs
 					else if( !empty($_SESSION['mapfilter']['bHardTurn'])  && abs($row['vl_impact_y']) >= $_SESSION['mapfilter']['gHardTurn'] )
-						$icon=106;			// ht
+						$icon=10006;			// ht
 					else if( !empty($_SESSION['mapfilter']['bBumpyRide']) && abs(1.0-$row['vl_impact_z']) >= $_SESSION['mapfilter']['gBumpyRide'] )
-						$icon=107;			// br
+						$icon=10007;			// br
 				}
 
 				return $icon;

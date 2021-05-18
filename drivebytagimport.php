@@ -83,7 +83,7 @@
 				$tag = readtag( substr( $pdfname, 0, -3 )."tag" ) ;
 				if( $tag ) {
 					$pdfname=basename($pdfname);
-					$sql = "UPDATE Drive_By_Event SET `event_status` =  'processed', `report_status` =  'report', `report_file` = '$pdfname', `event_processedby` =  '$_SESSION[user]', `event_processedtime` =  NOW(), Plateofviolator = '$tag[plateofviolator]', `notes` = '$tag[notes]', `email_status` = 'Pending' WHERE `Date_Time` = '$tag[datetime]' AND `Bus_Id` = '$tag[vehicle]' AND Client_Id = '$tag[clientid]' " ;
+					$sql = "UPDATE drive_by_event SET `event_status` =  'processed', `report_status` =  'report', `report_file` = '$pdfname', `event_processedby` =  '$_SESSION[user]', `event_processedtime` =  NOW(), Plateofviolator = '$tag[plateofviolator]', `notes` = '$tag[notes]', `email_status` = 'Pending' WHERE `Date_Time` = '$tag[datetime]' AND `Bus_Id` = '$tag[vehicle]' AND Client_Id = '$tag[clientid]' " ;
 
 					$resp['x'][] = $sql ;
 					

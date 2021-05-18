@@ -34,6 +34,9 @@
 	
 	if( $logon ) {
 
+		// lock table
+		$conn->query("LOCK TABLE vehicle_current_status READ ;");
+
         // create filter
 		if( empty($vehicle_status_valid_time) ) {
 			$vehicle_status_valid_time = 2 ;
@@ -137,6 +140,8 @@
 			}
 			$result->free();
 		}
+
+		$conn->query("UNLOCK TABLES");
 	}
 	echo json_encode($resp);
 ?>

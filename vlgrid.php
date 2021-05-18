@@ -65,7 +65,16 @@
 			$grid['page']=$grid['total'] ;
 		}
 		$start = $_REQUEST['rows'] * ($grid['page']-1) ;
-			
+
+		// special icon id,
+		// 10000:"Speeding",
+		// 10001:"Front Impact" ,
+		// 10002:"Rear Impact" ,
+		// 10003:"Side Impact" ,
+		// 10004:"Hard Brake" ,
+		// 10005:"Racing Start" ,
+		// 10006:"Hard Turn" ,
+		// 10007:"Bumpy Ride" 		
 		function vl_icon($row )
 		{
 			global $_SESSION ;
@@ -75,7 +84,7 @@
 			$vl_heading = $row[8] ;
 			if( $icon == 2 ) {			// route, check for speeding
 				if( $_SESSION['mapfilter']['bSpeeding'] && $vl_speed > $_SESSION['mapfilter']['speedLimit'] ) {
-					$icon = 100 ;		// speeding icon
+					$icon = 10000 ;		// speeding icon
 				}
 				$icon .= '?'. round($vl_heading/20) * 20 ;
 			}
@@ -83,33 +92,33 @@
 				$gforce_icons = array();
 				if( $row['vl_impact_x'] <= -$_SESSION['mapfilter']['gFrontImpact'] ) {
 					if( $_SESSION['mapfilter']['bFrontImpact'] )
-						$gforce_icons[]='101';			// fi
+						$gforce_icons[]='10001';			// fi
 				}
 				else if( $row['vl_impact_x'] >= $_SESSION['mapfilter']['gRearImpact'] ) {
 					if( $_SESSION['mapfilter']['bRearImpact'] )
-						$gforce_icons[]='102';			// ri
+						$gforce_icons[]='10002';			// ri
 				}
 				else if( $row['vl_impact_x'] <= -$_SESSION['mapfilter']['gHardBrake'] ) {
 					if( $_SESSION['mapfilter']['bHardBrake'] )
-						$gforce_icons[]='104';			// hb
+						$gforce_icons[]='10004';			// hb
 				}
 				else if( $row['vl_impact_x'] >= $_SESSION['mapfilter']['gRacingStart'] ) {
 					if( $_SESSION['mapfilter']['bRacingStart'] )
-						$gforce_icons[]='105';			// rs
+						$gforce_icons[]='10005';			// rs
 				}
 					
 				if( abs($row['vl_impact_y']) >= $_SESSION['mapfilter']['gSideImpact'] ) {
 					if( $_SESSION['mapfilter']['bSideImpact'] )
-						$gforce_icons[]='103';			// si
+						$gforce_icons[]='10003';			// si
 				}
 				else if( abs($row['vl_impact_y']) >= $_SESSION['mapfilter']['gHardTurn'] ) {
 					if( $_SESSION['mapfilter']['bHardTurn'] )
-						$gforce_icons[]='106';			// ht
+						$gforce_icons[]='10006';			// ht
 				}
 				
 				if( abs(1.0-$row['vl_impact_z']) >= $_SESSION['mapfilter']['gBumpyRide'] ) {
 					if( $_SESSION['mapfilter']['bBumpyRide'] )
-						$gforce_icons[]='107';			// br
+						$gforce_icons[]='10007';			// br
 				}
 					
 				if( !empty($gforce_icons) ) {

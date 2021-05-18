@@ -14,13 +14,13 @@
 	header("Content-Type: application/json");
 			
 	if( $logon ) {
-		$sql = "SELECT * FROM Drive_By_Event WHERE `idx` = $_REQUEST[id] " ;
+		$sql = "SELECT * FROM drive_by_event WHERE `idx` = $_REQUEST[id] " ;
 		if($result=$conn->query($sql)) {
 			if( $row=$result->fetch_array(MYSQLI_ASSOC) ) {
 				$resp['tag'] = $row ;
 				$resp['tag']['channels'] = new SimpleXMLElement( "<driveby>" . $row['Video_Files'] . "</driveby>" );
 				unset( $resp['tag']['Video_Files'] ) ;
-				$resp['id'] = $_REQUEST[id] ;
+				$resp['id'] = $_REQUEST['id'] ;
 				$resp['res'] = 1 ;
 			}
 			$result->free();

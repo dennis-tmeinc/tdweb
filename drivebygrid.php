@@ -71,7 +71,7 @@
 		$resp['page'] = 1 ;
 		$resp['rows'] = array() ;
 		// total records query
-		$sql="SELECT count(*) FROM Drive_By_Event WHERE ".$filter ;
+		$sql="SELECT count(*) FROM drive_by_event WHERE ".$filter ;
 		if( $result=$conn->query($sql) ) {
 			if( $row = $result->fetch_array( MYSQLI_NUM ) ) {
 				$resp['records'] = $row[0] ;
@@ -81,7 +81,7 @@
 			$result->free();
 		}
 		
-		$sql = "SELECT * FROM Drive_By_Event WHERE ".$filter ;
+		$sql = "SELECT * FROM drive_by_event WHERE ".$filter ;
 		if( !empty( $_REQUEST['sidx'] ) ) {
 			$sql .= "ORDER BY $_REQUEST[sidx]  $_REQUEST[sord] " ;
 		}

@@ -22,7 +22,7 @@
 //			}
 //		}
 
-		$sql = "SELECT * FROM Drive_By_Event WHERE `idx` = $_REQUEST[tag] " ;
+		$sql = "SELECT * FROM drive_by_event WHERE `idx` = $_REQUEST[tag] " ;
 		if($result=$conn->query($sql)) {
 			if( $row=$result->fetch_array(MYSQLI_ASSOC) ) {
 				$report_file = $driveby_eventdir. '/' . $row['report_file'] ;

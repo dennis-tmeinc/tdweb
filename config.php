@@ -66,7 +66,7 @@
 	$mapmode="grid" ;
 	
 	// session timeout (max half hour)
-	$session_timeout=900 ;
+	$session_timeout=9000 ;
 	
 	$session_path= "session";
 	$session_idname = "touchdownid";
@@ -106,8 +106,8 @@
 	
 	$enable_videos = true ;
 	// drive by demo
-	$support_driveby = 0 ;
-	$driveby_eventdir = "\\TouchDownCenter\\drivebydemo1" ;
+	$support_driveby = 1 ;
+	$driveby_eventdir = "drivebydemo1" ;
 	$webplay_support = 1 ;						// enable web video playback
 	$enable_livetrack = 1 ;						// enable or disable live track
 	$support_viewtrack_logo = false ;

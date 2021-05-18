@@ -88,7 +88,7 @@
 			$row = $result->fetch_array( MYSQLI_NUM ) ;
 			$resp['summary']['hardturn']=$row[0] ;
 			$result->free();
-		}	
+		}
 		}
 		
 		// Bumpy Ride

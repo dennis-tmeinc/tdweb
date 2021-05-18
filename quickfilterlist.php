@@ -1,21 +1,21 @@
 <?php
 // quickfilterlist.php - list quick filter
 // Requests:
-//      name: load one quick filter of this name, list all quick filter if not provided.
+//      quickfiltername: load one quick filter of this name, list all quick filter if not provided.
 // Return:
 //      JSON array of quick filter list
-// By Dennis Chen @ TME	 - 2013-06-15
+// By Dennis Chen @ TME	 - 2021-04-29
 // Copyright 2013 Toronto MicroElectronics Inc.
 
     require 'session.php' ;
 	header("Content-Type: application/json");
 
 	if( $logon ) {
-		if( empty($_REQUEST['name']) ) {
-			$sql="SELECT name FROM quickfilter; " ;
+		if( empty($_REQUEST['quickfiltername']) ) {
+			$sql="SELECT `name` as quickfiltername FROM quickfilter; " ;
 		}
 		else {
-			$sql="SELECT * FROM quickfilter WHERE `name` = '".$_REQUEST['name']."';" ;
+			$sql="SELECT `name` as quickfiltername, * FROM quickfilter WHERE `name` = '$_REQUEST[quickfiltername]';" ;
 		}
 		if($result=$conn->query($sql)) {
 			$resp['filterlist']=array();

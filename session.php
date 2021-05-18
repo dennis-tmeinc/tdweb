@@ -33,6 +33,13 @@ if (!is_dir($client_dir)) {
     mkdir($client_dir, 0777, true);
 }
 
+if (empty($driveby_eventdir) ) {
+    $driveby_eventdir = "drivebyevents";
+}
+if (!is_dir($driveby_eventdir)) {
+    mkdir($driveby_eventdir, 0777, true);
+}
+
 if (empty($session_idname)) {
     $session_idname = "touchdownid";
 }
@@ -149,6 +156,3 @@ function session_save($vname, $value) {
     }
     session_write();
 }
-
-return;
-?>

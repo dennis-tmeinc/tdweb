@@ -19,8 +19,7 @@
 <select id="cbBox" size="8">
 </select>
 </div>
-
-<input id="quickfilter" name="name" maxlength="45" type="text" style="background: white url(res/triangle_s.png) right no-repeat; padding-right: 12px; 
+<input id="quickfilter" name="quickfiltername" autocomplete="off" maxlength="45" type="text" style="background: white url(res/triangle_s.png) right no-repeat; padding-right: 12px; 
 " /><p />
 <button id="savequickfilter">Save</button><button id="deletequickfilter">Delete</button></fieldset>
 
@@ -179,6 +178,43 @@
 			<td><input checked="checked" name="bBumpyRide" type="checkbox" />
 			<img alt="" class="evicon" src="res/map_icons_br.png" /></td><td>Bumpy Ride</td>
 			<td><input name="gBumpyRide" size="5" type="text" value="0.0" /> g </td>
+		</tr>
+	</tbody>
+</table>
+</div>
+
+<h3>OBD Parameters</h3>
+<div>
+<table border="0" cellpadding="0" cellspacing="1" id="obdparameters" style="width: 100%;">
+	<tbody>
+		<tr>
+			<td><input checked="checked" name="bEnginOn" type="checkbox" />
+			<img alt="" class="evicon" src="res/map_icons_ignitionon.png" /></td><td>Engine On</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td><input checked="checked" name="bEnginOff" type="checkbox" />
+			<img alt="" class="evicon" src="res/map_icons_ignitionoff.png" /></td><td>Engine Off</td>
+		</tr>
+		<tr>
+			<td><input checked="checked" name="bFuelLevel" type="checkbox" />
+			<img alt="" class="evicon" src="res/map_icons_hb.png" /></td><td>Fuel Level < </td>
+			<td><input name="gFuelLevel" size="5" type="text" value="10" /> (%) </td>
+		</tr>
+		<tr>
+			<td><input checked="checked" name="bCoolantTemperature" type="checkbox" />
+			<img alt="" class="evicon" src="res/map_icons_ri.png" /></td><td>Coolant Temperature > </td>
+			<td><input name="gCoolantTemperature" size="5" type="text" value="250" /> F </td>
+		</tr>
+		<tr>
+			<td><input checked="checked" name="bEngineOilLevel" type="checkbox" />
+			<img alt="" class="evicon" src="res/map_icons_hb.png" /></td><td>Engine Oil Level < </td>
+			<td><input name="gEngineOilLevel" size="5" type="text" value="10" /> (%) </td>
+		</tr>
+		<tr>
+			<td><input checked="checked" name="bBatteryVoltage" type="checkbox" />
+			<img alt="" class="evicon" src="res/map_icons_hb.png" /></td><td>Battery Voltage < </td>
+			<td><input name="gBatteryVoltage" size="5" type="text" value="12.0" /> V </td>
 		</tr>
 	</tbody>
 </table>
@@ -402,13 +438,13 @@ function quickfilter_load()
 			var quickfilterlist = [];
 			var options="";
 			for(var i=0; i< qfl.length; i++){
-				quickfilterlist[i]=qfl[i].name ;
-				options += "<option>" + qfl[i].name + "</option>" ;
+				quickfilterlist[i]=qfl[i].quickfiltername ;
+				options += "<option>" + qfl[i].quickfiltername + "</option>" ;
 			}
 			$("#cbBox").html(options);
 			$("input#quickfilter").picker(quickfilterlist, function(v){
 				// load quick filter
-				$.getJSON("quickfilterlist.php?name="+v, function(quickfilter){
+				$.getJSON("quickfilterlist.php?quickfiltername="+v, function(quickfilter){
 					if( quickfilter.res==1 ){
 						var qf=quickfilter.filterlist ;
 						if( qf.length>0 ) {
@@ -420,7 +456,7 @@ function quickfilter_load()
 					}
 				});
 				return true;
-			});			
+			});
 		}
 	});
 }
@@ -453,7 +489,7 @@ $("button#savequickfilter").click(function(e){
 	//$("#quickfilter").val( $("#cbBox").parent().find("input").val() );
 
 	var fdata = filterform_data();
-	if( fdata.name.length<1 ) {
+	if( fdata.quickfiltername.length<1 ) {
 		alert("Please enter a name for quick filter!");
 		return;
 	}
@@ -461,7 +497,7 @@ $("button#savequickfilter").click(function(e){
 		if( resp.res == 1 ) {
 			// success
 			quickfilter_load();
-			alert("Quick filter \'"+fdata.name+"\' saved!");
+			alert("Quick filter \'"+fdata.quickfiltername+"\' saved!");
 		}
 		// fine, just silently failed, instead reported as a bug.
 		// else if( resp.errormsg ) {
@@ -480,19 +516,19 @@ $("button#deletequickfilter").click(function(e){
 	//$("#quickfilter").val( $("#cbBox").parent().find("input").val() );
 
 	var fdata = filterform_data();
-	if( fdata.name.length<1 ) {
+	if( fdata.quickfiltername.length<1 ) {
 		alert("Please select one quick filter!");
 		return;
 	}
-	if( !confirm("Do you want to delete quick filter :\n    "+fdata.name) ) {
+	if( !confirm("Do you want to delete quick filter :\n    "+fdata.quickfiltername) ) {
 	   return ;
 	}
 	$.getJSON("quickfilterdel.php", fdata, function(resp){
 		if( resp.res == 1 ) {
 			// success
 			quickfilter_load();
-			$("#filterform input[name='name']").val("");
-			alert("Quick filter \'"+fdata.name+"\' deleted!");
+			$("input#quickfilter").val("");
+			alert("Quick filter \'"+fdata.quickfiltername+"\' deleted!");
 		}
 		else if( resp.errormsg ) {
 			alert( resp.errormsg );
