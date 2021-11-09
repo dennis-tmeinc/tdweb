@@ -216,6 +216,18 @@
 			<img alt="" class="evicon" src="res/map_icons_hb.png" /></td><td>Battery Voltage < </td>
 			<td><input name="gBatteryVoltage" size="5" type="text" value="12.0" /> V </td>
 		</tr>
+
+		<!-- HardBrake / Quick Acc -->
+		<tr>
+			<td><input checked="checked" name="bObdHardBrake" type="checkbox" />
+			<img alt="" class="evicon" src="res/map_icons_hb.png" /></td><td>Hard Brake</td>
+			<td><input name="gObdHardBrake" type="number" step="0.001" max="10.0", min="0.1" value="0.3" size="5" />g</td>
+		</tr>
+		<tr>
+			<td><input checked="checked" name="bObdQuickAcceleration" type="checkbox" />
+			<img alt="" class="evicon" src="res/map_icons_rs.png" /></td><td>Quick Acceleration</td>
+			<td><input name="gObdQuickAcceleration" type="number" step="0.001" max="10.0", min="0.1" value="0.3" size="5" />g</td>
+		</tr>
 	</tbody>
 </table>
 </div>

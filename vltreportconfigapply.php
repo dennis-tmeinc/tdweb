@@ -33,6 +33,10 @@
 		$repcfg['vlt_impact_side'] = empty($_REQUEST['vlt_impact_side'])?0:$_REQUEST['vlt_impact_side'] ;
 		$repcfg['vlt_impact_bumpy'] = empty($_REQUEST['vlt_impact_bumpy'])?0:$_REQUEST['vlt_impact_bumpy'] ;
 
+		//obd related parameter
+		$repcfg['vlt_hard_brake'] = empty($_REQUEST['vlt_hard_brake'])?0:$_REQUEST['vlt_hard_brake'] ;
+		$repcfg['vlt_quick_acceleration'] = empty($_REQUEST['vlt_quick_acceleration'])?0:$_REQUEST['vlt_quick_acceleration'] ;
+
 		$repcfg['vlt_speed'] = empty($_REQUEST['vlt_speed'])?0:$_REQUEST['vlt_speed'] ;
 		$repcfg['vlt_time_interval'] = empty($_REQUEST['vlt_time_interval'])?0:$_REQUEST['vlt_time_interval'] ;
 		$repcfg['vlt_dist_interval'] = empty($_REQUEST['vlt_dist_interval'])?0:$_REQUEST['vlt_dist_interval'] ;

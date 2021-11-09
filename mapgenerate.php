@@ -102,6 +102,18 @@
 		$mapfilter['gEngineOilLevel'] = $_REQUEST['gEngineOilLevel'] ;
 		$mapfilter['gBatteryVoltage'] = $_REQUEST['gBatteryVoltage'] ;
 
+		// Hard Brake & Quick Acceleration , ref email 2021-10-29 from Tongrui@tme-inc.com
+		$mapfilter['bObdHardBrake'] = $_REQUEST['bObdHardBrake'] ;
+		$mapfilter['gObdHardBrake'] = $_REQUEST['gObdHardBrake'] ;
+		// convert it to what? the value of the above fields is defined in unit of 1/256 km/hr/s 
+		$mapfilter['gObdHardBrake'] = $mapfilter['gObdHardBrake'] * 9.80665 * 3600 * 256 / 1000.0 ;
+		$mapfilter['gObdHardBrake'] = (int)$mapfilter['gObdHardBrake'] ;
+
+		$mapfilter['bObdQuickAcceleration'] = $_REQUEST['bObdQuickAcceleration'] ;
+		$mapfilter['gObdQuickAcceleration'] = $_REQUEST['gObdQuickAcceleration'] ;
+		$mapfilter['gObdQuickAcceleration'] = $mapfilter['gObdQuickAcceleration'] * 9.80665 * 3600 * 256 / 1000.0 ;
+		$mapfilter['gObdQuickAcceleration'] = (int)$mapfilter['gObdQuickAcceleration'] ;
+
 		// save parameter for video clips/hours statistics
 		$mapfilter['vehiclelist'] = $vehiclelist ;
 		$mapfilter['endTime'] = $endTime ;
@@ -349,6 +361,11 @@
 		// 1)  in vl table add three event code in vl_incident:  VL_ENGINE_ON (101)
 		//		VL_ENGINE_OFF(102) VL_OBD_VALUE(103)
 
+		// add on 2021-10-29, Hard Brake & Quick Acceleration 
+		// VL_HARD_BRAKE = 104
+		// VL_QUICK_ACCEL = 105
+
+
 		// 2)  in vl table add 4 fields: 
 		//		vl_fuel:	percentage(0~100%)
 		//		vl_engine_coolant: coolant temperature 
@@ -360,6 +377,10 @@
 		$VL_ENGINE_ON = 101 ;
 		$VL_ENGINE_OFF = 102 ;
 		$VL_OBD_VALUE = 103 ;
+
+		// add on 2021-10-29, Hard Brake & Quick Acceleration 
+		$VL_HARD_BRAKE = 104;
+		$VL_QUICK_ACCEL = 105;
 
 		// Engine on
 		if( $mapfilter['bEnginOn'] ) {
@@ -392,6 +413,16 @@
 		// Battery Voltage
 		if( $mapfilter['bBatteryVoltage'] ) {
 			$obd_filters .= " OR ( vl_incident = $VL_OBD_VALUE AND vl_battery >= 0 AND vl_battery <= $mapfilter[gBatteryVoltage])" ;
+		}
+
+		// add on 2021-10-29, Hard Brake & Quick Acceleration 
+		if( $mapfilter['bObdHardBrake'] ) {
+			// 2021-11-3, Quang request to have search value
+			$obd_filters .= " OR ( vl_incident = $VL_HARD_BRAKE AND  vl_hard_brake >= $mapfilter[gObdHardBrake] )" ;
+		}
+		if( $mapfilter['bObdQuickAcceleration'] ) {
+			// 2021-11-3, Quang request to have search value
+			$obd_filters .= " OR ( vl_incident = $VL_QUICK_ACCEL AND  vl_quick_acceleration >= $mapfilter[gObdQuickAcceleration] )" ;
 		}
 
 		if( empty($filter) ) {

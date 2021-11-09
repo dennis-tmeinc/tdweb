@@ -14,8 +14,8 @@ require 'session.php';
 		#rcontainer { display:none }
 	</style>	
 <script>
-// start up
 
+// start up
 $(document).ready(function(){
 $("button").button();	
 $("input#<?php echo $btsetid ; ?>").prop( "checked", true );
@@ -239,8 +239,10 @@ $("#tag_list").jqGrid({
 					setmap();
 					
 					tagchannels = resp.tag.channels.channel ;
-					
 					if( !tagchannels ) return ;
+					if( ! (tagchannels instanceof Array) ) {
+						tagchannels = [tagchannels] ;
+					}
 					
 					// setup camera select
 					var camopts = [] ;
@@ -254,6 +256,7 @@ $("#tag_list").jqGrid({
 						camopts[ch] = name ;
 						camopt += "<option>"+name+"</option>" ;
 					}
+					camopt += "<option>Not Used</option>" ;
 					
 					var sel = $("select[name='vidcam']")[0].selectedIndex ;
 					if( sel >= tagchannels.length || sel < 0 ) {
@@ -272,12 +275,12 @@ $("#tag_list").jqGrid({
 					for( i= 0 ; i<sels.length; i++ ) {
 						var camname = sels[i]+"cam" ;
 						var s = $("select[name='"+camname+"']") ;
-						sel = s[0].selectedIndex ;
-						if( sel < 0 ) {
+						// sel = s[0].selectedIndex ;
+						// if( sel < 0 ) {
 							sel = i ;
-						}
-						if( sel >= tagchannels.length ) {
-							sel = 0 ;
+						// }
+						if( sel > tagchannels.length ) {
+							sel = tagchannels.length ;
 						}
 						s.html(camopt);
 						s[0].selectedIndex = sel ;
@@ -399,9 +402,13 @@ $("button#SaveEvent").click( function(e) {
 });
 
 $("button#GenerateReport").click( function() {
-	var param = {} ;
-	param.tag = selectedtag ;
-	param.mapzoom = mapzoom ;
+	var param = {
+		tag: selectedtag,
+		mapzoom: mapzoom,
+		mapaddr: mapaddr.formattedAddress,
+		State: mapaddr.adminDistrict,
+		City: mapaddr.locality
+	} ;
 	var sels = ['lpr1','lpr2','ov1','ov2'] ;
 	// cameras
 	var i;
@@ -425,6 +432,7 @@ $("button#GenerateReport").click( function() {
 // current zoom level
 var mapzoom = 15 ;
 var mapcoor = "37.778297,-122.417297" ;
+var mapaddr = {};
 
 function setmap() 
 {
@@ -439,7 +447,8 @@ function setmap()
 		dataType : 'jsonp',	jsonp :'jsonp'
 	}).done(function(location){
 		if( location.resourceSets[0].resources[0] && location.resourceSets[0].resources[0].address && location.resourceSets[0].resources[0].address.formattedAddress ) {
-			$("#mapaddress").text(location.resourceSets[0].resources[0].address.formattedAddress);
+			mapaddr = location.resourceSets[0].resources[0].address;
+			$("#mapaddress").text( mapaddr.formattedAddress );
 			$("#coordinate").text( mapcoor );
 		}
 	
@@ -503,6 +512,11 @@ $("select.cam").change(function(){
 	var s = $("select[name='"+cam+"cam']") ;
 	var len = 20 ;
 	var v = s.val();
+	if( v == "Not Used" ) {
+		$("video[name='"+ name +"']").attr("src", "");
+		return ;
+	}
+
 	for( var ch = 0 ; ch < tagchannels.length; ch++ ) {
 		if( v == tagchannels[ch].name ) {
 			len = tagchannels[ch].videolen ;
@@ -624,7 +638,7 @@ $("#rcontainer").show('slow');
 	<tbody>
 		<tr>
 			<td>
-			<video id="lpr2cam" name="lpr1cam" width="360" src="" type="video/mp4" controls>Your browser does not support the video tag.</video>
+			<video id="lpr1cam" name="lpr1cam" width="360" src="" type="video/mp4" controls>Your browser does not support the video tag.</video>
 			<br/>
 			<div>LPR1:&nbsp; &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;
 			<select class="cam" name="lpr1cam"></select>

@@ -23,6 +23,7 @@
 	$product_name = "TD FLEET MONITOR" ;
 
 	// List of timezone: http://php.net/manual/en/timezones.php
+	// A interesting api, http://ip-api.com/json, which could get current timezone based on IP
 	$timezone = "America/New_York" ;
 	
 	// number of icons on map , acture number of icons may get doubled
@@ -59,7 +60,8 @@
 	// $zone_mode = "cross" ;
 
 	// bing map credentials, for each tdweb installation, please head to https://www.bingmapsportal.com/  to get a new bing map key
-	$map_credentials="AqH8jpFgh8cOPZNsTLo0wcOQNGji0uwHgiGyBXOxJvzDySVjKN36y6t_TU1o33e-" ;
+	// $map_credentials="AqH8jpFgh8cOPZNsTLo0wcOQNGji0uwHgiGyBXOxJvzDySVjKN36y6t_TU1o33e-" ;
+	$map_credentials="AijN-XWqX56fM4wDzrrY9Og5tvW7bMc9UmhQTNrtexiXY84_6ITf2GvegVMs2FfL" ;
 
 	// Default map location, comment it to auto detect
 	$map_area="Toronto" ;
@@ -125,3 +127,4 @@
 
 	return ;
 ?>
+c:

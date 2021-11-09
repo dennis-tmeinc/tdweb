@@ -171,21 +171,21 @@ function load_sensors()
 load_sensors();
 
 var obd_codes = [
-	"Engine speed (rpm)",
-	"Wheel-Based Vehicle Speed (km/h)",
-	"Trip Distance (km)", 
-	"Total Distance (km)",
-	"Fuel Level (%)", 
-	"Engine Oil Level (%)",
-	"Engine Coolant Temperature", 
-	"Engine Oil Temperature", 
-	"Engine Fuel Temperature", 
+	"Engine speed(rpm)",
+	"Wheel-Based Vehicle Speed(km/h)",
+	"Trip Distance(km)", 
+	"Total Distance(km)",
+	"Fuel Level(%)", 
+	"Engine Oil Level(%)",
+	"Engine Coolant Temperature(\u2103)", 
+	"Engine Oil Temperature(\u2103)", 
+	"Engine Fuel Temperature(\u2103)", 
 	"Transmission Selected Gear", 
 	"Parking Brake Switch", 
-	"Brake Power (kw)", 
-	"Accelerator Pedal Position (%)", 
-	"Engine Percent Load (%)", 
-	"Engine Percent Torque (%)", 
+	"Brake Power(kw)", 
+	"Accelerator Pedal Position(%)", 
+	"Engine Percent Load(%)", 
+	"Engine Percent Torque(%)", 
 	"Idling State", 
 	"Steering Wheel Angle", 
 	"Door State", 
@@ -194,7 +194,13 @@ var obd_codes = [
 	"Right Turn Light", 
 	"Left Turn Light", 
 	"Engine Status",
-	"Battery Voltage (mV)"
+	"Battery Voltage(mV)",
+	
+	//   2021-10-08 ,ref to email from Tongrui@tme-inc.com	
+	"Fast Acceleration",	// OBD_QUICK_ACCEL = 24
+	"Hard Brake",			// OBD_HARD_BRAKE, /* (25) 
+	
+	"Unknown"
 ];
 var obd_engine_status = ["Stopped","Pre Start","Starting","Warm Up","Running","Cool Down","Stopping","Post Run"];
 var obd_state_onoff=["Off","On"];
@@ -207,7 +213,10 @@ var vlt_pins = {} ;
 function showpin( avlp, id, iconimg, clean ) 
 {
 	if( avlp.pos2 ) {
-		avlp.pos = avlp.pos2;
+		avlp.pos = avlp.pos2;	// <pos2> contain localtime (2021-11-01)
+		avlp.utc = false ;
+	}
+	else {
 		avlp.utc = true ;
 	}
 	if( avlp.pos.length>3 ) {
@@ -335,23 +344,14 @@ function showpin( avlp, id, iconimg, clean )
 			var infotitle = did ;
 			
 			// date & time
-			var dstr = '20'+avlp.pos.substr(0,2)+'-'+avlp.pos.substr(2,2)+'-'+avlp.pos.substr(4,2)+'T'+avlp.pos.substr(6,2)+':'+avlp.pos.substr(8,2)+':'+avlp.pos.substr(10,2)+'Z' ;
-			var dt = new Date(dstr);
-			var dyear = dt.getFullYear() ;
-			var dmon = dt.getMonth() + 1 ;
-			if( dmon<10 ) dmon = "0" + dmon ;
-			var ddate = dt.getDate() ;
-			if( ddate < 10 ) ddate = "0" + ddate ;
-			var dhour = dt.getHours() ;
-			if( dhour < 10 ) dhour = "0" + dhour ;
-			var dmin = dt.getMinutes() ;
-			if( dmin < 10 ) dmin = "0" + dmin ;
-			var dsec = dt.getSeconds() ;
-			if( dsec < 10 ) dsec = "0" + dsec ;
-			var desc = '<img src="'+e.target.getIcon()+'" /><br/>' + dyear + "-" + dmon + "-" + ddate + ' ' + dhour + ":" + dmin + ":" + dsec ;
+			var dstr = '20'+avlp.pos.substr(0,2) + '-' + avlp.pos.substr(2,2) + '-' + avlp.pos.substr(4,2)
+			           + 'T' 
+					   + avlp.pos.substr(6,2) + ':' + avlp.pos.substr(8,2) + ':' + avlp.pos.substr(10,2) ;
 			if( avlp.utc ) {
-				desc += " UTC" ;
+				dstr = dstr + 'Z' ;
 			}
+			var dt = new Date( dstr );
+			var desc = '<img src="'+e.target.getIcon()+'" /><br/>' + dt.toLocaleString() ;
 			var lines = 1 ;
 			
 			// speed
@@ -359,7 +359,6 @@ function showpin( avlp, id, iconimg, clean )
 			if( speed > 0.5 ) {
 				// convert km to mph
 				speed = speed / 1.609344 ;
-				
 				desc += "<br/>Speed: "+speed.toFixed(1);
 				lines++;
 			}
@@ -411,21 +410,43 @@ function showpin( avlp, id, iconimg, clean )
 				lines ++ ;
 			}
 
+			// AVL_QA_EVENT(51)
+			if( avlp.qa) { 		/* in 1/256 kps/s or kmh/s */
+				// var g = avlp.qa / 256 * 1000 / 3600 / 9.80665 ;
+				var g = avlp.qa * 1000.0 / 3600.0 / 9.80665 / 256.0;
+				desc += "<br/>Quick Acceleration: " + g ;
+				lines ++ ;
+			}
+
+			// AVL_HB_EVENT(52)
+			if(  avlp.hb ) { 		/* in 1/256 kps/s */
+				// var g = avlp.qa / 256 * 1000 / 3600 / 9.80665 ;
+				var g = avlp.hb * 1000.0 / 3600.0 / 9.80665 / 256.0;
+				desc += "<br/>Ignition: " + g ;
+				lines ++ ;
+			}
+
 			
 			// lets start obd lines here
 			if( avlp.obd && avlp.obd.i ) {
 				var ia = avlp.obd.i ;
 				if( !( ia instanceof Array) ) {
-					// single value avlp.obd.i
+					// single value avlp.obd.i <xml> to json problem
 					ia = [ia] ;
 				}
 				var i;
 				for( i=0; i<ia.length; i++ ) {
 					var obdi=ia[i].split(",");
 					if( obdi.length > 1 && obdi[0]<obd_codes.length ){
-						// filter obd values here, server will do any thing regarding "OBD Configure"
+						var v = obdi[1] ;
+
+						// filter out some crazy obd values
+						if( v>1000000000 || v<-1000000000 ){
+							continue;
+						}
+
+						// filter obd values here, server will not do any thing regarding "OBD Configure"
 						if( (vltparam.obd >> parseInt(obdi[0])) & 1 ) {
-							var v = obdi[1] ;
 							// translate some integer to text
 							if( obdi[0] == 10 || obdi[0] == 15 || obdi[0] == 18 || obdi[0] == 20 || obdi[0] == 21  ){		// for on/off
 								v = obd_state_onoff[v] ;
@@ -439,6 +460,26 @@ function showpin( avlp, id, iconimg, clean )
 							else if( obdi[0] == 22 ) {		// for engine status
 								v = obd_engine_status[v] ;
 							}
+
+							// not sure if "Hardbrake" and "FastAcceleration" going to be here?
+							//   2021-10-08 ,ref to email from Tongrui@tme-inc.com
+							else if(obdi[0] == 24){
+								v = "" + v*256 + " kps/s";
+							}
+							else if(obdi[0] == 25){
+								v = "" + v*256 + " kps/s";
+							}
+							// end not sure
+
+							// deal with some crazy values reported!!! 
+							// converted value is out of range
+							if( v==null || 
+								// or a number is crazy large 
+								( (!isNaN(v)) && ( v>1000000000 || v<-1000000000 )  )
+							){
+								continue;
+							}
+
 							desc += "<br/>" + obd_codes[obdi[0]] + ":" + v;
 							lines ++ ;
 						}
@@ -602,7 +643,19 @@ function tdwebc_message( tdwebc )
 				map.entities.push(polygon);
 			}	
 		}		
-				
+
+		// QA/HB events (2021-11-1)
+		else if( cmd == "51" ) {      // AVL_QA_EVENT(51)
+			if( tdwebc[i].source.dvrs && tdwebc[i].source.dvrs.dvr ) {
+				showpin( avlp, "QA__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_rs.png", false );
+			}
+		}
+		else if( cmd == "52" ) {      // AVL_HB_EVENT(52)
+			if( tdwebc[i].source.dvrs && tdwebc[i].source.dvrs.dvr ) {
+				showpin( avlp, "HB__"+tdwebc[i].source.dvrs.dvr	, "res/map_icons_hb.png", false );
+			}
+		}
+
 		else {
 			// alert( "Unknown message from AVL : "+ cmd );
 		}
@@ -1754,6 +1807,9 @@ $('#rcontainer').show('slow', showup );
 <div style="text-align: center;"><button style="min-width:14em;" name="obdconfig">OBD Configuration</button></div>
 <div style="text-align: center;"><button style="min-width:14em;" name="reportconfiguration">Report Configuration...</button></div>
 <div style="text-align: center;"><button style="min-width:14em;" name="startautoreort">Start Auto Report</button></div>
+<?php if(!empty($support_stop_auto_report)) { ?>
+<div style="text-align: center;"><button style="min-width:14em;" name="stopautoreport">Stop Auto Report</button></div>
+<?php } ?>
 <div style="text-align: center;"><button style="min-width:14em;" name="liveview">Live View</button></div>
 <div style="text-align: center;"><button style="min-width:14em;" name="playback">Play Back</button></div>
 <?php if( $_SESSION['user_type'] == "xxxxx" ) { ?>
@@ -1872,6 +1928,12 @@ $('#rcontainer').show('slow', showup );
 		<tr>
 		<td style="text-align: right;">Bumpy Ride:</td><td><input style="width:5em;" name="vlt_impact_bumpy"/> g</td>
 		</tr>
+		<tr>
+		<td style="text-align: right;">Hard Brake:</td><td><input style="width:5em;" name="vlt_hard_brake"/> g</td>
+		</tr>
+		<tr>
+		<td style="text-align: right;">Quick Acceleration:</td><td><input style="width:5em;" name="vlt_quick_acceleration"/> g</td>
+		</tr>		
 	</table>
 	</fieldset>
 

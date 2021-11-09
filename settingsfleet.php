@@ -1227,14 +1227,22 @@ text-align: center;
 		<tr>
 			<td style="text-align: right;">IVU ID:</td>
 			<td><input name="vehicle_ivuid" size="30" type="text" /></td>
-			<td style="text-align: right;"></td>
-			<td></td>
+			<td style="text-align: right;">
+				Hard Brake(g):
+			</td>
+			<td>
+				<input name="vehicle_hb" type="number" step="0.001" max="10.0", min="0.1" value="0.227" />
+			</td>
 		</tr>		
 		<tr>
 			<td style="text-align: right;">Phone:</td>
 			<td><input name="vehicle_phone" size="30" type="text" /></td>
-			<td style="text-align: right;"></td>
-			<td></td>
+			<td style="text-align: right;">
+				Quick Acceleration(g):
+			</td>
+			<td>
+				<input name="vehicle_qa" type="number" step="0.001" max="10.0", min="0.1" value="0.198"/>
+			</td>
 		</tr>
 	</tbody>
 </table>

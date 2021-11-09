@@ -370,6 +370,19 @@ $("button#emailsettings").click(function(e){
 	$( "#dialog_emailserver" ).dialog("open");
 });
 
+// Adding tz auto detection feature 2021-11-02, I don't know why I do this.
+$("button#btDetectTZ").click(function(e){
+	e.preventDefault();
+	$.getJSON("http://ip-api.com/json/", function(tz){
+		if( tz.timezone ) {
+			$("select[name='TimeZone']").val(tz.timezone);
+			if( tz.country && tz.regionName && tz.city){
+				$("input[name='MapArea']").val(tz.city + ", "+ tz.regionName + ", " + tz.country);
+			}
+		}
+	});
+});
+
 });
 </script>
 </head>
@@ -445,19 +458,21 @@ for( $d = ord('C'); $d<=ord('Z'); $d++ ) {
 			<td>
 			<select name="TimeZone">
 <?php
-$timezonelist=DateTimeZone::listIdentifiers(DateTimeZone::PER_COUNTRY, "US");
+$timezonelist=DateTimeZone::listIdentifiers(DateTimeZone::AMERICA);
 foreach( $timezonelist as $tz ) {
 	printf('<option value="%s">%s</option>', $tz, $tz );
 };
 ?>			
 			</select>
 			</td>
-			<td>&nbsp;</td>
+			<td>
+			<button id="btDetectTZ" >Detect</button>
+			</td>		
 			<td>&nbsp;</td>
 		</tr>
 		<tr>
 			<td style="text-align:right">Map Default Area:</td>
-			<td><input name="MapArea" type="text" value="USA" /></td>
+			<td><input name="MapArea" type="text" value="New York" /></td>
 			<td>&nbsp;</td>
 			<td>&nbsp;</td>
 		</tr>

@@ -49,6 +49,8 @@
 					"Vehicle_report_sat='$esc_req[Vehicle_report_sat]',".
 					"vehicle_ivuid='$esc_req[vehicle_ivuid]',".
 					"vehicle_phone='$esc_req[vehicle_phone]',".
+					"vehicle_qa='$esc_req[vehicle_qa]',".
+					"vehicle_hb='$esc_req[vehicle_hb]',".
 					"vehicle_out_of_service=".(empty($esc_req['vehicle_out_of_service'])?'0':'1').
 					" WHERE vehicle_name='$esc_req[oname]';" ;
 			}
@@ -73,6 +75,8 @@
 					Vehicle_report_sat,
 					vehicle_ivuid, 
 					vehicle_phone,
+					vehicle_qa,
+					vehicle_hb,
 					vehicle_out_of_service
 					) VALUES (
 					'$esc_req[vehicle_name]',
@@ -93,7 +97,10 @@
 					'$esc_req[Vehicle_report_fri]',
 					'$esc_req[Vehicle_report_sat]',
 					'$esc_req[vehicle_ivuid]',
-					'$esc_req[vehicle_phone]',"
+					'$esc_req[vehicle_phone]',
+					'$esc_req[vehicle_qa]',
+					'$esc_req[vehicle_hb]',
+					"
 					.(empty($esc_req['vehicle_out_of_service'])?'0':'1').
 					") ;" ;
 			}

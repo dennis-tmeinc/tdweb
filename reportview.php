@@ -307,6 +307,11 @@ function map_generate_x(mapevent, formdata)
 	101:"res/map_icons_ignitionon.png",
 	102:"res/map_icons_ignitionoff.png",
 	103:"res/map_icons_hb.png",
+
+	// new obd events
+	104:"res/map_icons_hb.png",
+	105:"res/map_icons_rs.png",
+
 	10000:"speed_icon.php?",
 	10001:"res/map_icons_fi.png" ,
 	10002:"res/map_icons_ri.png" ,

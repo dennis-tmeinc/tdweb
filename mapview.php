@@ -42,6 +42,11 @@ pinicons = {
 		101:"res/map_icons_ignitionon.png",
 		102:"res/map_icons_ignitionoff.png",
 		103:"res/map_icons_hb.png",
+
+		// new obd events
+		104:"res/map_icons_hb.png",
+		105:"res/map_icons_rs.png",
+
 		10000:"speed_icon.php?",
 		10001:"res/map_icons_fi.png" ,
 		10002:"res/map_icons_ri.png" ,
@@ -70,6 +75,11 @@ pintitles = {
 	101:"Engine On",
 	102:"Engine Off",
 	103:"OBD Data",
+
+	// new obd events
+	104:"Hard Brake",
+	105:"Quick Acceleration",
+
 	10000:"Speeding",
 	10001:"Front Impact" ,
 	10002:"Rear Impact" ,
@@ -674,12 +684,29 @@ function loadvlmap()
 								desc += "<br/>Duration: "+h+':'+m+':'+s;
 							}
 							var iheight=180 ;
-							if( v.vl.vl_impact_x != 0 || v.vl.vl_impact_y != 0 || v.vl.vl_impact_z != 0 ) {
+							if( v.vl.vl_impact_x && v.vl.vl_impact_y && v.vl.vl_impact_z ) {
 								desc += "<br/>X: "+v.vl.vl_impact_x +
 										" Y: "+v.vl.vl_impact_y +
 										" Z: "+v.vl.vl_impact_z ;
 								iheight += 20 ;
 							}
+
+							// add display of vl_hard_brake and vl_quick_acceleration, 2021-11-08
+							if( v.vl.vl_hard_brake > 0 ) {
+								// convert!convert!convert!convert!convert!convert!convert!
+								// in 1/256 kps/s or kmh/s  to g
+								var g = v.vl.vl_hard_brake * 1000.0 / 3600.0 / 9.80665 / 256.0 ;
+								desc += "<br/>Hard Brake: " + g +"g";
+								iheight += 20 ;
+							}
+							if( v.vl.vl_quick_acceleration > 0 ) {
+								// convert!convert!convert!convert!convert!convert!convert!
+								// in 1/256 kps/s or kmh/s  to g
+								var g = v.vl.vl_quick_acceleration * 1000.0 / 3600.0 / 9.80665 / 256.0 ;
+								desc += "<br/>Quick Acceleration: " + g +"g" ;
+								iheight += 20 ;
+							}
+
 							function iplayvideo() 
 							{ 
 								$("#formplayvideo input[name='vehicle_name']").val(v.vl.vl_vehicle_name);
@@ -703,9 +730,9 @@ function loadvlmap()
 								map_infobox.setOptions( { title:ititle, description: desc, actions: iaction, maxHeight: iheight,  zIndex: 10 } );
 							}
 						}
-					});				
+					});
 				}
-				
+
 				Microsoft.Maps.Events.addThrottledHandler(pushpin, 'mouseover', pin_info, 500 );  
 				Microsoft.Maps.Events.addThrottledHandler(pushpin, 'click', pin_info, 100 );  
 

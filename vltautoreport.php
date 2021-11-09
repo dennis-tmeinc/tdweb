@@ -147,6 +147,10 @@
 					$xml->avlp->right = $vdata['vlt_impact_side'];
 					$xml->avlp->bottom = $vdata['vlt_impact_bumpy'];
 					$xml->avlp->top = $vdata['vlt_impact_bumpy'];	
+					// obd related parameter
+					$xml->avlp->hardbrake = $vdata['vlt_hard_brake'];	
+					$xml->avlp->fastacc = $vdata['vlt_quick_acceleration'];	
+
 				}
 				else {
 					$xml->avlp->front = 0;
@@ -155,6 +159,10 @@
 					$xml->avlp->right = 0 ;
 					$xml->avlp->bottom = 0 ;
 					$xml->avlp->top = 0 ;
+
+					$xml->avlp->hardbrake = 0;
+					$xml->avlp->fastacc = 0;
+
 				}
 				@$avlxml = file_get_contents( $avlservice.'?xml='.rawurlencode($xml->asXML()) );	// don't care what is returned
 				if ( !empty ($avl_log) ) {
