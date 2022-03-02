@@ -673,7 +673,13 @@ function loadvlmap()
 							}
  							desc += 'Event Time: '+v.vl.vl_datetime ;
 							if( v.vl.vl_speed>0 ) {
-								desc += "<br/>Speed: "+(v.vl.vl_speed/1.609334).toFixed(1) ;
+								if( country == "US") {
+									desc += "<br/>Speed(mph): "+(v.vl.vl_speed/1.609334).toFixed(1) ;
+								}
+								else {
+									// In case of KMh
+									desc += "<br/>Speed(km/h): "+(v.vl.vl_speed * 1.0).toFixed(1) ;
+								}
 							}
 							if( v.vl.vl_time_len>0 ) {
 								var h = Math.floor(v.vl.vl_time_len/3600);

@@ -55,7 +55,10 @@
 				$_SESSION['clientid']=$savesess['clientid'];
 			}
 			$_SESSION['welcome_name'] = $savesess['welcome_name'];
-						
+
+			// country code support, for display units (imperial)
+			$_SESSION['country'] = $savesess['country'];
+
 		    $resp['res']=1 ;
 			$resp['user']=$_SESSION['user'] ;
 			if( !empty($savesess['lastpage']) ) {

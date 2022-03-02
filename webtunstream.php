@@ -2,19 +2,12 @@
 // webtunstream.php - webtun stream 
 // By Dennis Chen @ TME	 - 2016-11-21
 // Copyright 2016 Toronto MicroElectronics Inc.
-
-header("x-ws-1:1");
-
 require_once 'netpackfunc.php' ;
-
-header("x-ws-2:1");
 
 // default session path
 if( empty($session_path) ) {
 	$session_path= "session";
 }
-
-header("x-ws-3:1");
 
 class WebtunStream {
     private $server ;

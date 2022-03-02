@@ -15,11 +15,12 @@
 			$sql="SELECT `name` as quickfiltername FROM quickfilter; " ;
 		}
 		else {
-			$sql="SELECT `name` as quickfiltername, * FROM quickfilter WHERE `name` = '$_REQUEST[quickfiltername]';" ;
+			$sql="SELECT * FROM quickfilter WHERE `name` = '$_REQUEST[quickfiltername]';" ;
 		}
 		if($result=$conn->query($sql)) {
 			$resp['filterlist']=array();
 			while($row=$result->fetch_array(MYSQLI_ASSOC)){
+				$row['quickfiltername'] = $row['name'];
 				$resp['filterlist'][]=$row ;
 			}
 			$resp['res']=1; 	// success

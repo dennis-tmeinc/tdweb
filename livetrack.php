@@ -28,6 +28,9 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 <script src="td_alert.js"></script><script>
 // start up 
 var map  ;
+var country="<?php
+	echo $_SESSION['country'];
+?>";
 
 $(document).ready(function(){
 
@@ -756,17 +759,20 @@ $( ".tdcdialog#dialog_sensorconfig" ).dialog({
 		"<option>Emergency Door Open</option>" +
 		"<option>Emergency Door Close</option>" ;
 
+		var i;
 		var tb = "";
-		for( var i=0 ; i<vltsensor.length ; i++ ) {
+		for( i=0 ; i<vltsensor.length ; i++ ) {
 			//tb += '<tr><td>'+vltsensor[i].sensor_index+'</td><td><input name="' + vltsensor[i].sensor_index + '" value="' + vltsensor[i].sensor_name + '" type="text"/></td></tr>' ;
 			tb += '<tr><td>' + 
 			vltsensor[i].sensor_index + 
-			'</td><td><select name="' + vltsensor[i].sensor_index + 
-			'" value="' + vltsensor[i].sensor_name + '" >' +  
+			'</td><td><select name="' + vltsensor[i].sensor_index + '" >' +  
 			selOpt + 
 			'</select></td></tr>' ;
 		}
 		$("table#vltsensortable").html(tb);
+		for( i=0 ; i<vltsensor.length ; i++ ) {
+			$("select[name='" + vltsensor[i].sensor_index +"']").val(vltsensor[i].sensor_name);
+		}
 	},	
 	buttons:{
 		"OK": function() {
@@ -1939,7 +1945,16 @@ $('#rcontainer').show('slow', showup );
 
 	<table>
 		<tr>
-		<td style="text-align: right;">Report On Over Speed:</td><td><input style="width:5em;" name="vlt_speed"/> mph</td>
+		<td style="text-align: right;">Report On Over Speed:</td><td><input style="width:5em;" name="vlt_speed"/>
+		<?php
+			if( $_SESSION['country']=="US"){
+				echo "mph";
+			}
+			else {
+				echo "km/h";
+			}
+		?>
+		</td>
 		</tr>
 		<tr>
 		<td style="text-align: right;">Report On Time Interval:</td><td><input style="width:5em;" name="vlt_time_interval"/> s</td>
@@ -1954,7 +1969,16 @@ $('#rcontainer').show('slow', showup );
 		<td style="text-align: right;">Max Bytes:</td><td><input style="width:5em;" name="vlt_maxbytes"/> KB</td>
 		</tr>
 		<tr>
-		<td style="text-align: right;">Temperature:</td><td><input style="width:5em;" name="vlt_temperature"/> &deg;F</td>
+		<td style="text-align: right;">Temperature:</td><td><input style="width:5em;" name="vlt_temperature"/>
+		<?php
+			if( $_SESSION['country'] == "US"){
+				echo '&deg;F';
+			}
+			else {
+				echo '&deg;C';
+			}
+		?>
+		</td>
 		</tr>
 		<tr>  
 		<td style="text-align: right;">Idling:</td><td><input style="width:5em;" name="vlt_idling" /> s</td>

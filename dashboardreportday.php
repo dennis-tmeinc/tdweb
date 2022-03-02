@@ -98,8 +98,6 @@
 			$sql = "SELECT vl_vehicle_name, vl_datetime, vl_lat, vl_lon FROM `vl` WHERE vl_datetime BETWEEN '$date_begin' AND '$date_end' ORDER BY vl_vehicle_name, vl_datetime;";
 			$result=$conn->query($sql,MYSQLI_USE_RESULT);	// set MYSQLI_USE_RESULT for huge data
 			if( $result ){
-			
-						
 				$pvehicle = "";
 				$ptime=0;
 				$plat = 0;
@@ -145,6 +143,12 @@
 		// convert to hours
 		$resp['report']['Operating_Hours_day'] = round($Operating_time_day/3600, 2) ;
 		$resp['report']['Operating_Hours_avg'] = round($Operating_time_avg/3600, 2) ;
+
+		// convert to km/h based on country code
+		if( $_SESSION['country'] != "US"){
+			$Distance_Travelled_day *= 1.60934;
+			$Distance_Travelled_avg *= 1.60934;
+		}
 
 		$resp['report']['Distance_Travelled_day'] = round($Distance_Travelled_day, 2) ;	
 		$resp['report']['Distance_Travelled_avg'] = round($Distance_Travelled_avg, 2) ;	

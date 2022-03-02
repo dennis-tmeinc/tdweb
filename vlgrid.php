@@ -148,10 +148,19 @@
 				if( $m < 10 ) $m='0'.$m ;
 				$s = $row[11]%60 ;
 				if( $s < 10 ) $s='0'.$s ;
+				// for country code, mph or km/h
+				if( $_SESSION['country'] == "US") {
+					// mph
+					$speed = round($row[7]/ 1.609334 , 1);
+				}
+				else {
+					// km/h
+					$speed = round($row[7], 1);
+				}
 				$grid['rows'][] = array(
 						"id" => $row[0],
 						"cell" => array( 
-							$row[1], $row[9], vl_icon( $row ), $row[2], "$h:$m:$s", (string)round($row[7]/ 1.609334 , 1), $row[5].",".$row[6] ,""
+							$row[1], $row[9], vl_icon( $row ), $row[2], "$h:$m:$s", (string)$speed, $row[5].",".$row[6] ,""
 						) );
 			}
 			$result->free();

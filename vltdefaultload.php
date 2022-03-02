@@ -13,6 +13,9 @@
 	if( $logon ) {
 		$vltid = "__default".$_REQUEST['default'] ;
 		$sql="SELECT * FROM  vlt_config WHERE vlt_user_name = '$_SESSION[user]' AND vlt_config_id = '$vltid' " ;
+
+		$resp['sql'] = $sql;
+
 		if( $result=$conn->query($sql) ) {
 			if( $row = $result->fetch_assoc() ){
 

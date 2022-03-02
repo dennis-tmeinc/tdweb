@@ -81,7 +81,8 @@ if (!empty($_SESSION['clientid'])) {
             // database backup file location, 
             $backup_path = $company_root . "\\smartbackup";
         }
-    } else {
+    }
+    else {
         unset($_SESSION['clientid']);
     }
 }

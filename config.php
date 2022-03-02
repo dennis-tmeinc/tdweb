@@ -6,15 +6,15 @@
 //	$smart_host="173.167.112.105";
 //	$smart_host="tdlive.darktech.org" ;
 
-//	$smart_host="64.40.243.195";
-//	$smart_user="admin" ;
-//	$smart_password="Smart247" ;
-//	$smart_database="abc001" ;
-
-	$smart_host="dennispc.us.to";
-	$smart_user="dennis" ;
-	$smart_password="dennisdb" ;
+	$smart_host="64.40.243.195";
+	$smart_user="admin" ;
+	$smart_password="Smart247" ;
 	$smart_database="abc001" ;
+
+//	$smart_host="dennispc.us.to";
+//	$smart_user="dennis" ;
+//	$smart_password="dennisdb" ;
+//	$smart_database="abc001" ;
 
 	$database_persistent=true ;
 
@@ -120,11 +120,10 @@
 	$use_conv266 = true ;
 	$disable_mss = false ;
 	$support_videoviacellular = true ;
+	$support_km = true ;
 
 	$avl_log = "d:\\tmp\\avl.log";
 	
 	$vehicle_status_valid_time = 60*24*30*10 ;
-
 	return ;
 ?>
-c:

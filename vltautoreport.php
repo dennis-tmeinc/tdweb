@@ -75,7 +75,15 @@
 						$xml->avlp->speed = 0 ;
 					}
 					else {
-						$xml->avlp->speed = (int)( $vdata['vlt_speed'] * 1.609344 );		// mph to km/h
+						// base on country code now
+						if( $_SESSION['country'] =="US") {
+							// country US, use mph
+							$xml->avlp->speed = (int)( $vdata['vlt_speed'] * 1.609344 );		// mph to km/h
+						}
+						else {
+							// vlt_speed is km/h
+							$xml->avlp->speed = (int)( $vdata['vlt_speed'] );		// km/h
+						}
 					}
 					$xml->avlp->maxc = $vdata['vlt_maxcount'] ;
 					$xml->avlp->maxkb = $vdata['vlt_maxbytes'] ;
@@ -118,7 +126,13 @@
 					$xml->avlp->lo = dechex($io_low);
 					$xml->avlp->hi = dechex($io_high) ;
 					$xml->avlp->idle = $vdata['vlt_idling'] ;
-					$tempc = (int)(( $vdata['vlt_temperature'] - 32 ) * 5/9 ) ;		// F to C
+					// base on country code, use degree C or degree F
+					if($_SESSION['country'] == "US"){
+						$tempc = (int)(( $vdata['vlt_temperature'] - 32 ) * 5/9 ) ;		// F to C
+					}
+					else {
+						$tempc = (int)( $vdata['vlt_temperature'] ) ;		// C
+					}
 					if( $tempc < 1 ) {
 						$xml->avlp->temp = 0 ;
 					}

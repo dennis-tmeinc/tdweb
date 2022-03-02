@@ -25,7 +25,7 @@
 					$resp['tag']['channels'] = new SimpleXMLElement( "<emg>" . $row['video_files'] . "</emg>" );
 				}
 				unset( $resp['tag']['Video_Files'] ) ;
-				$resp['id'] = $_REQUEST[id] ;
+				$resp['id'] = $_REQUEST['id'] ;
 				$resp['res'] = 1 ;
 			}
 			$result->free();

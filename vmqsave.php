@@ -22,7 +22,7 @@
 			
 			$vmq_ch = 'A' ;
 			if( !empty( $_REQUEST['vmq_camera'] ) ) {
-				$vmq_ch = implode( $_REQUEST['vmq_camera'], ',');
+				$vmq_ch = implode( ',', $_REQUEST['vmq_camera']);
 			}
 
 			$sql="INSERT INTO vmq (`vmq_vehicle_name`,`vmq_ins_user_name`,`vmq_start_time`,`vmq_end_time`, `vmq_channel`, `vmq_description`) VALUES (

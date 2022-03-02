@@ -74,7 +74,15 @@
 		if( $s < 10 ) $s='0'.$s ;
 		
 		$resp['summary']['traveltime']= "$h:$m:$s";
-		$resp['summary']['traveldistance']= round ( $traveldistance, 1 ) ;
+		// use country code to set distance unit, miles or km
+		if( $_SESSION['country'] == "US") {
+			// miles
+			$resp['summary']['traveldistance']= round ( $traveldistance, 1 ) ;
+		}
+		else {
+			// km
+			$resp['summary']['traveldistance']= round ( $traveldistance * 1.60934 , 1 ) ;
+		}
 		
 		$resp['serial'] = $_REQUEST['serial'] ;
 		$resp['res'] = 1 ;

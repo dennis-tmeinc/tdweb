@@ -21,10 +21,10 @@ if( $logon ) {
 	include 'mp4previewfunc.php' ;
 	
 	if( empty( $_REQUEST['preload'] ) ) {
-		mp4cache_output($_REQUEST[index]);
+		mp4cache_output($_REQUEST['index']);
 	}
 	else {
-		$cachefile = mp4cache_load($_REQUEST[index]); 
+		$cachefile = mp4cache_load($_REQUEST['index']); 
 		if( !empty( $cachefile ) && vfile_exists( $cachefile ) ) {
 			$resp['res'] = 1 ;
 		}

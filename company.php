@@ -373,11 +373,15 @@ $("button#emailsettings").click(function(e){
 // Adding tz auto detection feature 2021-11-02, I don't know why I do this.
 $("button#btDetectTZ").click(function(e){
 	e.preventDefault();
+	// alternative: https://ipapi.co/json, but has rate limitation
 	$.getJSON("http://ip-api.com/json/", function(tz){
-		if( tz.timezone ) {
+		if( tz.status == "success" && tz.timezone ) {
 			$("select[name='TimeZone']").val(tz.timezone);
-			if( tz.country && tz.regionName && tz.city){
-				$("input[name='MapArea']").val(tz.city + ", "+ tz.regionName + ", " + tz.country);
+			if( tz.countryCode && tz.region && tz.city){
+				$("input[name='MapArea']").val(tz.city + ", "+ tz.region + ", " + tz.countryCode);
+				$("input[name='City']").val(tz.city);
+				$("input[name='State']").val(tz.region);
+				$("input[name='Country']").val(tz.countryCode);
 			}
 		}
 	});

@@ -67,8 +67,14 @@
 
 		$mapfilter=array();
 
-		// convert to kmh (from mph)
-		$mapfilter['speedLimit'] = $speedLimit = $_REQUEST['speedLimit']*1.609344 ;		
+		// base on country code now, 2021-11-22
+		if( $_SESSION['country'] == "US") {
+			// convert to kmh (from mph)
+			$mapfilter['speedLimit'] = $speedLimit = $_REQUEST['speedLimit']*1.609344 ;		
+		}
+		else{
+			$mapfilter['speedLimit'] = $speedLimit = $_REQUEST['speedLimit'] ;		
+		}
 		
 		$mapfilter['bSpeeding'] = 	!empty($_REQUEST['bSpeeding']) ;
 		

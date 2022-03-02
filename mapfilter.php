@@ -103,7 +103,16 @@
 <?php } ?>
 
 		<tr>
-			<td colspan="2"><input checked="checked" name="bSpeeding" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_speed.png" /> Speeding Limit: <input maxlength="10" name="speedLimit" size="2" type="text" value="0" /> mph</td>
+			<td colspan="2"><input checked="checked" name="bSpeeding" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_speed.png" /> Speeding Limit: <input maxlength="10" name="speedLimit" size="2" type="text" value="0" />
+			<?php
+				if( $_SESSION['country'] == "US"){
+					echo "mph";
+				}
+				else {
+					echo "km/h";
+				}
+			?>
+			</td>
 		</tr>
 		<tr>
 			<td colspan="2"><input checked="checked" name="bRoute" type="checkbox" /><img alt="" class="evicon" src="res/map_icons_route.png" /> Route </td>
@@ -239,6 +248,9 @@
 <p style="text-align: center;"><button id="reset">Reset</button></p>
 </div>
 <script>
+var country = "<?php
+	echo $_SESSION['country'];
+?>";
 // init mapfilter sections
 $(function(){
 

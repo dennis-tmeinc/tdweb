@@ -94,7 +94,7 @@ else {
 			$_SESSION['xuser_type'] = $row['user_type'] ;
 			$_SESSION['welcome_name'] = $row['first_name'].' '.$row['last_name'] ;
 			if($_SESSION['welcome_name']==' ') $_SESSION['welcome_name']=$_SESSION['xuser'] ;
-			
+
 			// Add company name
 			if( !empty($company_root) && vfile_exists($company_root."/companyinfo.xml") ) {
 				@$xmlcontents = vfile_get_contents( $company_root."/companyinfo.xml" ) ;
@@ -102,10 +102,23 @@ else {
 					@$companyinfo = new SimpleXMLElement( $xmlcontents ) ;
 					if( !empty( $companyinfo ) && !empty( $companyinfo->CompanyName ) ) {
 						$_SESSION['welcome_name'] = $_SESSION['welcome_name']."  -  ".$companyinfo->CompanyName  ;
+						if( isset( $companyinfo->Country ) ){
+							$country = (string) $companyinfo->Country;
+							$country = trim($country);
+						}
 					}
 				}
 			}
-			
+
+			// country code support, for display units (imperial)
+			if( empty($country) || $country == "United States") {
+				$_SESSION['country'] = "US";
+			}
+			else {
+				$_SESSION['country'] = $country;
+			}
+
+			// setup password challenge			
 			$nonce=' ' ;
 			$hexchar="0123456789abcdefghijklmnopqrstuvwxyz" ;
 			for( $i=0; $i<64; $i++) {

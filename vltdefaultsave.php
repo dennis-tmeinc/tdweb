@@ -13,7 +13,8 @@
 
 	if( $logon ) {
 		// get vlt_config field types, (int) filed should be set as number
-		$sql = "SELECT * FROM vlt_config WHERE `index` = 0" ;  // sql to get fields
+		// $sql = "SELECT * FROM vlt_config WHERE `index` = 0" ;  // sql to get fields
+		$sql = "SELECT * FROM vlt_config ;";  // sql to get fields
 		$fields = array();
 		if ($result = $conn->query($sql)) {
 			while( $finfo = $result->fetch_field() ) {
@@ -49,12 +50,11 @@
 		$sql = "DELETE FROM vlt_config WHERE vlt_user_name = '$_SESSION[user]' AND vlt_config_id = '$vltid' " ;
 		$conn->query($sql);
 		
+		// temperatry solution for 'max connt' and 'max bytes' 
 		$esc_req['vlt_maxcount'] = (int)$esc_req['vlt_maxcount'];
 		$esc_req['vlt_maxbytes'] = (int)$esc_req['vlt_maxbytes'];
-		
-		// temperatry solution for 'max connt' and 'max bytes' 
-		// $sql = "INSERT INTO vlt_config (vlt_config_id, vlt_gpio, vlt_impact, vlt_speed, vlt_time_interval, vlt_dist_interval, vlt_temperature, vlt_geo, vlt_idling, vlt_max_count, vlt_max_kb, vlt_user_name ) VALUES ('$vltid', '$vlt_gpio' , '$esc_req[vlt_impact_front],$esc_req[vlt_impact_rear],$esc_req[vlt_impact_side],$esc_req[vlt_impact_bumpy]', '$esc_req[vlt_speed]', '$esc_req[vlt_time_interval]' , '$esc_req[vlt_dist_interval]' ,'$esc_req[vlt_temperature]', '$esc_req[vlt_geo]' ,'$esc_req[vlt_idling]', '$esc_req[vlt_maxcount]', '$esc_req[vlt_maxbytes]', '$_SESSION[user]' ) " ;
 
+		// $sql = "INSERT INTO vlt_config (vlt_config_id, vlt_gpio, vlt_impact, vlt_speed, vlt_time_interval, vlt_dist_interval, vlt_temperature, vlt_geo, vlt_idling, vlt_max_count, vlt_max_kb, vlt_user_name ) VALUES ('$vltid', '$vlt_gpio' , '$esc_req[vlt_impact_front],$esc_req[vlt_impact_rear],$esc_req[vlt_impact_side],$esc_req[vlt_impact_bumpy]', '$esc_req[vlt_speed]', '$esc_req[vlt_time_interval]' , '$esc_req[vlt_dist_interval]' ,'$esc_req[vlt_temperature]', '$esc_req[vlt_geo]' ,'$esc_req[vlt_idling]', '$esc_req[vlt_maxcount]', '$esc_req[vlt_maxbytes]', '$_SESSION[user]' ) " ;
 		$sql = "INSERT INTO vlt_config (vlt_config_id, vlt_gpio, vlt_impact, vlt_hard_brake, vlt_quick_acceleration, vlt_speed, vlt_time_interval, vlt_dist_interval, vlt_temperature, vlt_geo, vlt_idling, vlt_max_count, vlt_max_kb, vlt_user_name ) VALUES ('$vltid', '$vlt_gpio' , '$esc_req[vlt_impact_front],$esc_req[vlt_impact_rear],$esc_req[vlt_impact_side],$esc_req[vlt_impact_bumpy]', '$esc_req[vlt_hard_brake]','$esc_req[vlt_quick_acceleration]', '$esc_req[vlt_speed]', '$esc_req[vlt_time_interval]' , '$esc_req[vlt_dist_interval]' ,'$esc_req[vlt_temperature]', '$esc_req[vlt_geo]' ,'$esc_req[vlt_idling]', '$esc_req[vlt_maxcount]', '$esc_req[vlt_maxbytes]', '$_SESSION[user]' ) " ;
 		if( $conn->query($sql) ) {
 			$resp['res'] |= 1 ;		// success
