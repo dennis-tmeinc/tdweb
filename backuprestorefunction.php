@@ -6,35 +6,31 @@
 //      $fpercent : progress file (already opened)
 // Return:
 //      none
-// By Dennis Chen @ TME	 - 2014-05-05
-// Copyright 2013 Toronto MicroElectronics Inc.
+// By Dennis Chen @ TME	 - 2023-01-25
+// Copyright 2023 Toronto MicroElectronics Inc.
 
-// windows hack on huge file size
-function largefilesize( $path )
+function dbprogress($fpercent, $prog, $msg = "")
 {
-	if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN') {
-		$path = realpath($path) ;
-		if (class_exists("COM")) {
-			@$fsobj = new COM('Scripting.FileSystemObject');
-			if( !empty( $fsobj ) ) {
-				$f = $fsobj->GetFile($path);
-				return $f->Size ;
-			}
-		}
-		$path = escapeshellarg( $path );
-		return trim(exec("for %F in ( $path ) do @echo %~zF"));
-	}
-	return filesize($path);
+    if( $fpercent ) {
+        fseek( $fpercent, 0 ); fwrite($fpercent, strval($prog)); fflush($fpercent);
+    }
+    else {
+        $prog = [
+            "event" => "progress",
+            "progress" => $prog,
+            "message" => $msg
+        ];
+        echo 'data: '. json_encode( $prog ) . "\n\n";
+        ob_flush(); flush();
+    }
 }
-	
+
 function dbrestore( $backupname, $conn, $fpercent ) 
 {
-	if( $fpercent ) {
-		fseek( $fpercent, 0 ); fwrite($fpercent, '0 '); fflush($fpercent);
-	}
+	dbprogress($fpercent, 0);
 
 	$ext=".sql.bz2";
-	$compress_rate = 10.6 ;		// assumed bz2 compression rate
+	$compress_rate = 10.2 ;		// assumed bz2 compression rate
 	@$fin = fopen("compress.bzip2://$backupname$ext", "r");
 	if( empty($fin) ) {
 		$ext=".sql.gz";
@@ -48,67 +44,77 @@ function dbrestore( $backupname, $conn, $fpercent )
 	}
 
 	if( empty($fin) ) {
-		if( $fpercent ) {
-			fseek( $fpercent, 0 ); fwrite($fpercent, '-1\nno fin\n'); fflush($fpercent);
-		}
+		dbprogress($fpercent, -1, "Backup file error!");
 		return;
 	}
 	
-	$fsize = largefilesize("$backupname$ext") ;
+	$fsize = filesize("$backupname$ext") ;
 	$fsize *= $compress_rate ;
 
-	$pgtotal = 0 ;
-	$pgcount = 0 ;
 	$percent = 0 ;
 	$percent_s = 0 ;
+	$ptime = time();
 	
+	$totalread = 0;
 	$statement = '';
-    while (($buffer = fgets($fin, 128*1024)) !== false) {
+    while (($buffer = fgets($fin, 256*1024)) !== false) {
 		set_time_limit(30);
 		$totalread += strlen($buffer);
-		$tr = trim($buffer) ;
-		if( substr($tr,0,2)=='--' || $tr=='' ) {		// comment
-			if( substr( $tr,4,5) == "@PGT:" ) {		// custom progress size 
-				$pgtotal = (real)substr($tr,9);
-			}
+		$buffer = trim($buffer) ;
+		if( substr($buffer,0,2)=='--' || $buffer=='' ) {		// comment or emptyline
 			continue ;
 		}
-		else if( substr($tr,-1,1) == ';' ) {	// end of a statement
+		else if( substr($buffer,-1,1) == ';' ) {	// end of a statement
 			$statement .= $buffer ;
+			$error = false;
 			// execute statement
-			$conn->query($statement);
-			$statement='';
+			try
+			{
+				$result = $conn->query($statement);
+			}
+			catch (mysqli_sql_exception $t)
+			{
+				$error = $t->getMessage();
+			}
+			catch (Throwable $t)
+			{
+				$error = $t->getMessage();
+			}
 
-			// progress
-			if( $pgtotal > 0 ) {
-				$affected_rows = $conn->affected_rows;
-				if( $affected_rows > 0 ) {
-					$pgcount += $affected_rows ;
-					$percent = floor( $pgcount * 100 / $pgtotal) ;
-				}
+			if( $error && !$fpercent ) {
+				$prog = [
+					"event" => "error",
+					"message" => $error
+				];
+				echo 'data: '. json_encode( $prog ) . "\n\n";
+				ob_flush(); flush();
 			}
-			else {
-				$percent = floor( $totalread * 100 / $fsize) ;
-			}
-			
-			if($percent>99)$percent=99 ;
-			if( $percent > $percent_s ) {
-				$percent_s = $percent ;
-				if( $fpercent ) {
-					fseek( $fpercent, 0 ); fwrite($fpercent, "".$percent_s); fflush($fpercent);
-				}
-			}
+
+			$statement='';
 		}
 		else { 
 			$statement .= $buffer ;
+		}
+
+		// progress
+		$percent = floor( $totalread * 100.0 / $fsize) ;
+		if($percent>99) {
+			$percent=99 ;
+		}
+		$xtime = time();
+		if( $percent > $percent_s || ($xtime-$ptime) >= 5 ) {
+			$ptime = $xtime ;
+			$percent_s = $percent ;
+			dbprogress($fpercent, $percent_s );
+            // update session time (back/restore would take very long)
+            session_save('xtime', $xtime);			
 		}
     }
 	
 	fclose($fin);
 	
-	if( $fpercent ) {
-		fseek( $fpercent, 0 ); fwrite($fpercent, "100"); fflush($fpercent);
-	}	
+	dbprogress($fpercent, 100);
+
 }
 	
 ?>

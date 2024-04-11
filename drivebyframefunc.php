@@ -6,8 +6,8 @@
 
 	require_once 'vfile.php' ;
 	
-	if( empty($cache_dir) ) {
-		$cache_dir = "videocache" ;
+	if (empty($cache_dir)) {
+		$cache_dir = sys_get_temp_dir().DIRECTORY_SEPARATOR."tdcache";
 	}
 
 	function drivebyframe_x($tagfile, $channel, $pos )
@@ -41,12 +41,13 @@
 						$part = $pos - $time ;
 					}
 					$namehash = md5( $vid );
-					$imgfile=  $cache_dir ."\\" .$namehash.'_'.$time.'_1.jpg' ;  
+					$imgpath = $cache_dir .DIRECTORY_SEPARATOR ;
+					$imgfile=  $imgpath .$namehash.'_'.$time.'_1.jpg' ;  
 					
 					if( vfile_size( $imgfile ) < 10 ) {
 						set_time_limit(60) ;
 					
-						$cachefn = str_replace ( '/' , DIRECTORY_SEPARATOR , $cache_dir."\\".$namehash.'_'.$time.'_%d.jpg' ) ; 
+						$cachefn = $imgpath.$namehash.'_'.$time.'_%d.jpg' ; 
 						$pvid  = escapeshellarg( $vid );
 						$ptime = escapeshellarg( $time );
 						$pcache = escapeshellarg( $cachefn );
@@ -56,10 +57,10 @@
 						$eret = 1 ;
 						$lline = vfile_exec( $cmdline, $eoutput, $eret ) ;
 					}
-					$fs = vfile_glob(  $cache_dir.'/'.$namehash.'_'.$time.'_*.jpg' ) ;
+					$fs = vfile_glob(  $imgpath.$namehash.'_'.$time.'_*.jpg' ) ;
 					$fc = count( $fs );
 					$part = ((int)($part*$fc)) + 1 ;
-					$imgfile = $cache_dir.'/' .$namehash.'_'.$time.'_'.$part.'.jpg' ;  
+					$imgfile = $imgpath .$namehash.'_'.$time.'_'.$part.'.jpg' ;  
 					
 					return $imgfile ;
 				}
@@ -113,8 +114,9 @@
 	function drivebysframe($videofile, $pos )
 	{
 		global $cache_dir ;
+		$imgpath = $cache_dir . DIRECTORY_SEPARATOR;
 		
-		$imgfile = "$cache_dir\\frame".md5($videofile.$pos).".jpg" ;
+		$imgfile = $imgpath. "frame".md5($videofile.$pos).".jpg" ;
 		$pos += 0.03 ;
 		$pvid = escapeshellarg( $videofile );
 		$pimg = escapeshellarg( $imgfile );
@@ -138,7 +140,7 @@
 			$imgfile = "videocache\\frame".md5($videofile.$pos).".jpg" ;
 		}
 		else {
-			$imgfile = "$cache_dir\\frame".md5($videofile.$pos).".jpg" ;
+			$imgfile = $cache_dir . DIRECTORY_SEPARATOR . 'frame' . md5($videofile.$pos).".jpg" ;
 		}
 		
 		$pvid = escapeshellarg( $videofile );

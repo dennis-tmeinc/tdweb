@@ -212,7 +212,7 @@
 		</tr>
 		<tr>
 			<td><input checked="checked" name="bCoolantTemperature" type="checkbox" />
-			<img alt="" class="evicon" src="res/map_icons_ri.png" /></td><td>Coolant Temperature > </td>
+			<img alt="" class="evicon" src="res/map_icons_hb.png" /></td><td>Coolant Temperature > </td>
 			<td><input name="gCoolantTemperature" size="5" type="text" value="250" /> F </td>
 		</tr>
 		<tr>
@@ -288,7 +288,7 @@ grouplist=<?php
 
 $( ".datetimepicker" ).datetimepicker({
 	dateFormat: "yy-mm-dd",
-	yearRange: "2000:2030",
+	yearRange: "2000:2040",
 	showTime: false ,
 	timeFormat: "H:mm:ss"
 });
@@ -565,17 +565,20 @@ $("button#deletequickfilter").click(function(e){
 
 function filterform_load( param )
 {
-	// preset vehicle list
-	for( i=0; i<vehiclelist.length; i++) {
-		var html="<option>"+vehiclelist[i]+"</option>";
-		$("select[name='vehicleGroupName']").append(html);
+	if( param.vehicleType != 0 ) {
+		list=grouplist ;
 	}
-	for( i=0; i<grouplist.length; i++) {
-		var html="<option>"+grouplist[i]+"</option>";
-		$("select[name='vehicleGroupName']").append(html);
+	else {
+		list=vehiclelist ;
 	}
-	
-	var field
+	let html = "<option>ALL</option>";
+	for( var i=0; i<list.length; i++) {
+		html += "<option>"+list[i]+"</option>" ;
+	}
+	$("select[name='vehicleGroupName']").html(html);
+	$("select[name='vehicleGroupName']").val("ALL");
+
+	var field;
 	for (field in param) {
 		var elm=$("form#filterform input[name='"+field+"']");
 		if( elm.length>0 ) {
@@ -594,7 +597,7 @@ function filterform_load( param )
 			elm.val(param[field]);
 		}
 	}
-	setvehicleType();
+
 	$("#filterform input[name='timeType']").change();
 }
 
@@ -610,12 +613,12 @@ function setvehicleType()
 	else {
 		list=grouplist ;
 	}
+	let html = "<option>ALL</option>";
 	for( var i=0; i<list.length; i++) {
-		var html="<option>"+list[i]+"</option>";
-		$("select[name='vehicleGroupName']").append(html);
+		html += "<option>"+list[i]+"</option>" ;
 	}
-	if( value )
-		$("select[name='vehicleGroupName']").val(value);
+	$("select[name='vehicleGroupName']").html(html);
+	$("select[name='vehicleGroupName']").val("ALL");
 }
 
 setvehicleType();
@@ -647,25 +650,33 @@ function wait( w )
 $("button#generate").click(function(e){
 	e.preventDefault();
 	map_clear();
+	$("td#gen_count").html('');
 	wait(true);
 	var fdata = filterform_data();
-	$.getJSON("mapgenerate.php", fdata, function(resp){
-		wait(false);
-		if( (resp instanceof Array) || resp.res == 1 ) {
-			if( resp.count && resp.count>0 ) {
-				$("td#gen_count").html(resp.count);
+	$.ajax({
+		url: "mapgenerate.php",
+  		dataType: "json",
+		timeout: 28000,
+		method: "POST",
+  		data: fdata,
+  		success: function(resp){
+			if( (resp instanceof Array) || resp.res == 1 ) {
+				if( resp.count && resp.count>0 ) {
+					$("td#gen_count").html(resp.count);
+				}
+				map_generate(resp, fdata);
 			}
-			else {
-				$("td#gen_count").html('');
+			else if( resp.errormsg ) {
+				alert(resp.errormsg);
 			}
-			map_generate(resp, fdata);
+		},
+		error: function(jqXHR, textStatus) { 
+			console.log( "error: " + textStatus ); 
+			$("td#gen_count").html(textStatus);
+		},
+		complete: function(jqXHR, textStatus) { 
+			wait(false);
 		}
-		else if( resp.errormsg ) {
-			alert(resp.errormsg);
-		}
-	}).fail(function(jqXHR, textStatus) { 
-		console.log( "error" ); 
-		wait(false);
 	});
 });	
 
@@ -696,8 +707,22 @@ $("button#reset").click(function(){
 	});
 });
 
-var filter = false ;
-if( sessionStorage ) {
+function save_session() {
+	var tdsess = sessionStorage.getItem('tdsess');
+	var localsession = {} ;
+	if( tdsess ) {
+		localsession = JSON.parse(tdsess);
+	}
+	localsession.mapfilter=filterform_data();
+	if( map ) {
+		var center = map.getCenter();
+		var zoom = map.getZoom();
+		localsession.tdcmap={ lat:center.latitude,lon:center.longitude,zoom:zoom };
+	}
+	sessionStorage.setItem('tdsess', JSON.stringify(localsession));
+}
+
+function load_session() {
 	var tdsess = sessionStorage.getItem('tdsess');
 	var localsession ;
 	if( tdsess ) {
@@ -707,20 +732,13 @@ if( sessionStorage ) {
 		filter = localsession.mapfilter ;
 		filterform_load( filter );
 	}
-	$(window).on( "unload", function(){
-		var tdsess = sessionStorage.getItem('tdsess');
-		var localsession = {} ;
-		if( tdsess ) {
-			localsession = JSON.parse(tdsess);
-		}
-		localsession.mapfilter=filterform_data();
+}
 
-		if( map ) {
-			var center = map.getCenter();
-			var zoom = map.getZoom();
-			localsession.tdcmap={ lat:center.latitude,lon:center.longitude,zoom:zoom };
-		}
-		sessionStorage.setItem('tdsess', JSON.stringify(localsession));
+var filter = false ;
+if( sessionStorage ) {
+	load_session();
+	$(window).on( "unload", function(){
+		save_session();
 	});
 }
 

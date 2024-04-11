@@ -11,7 +11,7 @@
 	
 	if( $logon ) {
 		if( $_SESSION['user'] == 'admin' ) {
-			header( "Content-Type: application/octet-stream" );
+			header( "Content-Type: text/csv" );
 			header( "Content-Disposition: attachment; filename=users.csv" );   	
 
 			$output = fopen('php://output', 'w');

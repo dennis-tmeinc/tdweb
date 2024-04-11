@@ -71,10 +71,6 @@
 			"page" => $_REQUEST['page'] ,
 			"rows" => array()  );
 		
-		if( $grid['page'] > $grid['total'] ) {
-			$grid['page']=$grid['total'] ;
-		}
-		if( $grid['page'] < 1 ) $grid['page'] = 1 ;
 		$start = $_REQUEST['rows'] * ($grid['page']-1) ;
 			
 		$alert_code = array(

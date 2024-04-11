@@ -61,10 +61,9 @@
 			"page" => $_REQUEST['page'] ,
 			"rows" => array()  );
 			
-		if( $grid['page'] > $grid['total'] ) {
-			$grid['page']=$grid['total'] ;
-		}
 		$start = $_REQUEST['rows'] * ($grid['page']-1) ;
+		if( $start < 0 )
+			$start = 0;
 
 		// special icon id,
 		// 10000:"Speeding",
@@ -86,7 +85,7 @@
 				if( $_SESSION['mapfilter']['bSpeeding'] && $vl_speed > $_SESSION['mapfilter']['speedLimit'] ) {
 					$icon = 10000 ;		// speeding icon
 				}
-				$icon .= '?'. round($vl_heading/20) * 20 ;
+				$icon .= '?'. floor($vl_heading/20) * 20 ;
 			}
 			else if( $icon == 16 ) {	// g-force event
 				$gforce_icons = array();
@@ -151,17 +150,18 @@
 				// for country code, mph or km/h
 				if( $_SESSION['country'] == "US") {
 					// mph
-					$speed = round($row[7]/ 1.609334 , 1);
+					$speed = round($row[7] / 1.609334 , 1);
 				}
 				else {
 					// km/h
 					$speed = round($row[7], 1);
 				}
+				$co = round($row[5], 4).",".round($row[6], 4);
 				$grid['rows'][] = array(
 						"id" => $row[0],
-						"cell" => array( 
-							$row[1], $row[9], vl_icon( $row ), $row[2], "$h:$m:$s", (string)$speed, $row[5].",".$row[6] ,""
-						) );
+						"cell" => array(
+							$row[1], $row[9], vl_icon( $row ), $row[2], "$h:$m:$s", (string)$speed, $co
+						));
 			}
 			$result->free();
 		}

@@ -29,6 +29,19 @@
 				$conn->query($sql);
 			}
 
+			// register all ivuid, asked by @tongrui 2022-12
+			if( !empty($td_ivu_setup) && !empty($_SESSION['clientid']) ) {
+				$sql = 'SELECT vehicle_ivuid FROM vehicle;';
+				if($result=$conn->query($sql)) {
+					while( $row=$result->fetch_array() ) {
+						if(!empty($row[0])){
+							$p1 = escapeshellarg( $row[0] );
+							$p2 = escapeshellarg( $_SESSION['clientid'] );
+							exec($td_ivu_setup." $p1 $p2");
+						}
+					}
+				}
+			}
 		}
 	}
 	

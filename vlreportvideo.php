@@ -26,9 +26,12 @@
 		$hoursofvideo = 0;
 		$videoclips = 0;
 		
-//		$sql = "SELECT count(*), sum(TimeStampDiff(SECOND, time_start, time_end)) FROM `videoclip` WHERE vehicle_name in ($vehiclelist) AND time_start BETWEEN '$startTime' AND '$endTime' ;";
-		$sql = "SELECT count(*), sum(TimeStampDiff(SECOND, time_start, time_end)) FROM `videoclip` WHERE vehicle_name in ($vehiclelist) AND ((time_start BETWEEN '$startTime' AND '$endTime') OR (time_end BETWEEN '$startTime' AND '$endTime'));";		
-		
+		//$sql = "SELECT count(*), sum(TimeStampDiff(SECOND, time_start, time_end)) FROM `videoclip` WHERE vehicle_name in ($vehiclelist) AND ((time_start BETWEEN '$startTime' AND '$endTime') OR (time_end BETWEEN '$startTime' AND '$endTime'));";		
+		$sql = "SELECT count(*), sum(TimeStampDiff(SECOND, time_start, time_end)) FROM `videoclip` WHERE ((time_start BETWEEN '$startTime' AND '$endTime') OR (time_end BETWEEN '$startTime' AND '$endTime'))";		
+		if( !empty($vehiclelist) ) {
+			$sql .= " AND vehicle_name in ($vehiclelist)";
+		}
+
 		if( $result=$conn->query($sql) ) {
 			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
 				$hoursofvideo = $row[1] ;

@@ -80,10 +80,9 @@
 				}
 
 				fseek( $fvlt, 0, SEEK_SET );
+                ftruncate( $fvlt, 0 );
 				fwrite( $fvlt, json_encode($vlt) );
-		
-				ftruncate( $fvlt, ftell($fvlt) );
-				fflush( $flvt ) ;              	// flush before release the lock
+				fflush( $fvlt ) ;              	// flush before release the lock
 			}
 			
 			flock( $fvlt, LOCK_UN );
@@ -95,7 +94,3 @@
 	}
 	echo json_encode( $resp );
 ?>
-
-
-
-

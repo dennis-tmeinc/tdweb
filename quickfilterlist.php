@@ -12,7 +12,7 @@
 
 	if( $logon ) {
 		if( empty($_REQUEST['quickfiltername']) ) {
-			$sql="SELECT `name` as quickfiltername FROM quickfilter; " ;
+			$sql="SELECT `name` FROM quickfilter; " ;
 		}
 		else {
 			$sql="SELECT * FROM quickfilter WHERE `name` = '$_REQUEST[quickfiltername]';" ;

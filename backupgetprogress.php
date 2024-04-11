@@ -14,20 +14,11 @@
 	$resp=array();
 	$resp['res']=0;
 	if( $logon ) {
-		if( empty($_REQUEST['progressfile'] ) ) {
-			if( empty( $backup_path ) ) {
-				$backup_path=sys_get_temp_dir();
-			}
-			$progressfile = $backup_path.'/bkpercent' ;
-		}
-		else {
-			$progressfile = $_REQUEST['progressfile'] ;
-		}
-		
+		$progressfile = $_REQUEST['progressfile'] ;
 		$resp['percentage'] = '0';
 		
 		if( $fpercent = fopen($progressfile, 'r') ) {
-			$resp['percentage'] = fgets($fpercent, 5);
+			$resp['percentage'] = (int) fgets($fpercent, 10);
 			fclose($fpercent);
 			$resp['res']=1 ;
 		}

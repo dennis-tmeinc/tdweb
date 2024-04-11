@@ -9,6 +9,7 @@
 //
 
 include_once 'vfile.php' ;
+require_once 'session.php';
 
 function fcmp($a, $b)
 {
@@ -28,7 +29,7 @@ function mp4cache_clear( $pattern )
 			if( $st['mtime'] > $st['atime'] ) {
 				$st['atime'] = $st['mtime'] ;		// noatime fs fix
 			}
-			if( $tnow - $st['atime'] > 10*24*60*60 ) {
+			if( $tnow - $st['atime'] > 15*24*60*60 ) {
 				@vfile_unlink( $filename );
 			}
 			else {
@@ -64,24 +65,17 @@ function mp4cache_load( $index )
 {
 	global $conn ;
 	global $cache_dir ;
-	global $smart_server, $smart_user, $smart_password, $smart_database ;
+	global $smart_host, $smart_user, $smart_password, $smart_database ;
 	
 	$preview_file = NULL ;
 	
 	if( empty( $conn ) )
-		@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
+		@$conn=new mysqli($smart_host, $smart_user, $smart_password, $smart_database );
 
 	$sql = "SELECT * FROM videoclip WHERE `index` = $index ;" ;
 
 	if($result=$conn->query($sql)) {
 		if( $row=$result->fetch_array() ) {
-			if( vfile_realpath( "/" ) == "/" ) {
-				$dirc = "/" ;
-			}
-			else {
-				$dirc = "\\" ;
-			}
-
 			$hash = md5($row['path']);
 
 			if( !empty($row['mp4_path']) && vfile_exists( $row['mp4_path'] ) ) {
@@ -97,10 +91,10 @@ function mp4cache_load( $index )
 					flock( $lockf, LOCK_EX ) ;		// exclusive lock
 					
 					if( vfile_remote() ) {
-						$preview_dir = "videocache".$dirc ;
+						$preview_dir = "videocache".DIRECTORY_SEPARATOR;
 					}
 					else {
-						$preview_dir = $cache_dir.$dirc ;
+						$preview_dir = $cache_dir.DIRECTORY_SEPARATOR ;
 					}
 
 					$preview_file = $preview_dir."v".$hash.".mp4" ;
@@ -112,6 +106,19 @@ function mp4cache_load( $index )
 
 						// convert
 						$ifile = $row['path'] ;
+
+						// check and convert relative path to abs path
+						if( !empty($company_root) ) {
+							if( $ifile[0] == '/' || 
+								$ifile[0] == '\\' || 
+								$ifile[1] == ':' )
+							{
+							}
+							else {
+								$ifile = $company_root . DIRECTORY_SEPARATOR . $ifile ;
+							}
+						}
+
 						if( vfile_exists( $ifile ) ){
 							set_time_limit(600) ;
 							$tmp_mp4 = $preview_dir."t".$hash.".mp4" ;

@@ -104,21 +104,21 @@
 					.(empty($esc_req['vehicle_out_of_service'])?'0':'1').
 					") ;" ;
 			}
-			$resp['sql']=$sql ;
 			
 			if( $conn->query($sql) ) {
 				$resp['res']=1 ;	// success
 				// 2021-02-26, call IVUSetup.exe -register [ivu id] [client id]
-				if( !empty($_REQUEST['vehicle_ivuid'] )) {
-					if( empty($_SESSION['clientid'])) {
-						$clientid="";
-					}
-					else {
-						$clientid=$_SESSION['clientid'];
-					}
+				if( !empty($_REQUEST['vehicle_ivuid'] ) && !empty($td_ivu_setup) && !empty($_SESSION['clientid']) ) {
+					$clientid=$_SESSION['clientid'];
 					$p1 = escapeshellarg( $_REQUEST['vehicle_ivuid'] );
 					$p2 = escapeshellarg( $clientid );
-					exec($td_ivu_setup." $p1 $p2");
+					$output = null;
+					$result_code = 0;
+					exec($td_ivu_setup." $p1 $p2", $output, $result_code);
+					if( $result_code != 0 ) {
+						$resp['res']=0;
+						$resp['errormsg']="IVU setup error!";
+					}
 				}
 			}
 			else {

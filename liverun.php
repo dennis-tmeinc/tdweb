@@ -112,10 +112,9 @@ $audio_samplerate = 8000 ;
 $afile = NULL ;
 $vfile = NULL ;
 
-if( empty($cache_dir) || !is_dir($cache_dir) ) {
-	$cache_dir = "videocache" ;
+if (empty($cache_dir)) {
+    $cache_dir = sys_get_temp_dir().DIRECTORY_SEPARATOR."tdcache";
 }
-$cache_dir = realpath( $cache_dir );
 $video_prefix = $cache_dir . DIRECTORY_SEPARATOR . "vlp${phone}c${camera}" ;
 
 $video_live = true ;

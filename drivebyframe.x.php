@@ -45,11 +45,12 @@
 						$part = $_REQUEST['time'] - $time ;
 					}
 					$namehash = md5( $vid );
-					$imgfile=  $cache_dir. DIRECTORY_SEPARATOR .$namehash.'_'.$time.'_1.jpg' ;  
+					$imgpath = $cache_dir. DIRECTORY_SEPARATOR ;
+					$imgfile=  $imgpath .$namehash.'_'.$time.'_1.jpg' ;  
 					
 					
 					if( vfile_size( $imgfile ) < 10 ) {
-						$cachefn = "$cache_dir". DIRECTORY_SEPARATOR .$namehash.'_'.$time.'_%d.jpg' ;  
+						$cachefn = $imgpath.$namehash.'_'.$time.'_%d.jpg' ;  
 						$cmdline = "bin\\ffmpeg.exe -i $vid -ss $time -t 1.02 -y $cachefn" ;
 						
 						set_time_limit(60) ;
@@ -58,10 +59,10 @@
 						$lline = vfile_exec( $cmdline, $eoutput, $eret ) ;
 						
 					}
-					$fs = vfile_glob(  "$cache_dir". DIRECTORY_SEPARATOR .$namehash.'_'.$time.'_*.jpg' ) ;
+					$fs = vfile_glob( $imgpath .$namehash.'_'.$time.'_*.jpg' ) ;
 					$fc = count( $fs );
 					$part = ((int)($part*$fc)) + 1 ;
-					$imgfile = "$cache_dir". DIRECTORY_SEPARATOR .$namehash.'_'.$time.'_'.$part.'.jpg' ;  
+					$imgfile = $imgpath . $namehash.'_'.$time.'_'.$part.'.jpg' ;  
 					
 					$imgdata = vfile_get_contents( $imgfile );
 					if( $imgdata )

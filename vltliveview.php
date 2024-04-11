@@ -34,12 +34,12 @@
 				$info['playmode'] = "live" ;
 			
 			// assing info['encoder']
-			if( empty( $info['type'] ) || (int)$info['type'] == 5 ) {
+			// if( empty( $info['type'] ) || (int)$info['type'] == 5 ) {
 				$info['encoder'] = "266" ;		// support 266 only now
-			}
-
+			//}
+			
 			$server = array();
-			$server['protocol'] = "dvr" ;		// this default protocol
+			$server['protocol'] = "dvr" ;		// this is default protocol
 			if( !empty( $req['ip'] ) ) {
 				$server['host'] = $req['ip'] ;
 			}
@@ -55,11 +55,26 @@
 				if( $server['protocol'] == "relay" ) {
 					$info['support_relay'] = 1 ;
 					if( empty( $server['host'] ) ) {
-						$server['host'] = file_get_contents("http://tdlive.ignorelist.com/vlt/myip.php");
+						$server['host'] = file_get_contents("https://api.ipify.org/");
 					}
 				}
 			}
-			
+
+			$server["sessionidname"] = $session_idname ;
+			$server[$session_idname] = session_id() ;
+
+			$protocol = $_SERVER["REQUEST_SCHEME"] ;
+			$host = $_SERVER['HTTP_HOST'];
+			$port = $_SERVER["SERVER_PORT"];
+			if( $port == "443" || $port == "80" ){
+				$port = '';
+			}
+			else {
+				$port = ':'.$port;
+			}
+			$app = dirname( $_SERVER["SCRIPT_NAME"] )."/istream.php" ;
+			$server['url'] = "$protocol://$host$port$app" ;
+
 			$dpl = array();
 			$dpl["server"] = $server ;
 			$dpl['info'] = $info ;

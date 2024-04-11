@@ -26,7 +26,7 @@ function playbackcontext( $index, $vehicle_name, $playtime )
 	}
 	
 	$server['port']=$_SERVER["SERVER_PORT"];
-	$server['host']=$_SERVER["SERVER_NAME"];
+	$server['host']=$_SERVER['HTTP_HOST'];
 	
 	if( empty($support_https_playback) && $server['protocol'] == "https" ) {
 		// https not supported
@@ -35,7 +35,11 @@ function playbackcontext( $index, $vehicle_name, $playtime )
 	}
 	
 	$server['app']=dirname( $_SERVER["SCRIPT_NAME"] )."/istream.php" ;
-	$server['url']= $server['protocol'].'://'.$server['host'].":".$server['port'].$server['app'] ;
+	$port="";
+	if($server['port']!="443" && $server['port']!="80" ){
+		$port = ":$server[port]";
+	}
+	$server['url'] = "$server[protocol]://$server[host]$port$server[app]" ;
 	$server['sessionidname']=session_name();
 	$server[$server['sessionidname']]=session_id() ;
 	
@@ -63,11 +67,10 @@ function playbackcontext( $index, $vehicle_name, $playtime )
 	}
 	else {
 		$info['playtime'] = $playtime ;
-		$sql = "SELECT vehicle_name, path FROM videoclip WHERE vehicle_name = '$vehicle_name' DESC LIMIT 1;" ;
+		$sql = "SELECT vehicle_name, path FROM videoclip WHERE vehicle_name = '$vehicle_name' ORDER BY time_start DESC LIMIT 1";
 		if( $result = $conn->query($sql) ) {
 			if( $row=$result->fetch_array() ) {
 				$info['name'] = $row['vehicle_name'] ;
-				
 				$path_parts = pathinfo($row['path']);
 				$info['encoder'] = $path_parts['extension'] ;
 			}

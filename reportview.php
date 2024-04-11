@@ -12,15 +12,15 @@ session_save('mapfilter', array() );
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta content="Touch Down Center by TME" name="description" />
 	<meta content="Dennis Chen @ TME, 2013-05-15" name="author" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="//code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css"><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="https://libs.cdnjs.net/jqueryui/<?php echo $jquiver; ?>/themes/<?php echo $jqtheme; ?>/jquery-ui.min.css"><script src="https://libs.cdnjs.net/jquery/<?php echo $jqver; ?>/jquery.min.js"></script><script src="https://libs.cdnjs.net/jqueryui/<?php echo $jquiver; ?>/jquery-ui.min.js"></script>
 	<script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
-	<link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
+	<link rel="stylesheet" href="https://libs.cdnjs.net/free-jqgrid/4.14.1/css/ui.jqgrid.min.css"><script src="https://libs.cdnjs.net/free-jqgrid/4.14.1/i18n/min/grid.locale-en.js"></script><script src="https://libs.cdnjs.net/free-jqgrid/4.14.1/jquery.jqgrid.min.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	.summarytable {
 		min-width:760px;
 	}
 	</style>
-	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
+	<link rel="stylesheet" href="https://libs.cdnjs.net/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.css"><script src="https://libs.cdnjs.net/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.js"></script>
 <script src="td_alert.js"></script><script>
 // start up 
 
@@ -64,7 +64,7 @@ $("#vllist").jqGrid({
       {name:'vl_coordinate', index:'vl_lat', width:250, sortable: true, hidden: true },
       {name:'vl_address', index:'vl_addr', width:250, sortable: false },
     ],
-   	rowNum:100,
+   	rowNum:50,
 	rowList: [20, 50, 100, 200],
    	mtype: "GET",
 	rownumbers: true,
@@ -80,7 +80,7 @@ $("#vllist").jqGrid({
 		var i ;
 		var pinicons = {
 			1:"res/map_icons_stop.png",
-			2:"route_icon.php?",
+			2:"route_icon.php",
 			4:"res/map_icons_idle.png",
 			10:"res/map_icons_dooropen.png",
 			11:"res/map_icons_doorclose.png",
@@ -118,10 +118,11 @@ $("#vllist").jqGrid({
 				data.rows[i].cell[2]='<img src="'+ pinicons[ icon ] + "?deg=" + nicon.substr(heading+1,5) +'" height="16" width="16" />';
 			}
 			else if( typeof nicon == 'object' ){
-				data.rows[i].cell[2] = "";
+				icon = "";
 				for (var ic=0;ic<nicon.length;ic++) {
-					data.rows[i].cell[2] += '<img src="'+ pinicons[ nicon[ic] ] +'" height="16" width="16" />';
+					icon += '<img src="'+ pinicons[ nicon[ic] ] +'" height="16" width="16" />';
 				}
+				data.rows[i].cell[2] = icon ;
 			}
 			else {
 				icon = pinicons[ nicon ] ;
@@ -131,33 +132,57 @@ $("#vllist").jqGrid({
     },
 	loadComplete: function(data){
 		if( data && data.rows ) {
+			var reststop = false ;
 			function loadAddress( id, coor ) {
-				$.ajax({
-					url: "https://dev.virtualearth.net/REST/v1/Locations/" + coor,
-					data: {
-						includeEntityTypes: "Address",
-						maxResults : 1,
-						key : "<?php echo $map_credentials ; ?>",
-					},
-					dataType: "jsonp" ,
-					jsonp: "jsonp",
-					success: function( location ) {
-						var addr ;
-						try{
-							addr = location.resourceSets[0].resources[0].address.formattedAddress ;
-						}
-						catch( err ) {
-							addr = "(Address not available)" ;
-						}
-						finally {
-							$("#vllist").jqGrid('setCell', id, 8, addr );
-						}
+				let geoaddr = "https://dvp.my247now.com/dvp/geoaddr.php";
+				$.getJSON(geoaddr, {c:'query',coor:coor}, function( data ) {
+					if( data.res ) {
+						$("#vllist").jqGrid('setCell', id, 8, data.address );
+					}
+					else {
+						if( reststop ) return ;
+						$.ajax({
+							url: "https://dev.virtualearth.net/REST/v1/Locations/" + coor,
+							data: {
+								includeEntityTypes: "Address",
+								maxResults : 1,
+								key : "<?php echo $map_credentials ; ?>",
+							},
+							dataType: "jsonp" ,
+							jsonp: "jsonp",
+							success: function( location ) {
+								let addr = "(Address not available)" ;
+								try{
+									if( location.statusCode == 200 ) {
+										try {
+											addr = location.resourceSets[0].resources[0].address.formattedAddress ;
+										}
+										catch( erraddr ) {
+											addr = "";
+										}
+										$.post( geoaddr, {c:'save',coor:coor, address:addr} );
+									}
+									else {
+										reststop = true;
+										addr = "Error:" + location.statusDescription;
+									}
+								}
+								catch( err ) {
+									addr = "(Address Error)" ;
+								}
+								finally {
+									$("#vllist").jqGrid('setCell', id, 8, addr );
+								}
+							}
+						});
 					}
 				});
 			}
 			var i ;
 			for( i in data.rows ) {
-				loadAddress( data.rows[i].id, data.rows[i].cell[6] ) ;
+				let cell = data.rows[i].cell;
+				if( cell.length<8 || cell[7].length < 1 )
+					loadAddress( data.rows[i].id, data.rows[i].cell[6] ) ;
 			}
 		}
 	},

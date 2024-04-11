@@ -37,12 +37,18 @@
 		$f = fopen($cfg,"r+");
 		if( $f ) {
 			if( is_string( $value ) ) {
-				$xline = $key."=\"".addslashes($value)."\" ;" ;
+				$value = trim($value) ;
+				if( strlen($value) == 0 ) {
+					$xline="";
+				}
+				else {
+					$xline = $key." = \"".addslashes($value)."\";" ;
+				}
 			}
 			else {
 				$xline = "$key=$value ;" ;
 			}
-				
+
 			$lines = array();
 			while( ($line=fgets($f)) ) {
 				$line = trim( $line );
@@ -51,13 +57,15 @@
 					if( count($x) > 1 ) {
 						$k = trim( $x[0] ) ;
 						if( $k == $key ) {
-							$lines[] = $xline ;
-							$xline = '' ;
+							if( !empty($xline) ) {
+								$lines[] = $xline ;
+								$xline = "" ;
+							}
 						}
 						else {
 							$lines[] = $line ;
 						}
-					}	
+					}
 				}
 			}
 			if( !empty($xline) ) {
@@ -103,6 +111,19 @@
 				goto done ;
 			}
 
+			// check global client id, url example: "https://dvp.my247now.com/dvp/ivudb.php?clientid=abc"
+			$query = array(
+                "clientid"=> $_REQUEST['CompanyId']
+            );
+            $ivudb = file_get_contents( "https://dvp.my247now.com/dvp/ivudb.php?".http_build_query($query));
+			if( $ivudb ) {
+				$jdb = json_decode( $ivudb, true);
+				if( !empty($jdb['res']) && !empty($jdb['rows']) ){
+					$resp['errormsg'] = "This company id has been used, please enter a new company id!" ;
+					goto done ;
+				} 
+			}
+
 			// to create a new company
 			$company_root = $_REQUEST['CompanyRootDir'] ;
 
@@ -114,17 +135,20 @@
 			fclose( $cfile );
 
 			set_var( $cfgfile, "\$company_root", $company_root );
-			set_var( $cfgfile, "\$smart_database", $_REQUEST['Database'] );		
+			set_var( $cfgfile, "\$smart_database", $_REQUEST['Database'] );
 
 			// create root folder
 			vfile_mkdir( $company_root );
 
 		}
 
-		if( !empty($_REQUEST['TimeZone']) )
-			set_var( $cfgfile, "\$timezone", $_REQUEST['TimeZone'] );
-		if( !empty($_REQUEST['MapArea']) )
-			set_var( $cfgfile, "\$map_area", $_REQUEST['MapArea'] );
+		// add video relay server per client. (2022-12-01)
+		if( isset($_REQUEST['VideoRelay'] ) ){
+			set_var( $cfgfile, "\$liveplay_host", $_REQUEST['VideoRelay'] );		
+		}
+
+		set_var( $cfgfile, "\$timezone", $_REQUEST['TimeZone'] );
+		set_var( $cfgfile, "\$map_area", $_REQUEST['MapArea'] );
 		$SessionTimeout = (int)$session_timeout ;
 		if( !empty($_REQUEST['SessionTimeout']) ) {
 			$SessionTimeout = (int)$_REQUEST['SessionTimeout'] ;
@@ -182,6 +206,7 @@
 				if( $ret != 0 ) {
 					$resp['errormsg']='Creating database failed' ;
 					$resp['res'] = 0 ;
+					unlink($cfgfile);
 				}
 				else {
 					$resp['errormsg']='success' ;

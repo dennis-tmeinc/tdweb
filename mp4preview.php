@@ -13,8 +13,7 @@ include_once "session.php" ;
 include_once 'vfile.php' ;
 
 if( $logon ) {
-	@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-	
+
 	if( !empty( $_REQUEST['preloadsize'] ) )
 		$mp4preloadsize = (int)$_REQUEST['preloadsize'] ;
 

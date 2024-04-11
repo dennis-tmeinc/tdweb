@@ -237,7 +237,9 @@ if( !empty($_REQUEST['n']) && !empty($_REQUEST['c']) ) {
 			}
 			flock( $f, LOCK_UN );
 			fclose( $f );
-			if( !empty($mtime) ) touch($file, $mtime);
+			if( !empty($mtime) ) {
+				touch($file, $mtime);
+			}
 		}
 		break;		
 		

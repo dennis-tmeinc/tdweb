@@ -10,9 +10,9 @@ session_save('videofilter','');
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">
 	<meta name="author" content="Dennis Chen @ TME, 2013-05-24">		
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="//code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css"><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="https://libs.cdnjs.net/jqueryui/<?php echo $jquiver; ?>/themes/<?php echo $jqtheme; ?>/jquery-ui.min.css"><script src="https://libs.cdnjs.net/jquery/<?php echo $jqver; ?>/jquery.min.js"></script><script src="https://libs.cdnjs.net/jqueryui/<?php echo $jquiver; ?>/jquery-ui.min.js"></script>
 	<script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
-	<link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
+	<link rel="stylesheet" href="https://libs.cdnjs.net/free-jqgrid/4.14.1/css/ui.jqgrid.min.css"><script src="https://libs.cdnjs.net/free-jqgrid/4.14.1/i18n/min/grid.locale-en.js"></script><script src="https://libs.cdnjs.net/free-jqgrid/4.14.1/jquery.jqgrid.min.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
       #search {
         font-size:20px;
@@ -168,7 +168,7 @@ if( navigator.platform == 'Win32' || navigator.platform == 'Win64' )  {
 			return ;
 		}
 		$("#formplayvideo input[name='index']").val(id);
-		$("#formplayvideo input[name='vehicle_name']").val($("#videolist").getCell(id,1));
+		$("#formplayvideo input[name='vehicle_name']").val($("#videolist").getCell(id,2));
 		$('#formplayvideo').submit();
 	});
 }
@@ -476,7 +476,7 @@ $("#rcontainer").show('slow' );
 Groups &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="selectallgroup">Select All</button>
 <br/>
 <select multiple="true" name="groups[]" size="8" style="min-width:13em;" > <?php 
-  $sql="SELECT `name` FROM vgroup ORDER BY `name ;" ;
+  $sql="SELECT `name` FROM vgroup ORDER BY `name` ;" ;
   if( $result=$conn->query($sql) ) {
 	while( $row = $result->fetch_array() ) { 
 		echo "<option>$row[name]</option>" ;
@@ -512,6 +512,7 @@ Vehicles &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<button id="selectallvehicle">Select All<
 <?php } else { ?>
   <input   name="btset" href="videosrequest.php" id="btvideoreq" type="radio" /><label for="btvideoreq"> Request Video Clips</label>
 <?php } ?>
+  <input   name="btset" href="videosrequestevent.php" id="btvideoreqevent" type="radio" /><label for="btvideoreqevent"> Request Video Clips on Events </label>
 </p>
   
 <h4>Browse &amp; Manage Videos</h4>

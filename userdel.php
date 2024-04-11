@@ -25,9 +25,6 @@
 		    ( $_SESSION['user'] == 'admin' ||  $_SESSION['user'] == $_REQUEST['username'] ) )
 		{	// only one admin can do deleting.  not on admin self
 		
-			// MySQL connection
-			$conn=mysqli_connect($smart_server, $smart_user, $smart_password, $smart_database );
-			
 			// escaped string for SQL
 			$esc_req=array();
 			foreach( $_REQUEST as $key => $value )
@@ -36,7 +33,7 @@
 			}
 			
 			$sql="DELETE FROM app_user WHERE user_name = '$esc_req[username]' ;";
-			if( mysqli_query($conn, $sql) ) {
+			if( $conn->query($sql) ) {
 				if( $_SESSION['user'] == $_REQUEST['username'] ) {
 					// current user removed!!!
 					session_save('user', '');	// stop this session

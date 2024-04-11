@@ -12,11 +12,11 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">
 	<meta name="author" content="Dennis Chen @ TME, 2013-05-15">	
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="//code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css"><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="https://libs.cdnjs.net/jqueryui/<?php echo $jquiver; ?>/themes/<?php echo $jqtheme; ?>/jquery-ui.min.css"><script src="https://libs.cdnjs.net/jquery/<?php echo $jqver; ?>/jquery.min.js"></script><script src="https://libs.cdnjs.net/jqueryui/<?php echo $jquiver; ?>/jquery-ui.min.js"></script>
 	<script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	</style>
-	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
+	<link rel="stylesheet" href="https://libs.cdnjs.net/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.css"><script src="https://libs.cdnjs.net/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.js"></script>
 	<script src="td_alert.js"></script>
 	<script>
 // start up 
@@ -562,8 +562,9 @@ function map_generate(mapevent, formdata)
 	// stop player sync (v3.0)
 	playerinsync=0 ;
 	$("button#playsync").button( "option", "label", syncLabel1 );
-			
+	let mapload = false ;
 	if( mapevent.res==1 && mapevent.zone && mapevent.zone.north != null ) {
+		map_search = formdata ;
 		if( formdata.zoneName != "Current Map" ) {	// don't change view on 'User Defined Zone'
 			if( mapevent.zone.north == mapevent.zone.south ) {
 				mapevent.zone.north=parseFloat(mapevent.zone.north)+0.003 ;
@@ -573,8 +574,9 @@ function map_generate(mapevent, formdata)
 				new Microsoft.Maps.Location( mapevent.zone.north, mapevent.zone.west ),
 				new Microsoft.Maps.Location( mapevent.zone.south, mapevent.zone.east  )
 			] )});
+			mapload = true;
 		}
-		map_search = formdata ;
+		if(!mapload)
 		setTimeout(function(){
 			if( !mapmove ) {
 				loadvlmap();
@@ -792,10 +794,7 @@ function loadvlmap()
 
 </div>
 
-<div id="rcontainer">
-
-<?php include "mapfilter.php" ; ?>
-
+<div id="rcontainer"><?php include "mapfilter.php" ; ?>
 <div id="workarea">
 <div id="tdcmap">Maps</div>
 

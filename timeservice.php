@@ -51,6 +51,10 @@ $result['localtime'] = date( $timeformat, $ts );
 $result['UTC'] = gmdate( $timeformat, $ts);
 $result['status']="OK";
 
+if( !empty($_REQUEST['vhost']) && !empty($liveplay_host)) {
+    $result['vhost']=$liveplay_host ;
+}
+
 if( !empty( $result ) ) {
 	header("Content-Type: application/json");
 	echo json_encode( $result, JSON_PRETTY_PRINT );

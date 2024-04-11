@@ -43,17 +43,47 @@
 			if( !empty( $email['notes'] ) ) {
 				$message .= "Notes:\n". $email['notes'] ; 
 			}
-			$attachment=array();
-			$attachment[0]['name'] = "DriveByReport.pdf" ;
-			$attachment[0]['content'] = $pdf_buffer ;
 			
-			if( sendmail_secure( $_REQUEST['to'], $_REQUEST['from'], $subject, $message, $attachment ) ) {
-				$resp['res'] = 1 ;
-				
+			if( empty($use_tdcmail) ) {
+				$attachment=array();
+				$attachment[0]['name'] = "DriveByReport.pdf" ;
+				$attachment[0]['content'] = $pdf_buffer ;
+				if( sendmail_secure( $_REQUEST['to'], $_REQUEST['from'], $subject, $message, $attachment ) ) {
+					$resp['res'] = 1 ;
+				}
+			}
+			else {
+				// use tdc mail server through tdc.my247now.com
+				$content = array(
+					'to' => $email['to'],
+					'subject' => $subject,
+					'message' => $message,
+					'attachment_name' => "DriveByReport.pdf",
+					'attachment' => $pdf_buffer
+				);
+				$sslctx = stream_context_create(array(
+					'http' =>
+						array(
+							'method'  => 'POST',
+							'header'  => 'Content-type: application/x-www-form-urlencoded',
+							'content' => http_build_query($content)
+						),
+					'ssl' =>
+						array(
+							'verify_peer_name' => false,
+							'allow_self_signed' => true
+						)
+						));
+				$rsp = file_get_contents( 'https://tdc.my247now.com/tdc/sendmail.php', false, $sslctx );
+				if( $rsp == "Mail Sent!" ) {
+					$resp['res'] = 1 ;
+				}
+			}
+
+			if( $resp['res']  ) {
 				// update event status
 				$sql = "UPDATE drive_by_event SET `email_status` = 'Sent', `sentto` = '$_REQUEST[to]'  WHERE `idx` = $_REQUEST[tag] " ;
 				$conn->query($sql) ;
-
 			}
 		}
 

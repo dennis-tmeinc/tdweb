@@ -4,28 +4,22 @@
 // By Dennis Chen @ TME	 - 2013-06-15
 // Copyright 2013 Toronto MicroElectronics Inc.
 
-include_once 'config.php';
+include 'config.php';
 
 // all default global path/dir
-if (!empty($session_path)) {
-    if (!is_dir($session_path)) {
-        if (!mkdir($session_path, 0777, true)) {
-            $session_path = "session";
-        }
-    }
-} else {
-    $session_path = "session";
+if (empty($session_path) || !is_dir($session_path)) {
+    $session_path = sys_get_temp_dir() ;
 }
-if (!empty($cache_dir)) {
-    if (!is_dir($cache_dir)) {
-        if (!mkdir($cache_dir, 0777, true)) {
-            $cache_dir = "videocache";
-        }
-    }
-} else {
-    $cache_dir = "videocache";
+
+if (empty($cache_dir)) {
+    $cache_dir = sys_get_temp_dir().DIRECTORY_SEPARATOR."tdcache";
 }
-$cache_dir = realpath($cache_dir);
+if (!is_dir($cache_dir)) {
+    if (!mkdir($cache_dir, 0777, true)) {
+        $cache_dir = "videocache";
+    }
+}
+
 if (empty($client_dir) || !is_dir($client_dir)) {
     $client_dir = "client";
 }
@@ -55,17 +49,27 @@ if (empty($product_name)) {
 }
 
 if (empty($td_conf)) {
-    $td_conf = "C:\\SmartSvrApps\\tdconfig.conf";
+    if( is_file("C:\\SmartSvrApps\\tdconfig.conf") ) {
+        $td_conf = "C:\\SmartSvrApps\\tdconfig.conf";
+    }
+    else {
+        $td_conf = realpath("client") . "\\tdconfig.conf" ;
+    }
 }
 
 if (empty($jqver)) {
-    $jqver = "3.6.0.min" ;
+    $jqver = "3.7.1" ;
 }
 if (empty($jquiver)) {
-    $jquiver = "1.12.1" ;
+    $jquiver = "1.13.2" ;
+}
+if (empty($jqtheme)) {
+    $jqtheme = "base" ;
 }
 
-session_start();
+if(empty($nologon)){
+    session_start();
+}
 
 // load client config
 if (!empty($_SESSION['clientid'])) {
@@ -88,72 +92,62 @@ if (!empty($_SESSION['clientid'])) {
 }
 
 // setup time zone
-date_default_timezone_set($timezone);
-
-/* page ui */
-if (!empty($_COOKIE['ui']))
-    $default_ui_theme = $_COOKIE['ui'];
+if(!empty($timezone) ) {
+	date_default_timezone_set($timezone) ;	
+}
 
 $resp = array('res' => 0);
 $request_time = time();
 $logon = false;
-if (empty($_SESSION['user']) ||
-        empty($_SESSION['xtime']) ||
-        $request_time > $_SESSION['xtime'] + $session_timeout) {
-    // logout
-    unset($_SESSION['user']);
-    unset($_SESSION['user_type']);
-    $resp['errormsg'] = "Session error!";
-    /* AJAX check */
-    if (empty($noredir) && empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
-        header('Location: logon.php');
+
+if(empty($nologon)){
+    if (empty($_SESSION['user']) ||
+            empty($_SESSION['xtime']) ||
+            $request_time > $_SESSION['xtime'] + $session_timeout) {
+        // logout
+        unset($_SESSION['user']);
+        unset($_SESSION['user_type']);
+        $resp['errormsg'] = "Session error!";
+        /* AJAX check */
+        if (empty($noredir) && empty($_SERVER['HTTP_X_REQUESTED_WITH'])) {
+            header('Location: logon.php');
+        }
+    } else {
+        if (empty($noupdatetime))
+            $_SESSION['xtime'] = $request_time;
+        $logon = true;
     }
-} else {
-    if (empty($noupdatetime))
-        $_SESSION['xtime'] = $request_time;
-    $logon = true;
 }
 
-session_write_close();
+if( session_status() == PHP_SESSION_ACTIVE ) {
+    session_write_close();
+}
 
+$conn = null;
 if ($logon) {
-    if ($database_persistent) {
-        $smart_server = "p:" . $smart_host;
-    } else {
-        $smart_server = $smart_host;
-    }
     // move sql connection here, in case for general session's settings (etc. timezone)
     if (empty($nodb)) {
-        @$conn = new mysqli($smart_server, $smart_user, $smart_password, $smart_database);
+        if( !empty($smart_database) ) {
+            @$conn = new mysqli($smart_host, $smart_user, $smart_password, $smart_database);
+            if( empty($conn) ){
+                $logon = false;
+            }
+        }
     }
 }
 
 // save $_SESSION variable after session_write_close()
 function session_write() {
-    if (empty($_SESSION)) {
-        // remove this session file
-        @unlink(session_save_path() . '/sess_' . session_id());
-    } else {
-        //	file_put_contents( session_save_path().'/sess_'.session_id(), session_encode() );	
-        $fsess = fopen(session_save_path() . '/sess_' . session_id(), 'c+');
-        if ($fsess) {
-            flock($fsess, LOCK_EX);  // exclusive lock
-            $sess_str = session_encode();
-            fwrite($fsess, $sess_str);
-            ftruncate($fsess, ftell($fsess));
-            fflush($fsess);              // flush before releasing the lock
-            flock($fsess, LOCK_UN);  // unlock ;
-            fclose($fsess);
-        }
-    }
+    $x_session = $_SESSION ;
+    session_start();
+    $_SESSION = $x_session ;
+    session_write_close();
 }
 
 // store one variable to session
 function session_save($vname, $value) {
-    if (empty($value)) {
-        unset($_SESSION[$vname]);
-    } else {
-        $_SESSION[$vname] = $value;
+    $_SESSION[$vname] = $value;
+    if( session_status() != PHP_SESSION_ACTIVE ) {
+        session_write();
     }
-    session_write();
 }

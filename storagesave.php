@@ -48,7 +48,7 @@
 					
 				}
 			}
-					
+
 			$sql="UPDATE tdconfig SET keepGpsLogDataForDays = $esc_req[keepGpsLogDataForDays], keepVideoDataForDays = $esc_req[keepVideoDataForDays] ;" ;
 			if( $conn->query($sql) ) {
 				$resp['res']=1 ;	// success

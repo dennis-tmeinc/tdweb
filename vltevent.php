@@ -90,10 +90,17 @@ if( !empty( $tdwebc->avlp ) ) {
 			$xmlresp->errormsg='Session not exist or expired.' ;
 		}
 		else {
-			if( empty( $vlt['events'] ) ) {
+			if( empty($vlt['events']) ) {
+				$vlt['events'] = array();
+				$vlt['xtime'] = $_SERVER['REQUEST_TIME'];
+			}
+			if( count($vlt['events'])>100 || $_SERVER['REQUEST_TIME'] - $vlt['xtime'] > 180  ) {
+				$vlt['run'] = 0;
 				$vlt['events'] = array();
 			}
-			$vlt['events'][] = $tdwebc ;
+			else {
+				$vlt['events'][] = $tdwebc ;
+			}
 			
 			fseek( $fvlt, 0, SEEK_SET );
 			ftruncate( $fvlt, 0 );
@@ -102,7 +109,7 @@ if( !empty( $tdwebc->avlp ) ) {
 
 			$xmlresp->status='OK' ;
 		}
-			
+
 		flock( $fvlt, LOCK_UN );
 		fclose( $fvlt );
 	}

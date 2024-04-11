@@ -52,7 +52,25 @@
 			}
 			else {
 				$resp['errormsg']="SQL error: ".$conn->error ;
-			}			
+			}
+
+			if( empty($support_multicompany) ) {
+				// for new servers, also save to \SmartSvrApps\tdconfig.conf
+				if( !empty( $td_conf ) && !empty($_REQUEST['smtpServer']) ){
+					@$tdconf = simplexml_load_file( $td_conf );
+					if( !$tdconf ) {
+						$tdconf = new SimpleXMLElement( "<tdconfig></tdconfig>" );
+					}
+					$tdconf -> emailserver -> smtpServer = $_REQUEST['smtpServer'] ;
+					$tdconf -> emailserver -> smtpServerPort = $_REQUEST['smtpServerPort'] ;
+					$tdconf -> emailserver -> security = $_REQUEST['security'] ;
+					$tdconf -> emailserver -> senderAddr = $_REQUEST['senderAddr'] ;
+					$tdconf -> emailserver -> senderName = $_REQUEST['senderName'] ;
+					$tdconf -> emailserver -> authenticationUserName = $_REQUEST['authenticationUserName'] ;
+					$tdconf -> emailserver -> authenticationPassword = $_REQUEST['authenticationPassword'] ;
+					$tdconf->asXML ( $td_conf );
+				}
+			}
 		}
 		else {
 			$resp['errormsg']="Not allowed!";

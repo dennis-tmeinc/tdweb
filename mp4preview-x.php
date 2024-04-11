@@ -44,7 +44,7 @@ function mp4cache_clear( $pattern )
 		}
 	}
 
-	usort($flist, "fcmp");		
+	usort($flist, "fcmp");
 	while( !empty($flist) && $cachesize > 2000000000 ) {
 		if( $p = array_pop( $flist ) ) {
 			@vfile_unlink( $p['filename'] );
@@ -58,25 +58,15 @@ function mp4cache_clear( $pattern )
 
 if( $logon ) {
 
-	@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
-
 	$sql = "SELECT `path` FROM videoclip WHERE `index` = $_REQUEST[index] ;" ;
-
 	if($result=$conn->query($sql)) {
 		if( $row=$result->fetch_array() ) {
 			$hash = md5($row['path']);
 
-			if( vfile_realpath( "/" ) == "/" ) {
-				$dirc = "/" ;
-			}
-			else {
-				$dirc = "\\" ;
-			}
-
-			$preview_file = $cache_dir.$dirc."v".$hash.".mp4" ;
-			$preview_tmpfile = $cache_dir.$dirc."t".$hash.".mp4" ;
-			$preview_file_pattern = $cache_dir.$dirc."*" ;
-			$preview_lockfile = session_save_path().'/sess_lock'.$hash ;
+			$preview_file = $cache_dir.DIRECTORY_SEPARATOR."v".$hash.".mp4" ;
+			$preview_tmpfile = $cache_dir.DIRECTORY_SEPARATOR."t".$hash.".mp4" ;
+			$preview_file_pattern = $cache_dir.DIRECTORY_SEPARATOR."*" ;
+			$preview_lockfile = session_save_path(). DIRECTORY_SEPARATOR .'sess_lock'.$hash ;
 			
 			if( vfile_size( $preview_file ) < 100 ) {
 			

@@ -11,34 +11,38 @@
 	header("Content-Type: application/json");
 	
 	if( $logon ) {
-		$allow=false ;
-		if(  $_SESSION['user_type'] != "admin" ) {	// admin 
+		if(  $_SESSION['user_type'] == "admin" ) {	// admin 
+			$vmq_ids = $_REQUEST['vmq_id'];
+		}
+		else {
 			// to verify if the request is come from the vmq owner
-			$sql = "SELECT `vmq_ins_user_name` FROM `vmq` WHERE `vmq_id` = $_REQUEST[vmq_id] ;" ;
-			$result=$conn->query($sql);
-			if( !empty($result)) {
-				$row = $result->fetch_array(MYSQLI_NUM);
-				if($row) {
-					if( $row[0]==$_SESSION['user']) {
-						$allow=true ;
+			$vmq_ids = array();
+			foreach($_REQUEST['vmq_id'] as $id ) {
+				$sql = "SELECT `vmq_ins_user_name` FROM `vmq` WHERE `vmq_id` = $id ;" ;
+				$result=$conn->query($sql);
+				if( !empty($result)) {
+					$row = $result->fetch_array(MYSQLI_NUM);
+					if($row) {
+						if( $row[0]==$_SESSION['user']) {
+							$vmq_ids[] = $id ;
+						}
 					}
 				}
 			}
 		}
-		else {
-			$allow=true ;
+
+		if( empty($vmq_ids)) {
+			$resp['errormsg']='Not allowed!' ;
 		}
-		if( $allow ) {
-			$sql = "DELETE FROM `vmq` WHERE `vmq_id` = $_REQUEST[vmq_id] ;" ;
+		else {
+			$ids = implode( ',',$vmq_ids );
+			$sql = "DELETE FROM `vmq` WHERE `vmq_id` in ($ids) " ;
 			if( $conn->query($sql) ) {
 				$resp['res']=1 ;	// success
 			}
 			else {
 				$resp['errormsg']="SQL error: ".$conn->error ;
 			}
-		}
-		else {
-			$resp['errormsg']='Not allowed!' ;
 		}
 	}
 	echo json_encode($resp);

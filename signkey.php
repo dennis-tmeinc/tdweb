@@ -17,7 +17,7 @@
 	$_SESSION['xtime']=time() ;	
 	$_SESSION['release']=file_get_contents("release") ;
 	if( empty($_SESSION['release']) )
-		$_SESSION['release'] = "V3.7.23" ;	// known last release
+		$_SESSION['release'] = "V3.7.48" ;	// known last release
 	$_SESSION['remote']=$_SERVER['REMOTE_ADDR'] ;
 	
 	if( $savesess['xuser'] == 'SuperAdmin' ) {
@@ -34,6 +34,7 @@
 			$_SESSION['user']=$savesess['xuser'];
 			$_SESSION['user_type']=$savesess['xuser_type'];
 			$_SESSION['welcome_name'] = $savesess['welcome_name'];
+			$_SESSION['country'] = $savesess['country'];
 
 			$resp['user'] = $_SESSION['user'] ;
 		    $resp['res']=1 ;
@@ -71,10 +72,12 @@
 			// update user last login time
 			$now = new DateTime() ;
 
-			// reconnect MySQL (don't remove this one)
-			@$conn = new mysqli("p:".$smart_host, $smart_user, $smart_password, $smart_database );
-		    $sql="UPDATE app_user SET last_logon = '".$now->format("Y-m-d H:i:s")."' WHERE user_name = '".$_SESSION['user']."';" ;
-			$conn->query($sql);
+			// pre-connect MySQL (don't remove this one)
+			if( !empty($smart_database) ) {
+				@$conn = new mysqli($smart_host, $smart_user, $smart_password, $smart_database );
+		    	$sql="UPDATE app_user SET last_logon = '".$now->format("Y-m-d H:i:s")."' WHERE user_name = '".$_SESSION['user']."';" ;
+				$conn->query($sql);
+			}
 		}
 	}
 	session_write();

@@ -353,6 +353,4 @@ if( $result ){
 		$GForce_Alerts_avg=round( ($row[0])/($dashboard_option['nAverageDuration']), 2) ;
 	}
 }
-
-
 ?>

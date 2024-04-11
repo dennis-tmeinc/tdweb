@@ -42,9 +42,6 @@
 			"page" => $_REQUEST['page'] ,
 			"rows" => array()  );
 			
-		if( $grid['page'] > $grid['total'] ) {
-			$grid['page']=$grid['total'] ;
-		}
 		$start = $_REQUEST['rows'] * ($grid['page']-1) ;
 			
 //		$sql="SELECT * FROM vl $filter ORDER BY $_REQUEST[sidx] $_REQUEST[sord] LIMIT $start, $_REQUEST[rows] ;";

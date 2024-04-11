@@ -28,10 +28,10 @@
 			"total" => ceil($records/$_REQUEST['rows']),
 			"page" => $_REQUEST['page'] ,
 			"rows" => array()  );
-		if( $grid['page'] > $grid['total'] ) {
-			$grid['page']=$grid['total'] ;
-		}
+
 		$start = $_REQUEST['rows'] * ($grid['page']-1) ;
+		if( $start < 0 )
+			$start = 0;
 			
 		$sql="SELECT `index`, `vehicle_name`, `time_start`, TIMESTAMPDIFF(SECOND, `time_start`, `time_end`) AS duration, path FROM videoclip $filter ORDER BY $_REQUEST[sidx] $_REQUEST[sord] LIMIT $start, $_REQUEST[rows] ;";
 		if( $result=$conn->query($sql) ) {

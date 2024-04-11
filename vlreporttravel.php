@@ -33,8 +33,12 @@
 		$traveldistance = 0 ;
 		$min_traveltime = empty($min_traveltime)?30:$min_traveltime ;
 		
-		$sql = "SELECT vl_vehicle_name, vl_datetime, vl_lat, vl_lon FROM `vl` WHERE vl_vehicle_name IN ($vehiclelist) AND vl_datetime BETWEEN '$startTime' AND '$endTime' ORDER BY vl_vehicle_name, vl_datetime;";
-		
+		$sql = "SELECT vl_vehicle_name, vl_datetime, vl_lat, vl_lon FROM `vl` WHERE (vl_datetime BETWEEN '$startTime' AND '$endTime')";
+		if( !empty($vehiclelist) ) {
+			$sql .= " AND vehicle_name in ($vehiclelist)";
+		}
+		$sql.=" ORDER BY vl_vehicle_name, vl_datetime";
+
 		$result=$conn->query($sql,MYSQLI_USE_RESULT);	// set MYSQLI_USE_RESULT for huge data
 		if( $result ){
 			$pvehicle = "";

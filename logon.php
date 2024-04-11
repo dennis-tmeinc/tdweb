@@ -16,9 +16,9 @@ header( 'Location: logon.php' );
 
 	<meta name="author" content="Dennis Chen @ TME, 2013-06-15">	
 	<link rel="shortcut icon" href="/favicon.ico" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="//code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css"><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="https://libs.cdnjs.net/jqueryui/<?php echo $jquiver; ?>/themes/<?php echo $jqtheme; ?>/jquery-ui.min.css"><script src="https://libs.cdnjs.net/jquery/<?php echo $jqver; ?>/jquery.min.js"></script><script src="https://libs.cdnjs.net/jqueryui/<?php echo $jquiver; ?>/jquery-ui.min.js"></script>
 	<script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
-	<script src="md5min.js"></script>
+	<script src="jq/md5min.js"></script>
 	<style> body { display:none; } </style>
 	<script>
 // start up 
@@ -83,7 +83,7 @@ $("form").submit(function(e){
 	
 	$.post("signuser.php", { user: userid, c: clientid, n: nonce }, function(data) {
 		wait(0);
-		if( data.res == 1 && data.user.toLowerCase() == userid.toLowerCase() ) {
+		if( data.res == 1 ) {
 		  var vcnonce=gencnonce(64);
 		  var ha1 ;
 		  if( data.keytype==0 ){
@@ -163,7 +163,9 @@ if (typeof(Storage) !== "undefined") {
 <?php if(!empty($support_multicompany) ) { ?>
 <div id="dclientid">
 <p>Client ID<br />
-<input id="clientid" name="clientid" value="<?php echo $_SESSION['clientid']; ?>" /></p>
+<input id="clientid" name="clientid" value="<?php 
+if( !empty( $_SESSION['clientid'] ) ) echo $_SESSION['clientid'] ;
+?>" /></p>
 </div>
 <?php } ?>
 <p>User ID<br />

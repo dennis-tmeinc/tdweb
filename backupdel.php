@@ -18,15 +18,16 @@
 			$resp['errormsg']="No backup name specified!" ;
 		}
 		else {
-			if( empty( $backup_path ) ) {
-				$backup_path=sys_get_temp_dir();
+			if( !empty( $backup_path ) ) {
+				$backupname=urlencode( $_REQUEST['backupname'] );
+				foreach (glob( $backup_path. DIRECTORY_SEPARATOR . "bk$backupname.sql*") as $filename) {
+					unlink( $filename );
+				}
+				$resp['res']=1;
 			}
-			$backupname=urlencode( $_REQUEST['backupname'] );
-			chdir($backup_path);
-			foreach (glob("bk$backupname.sql*") as $filename) {
-				unlink( $filename );
+			else {
+				$resp['errormsg']="No backup path!" ;
 			}
-			$resp['res']=1;
 		}
 	}
 	echo json_encode( $resp );

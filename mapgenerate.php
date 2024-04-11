@@ -46,7 +46,10 @@
 
 		// for group
 		$vehiclelist='';
-		if( $_REQUEST['vehicleType'] != 0 ) {	// group
+		if( empty( $_REQUEST['vehicleGroupName'] ) || $_REQUEST['vehicleGroupName'] == "ALL" ) {
+			$vehiclelist='';
+		}
+		else if( $_REQUEST['vehicleType'] ) {	// group
 			// to read group 
 			$sql="SELECT `vehiclelist` FROM `vgroup` WHERE `name` = '$esc_req[vehicleGroupName]';" ;
 			if( $result=$conn->query($sql) ) {
@@ -171,7 +174,11 @@
 		}
 		
 		// vehicle, time and area filter
-		$filter_vta = "vl_vehicle_name IN ($vehiclelist) AND ( vl_datetime BETWEEN '$startTime' AND '$endTime' )" ;
+		$filter_vta = "";
+		if( !empty($mapfilter['vehiclelist'] ) ) {
+			$filter_vta = "vl_vehicle_name IN ($mapfilter[vehiclelist]) AND ";
+		}
+		$filter_vta .= "( vl_datetime BETWEEN '$startTime' AND '$endTime' ) " ;
 		if( $north<=90 ) {		// zone defined
 			if($_REQUEST['zoneType']=="0") {
 				$filter_vta .=" AND (vl_lat BETWEEN $south AND $north ) AND (vl_lon BETWEEN $west AND $east)" ;
@@ -373,9 +380,9 @@
 
 
 		// 2)  in vl table add 4 fields: 
-		//		vl_fuel:	percentage(0~100%)
-		//		vl_engine_coolant: coolant temperature 
-		//		vl_engine_oil: 	percentage(0~100%)
+		//		vl_fuel:	percentage(0~100)%
+		//		vl_engine_coolant: coolant temperature (c)
+		//		vl_engine_oil: 	percentage(0~100)%
 		//		vl_battery: mV 
 	
 		//	for all above fields if value is -10000 means the value is invalid.
@@ -400,7 +407,7 @@
 
 		// Fuel Level
 		if( $mapfilter['bFuelLevel'] ) {
-			$obd_filters .= " OR ( vl_incident = $VL_OBD_VALUE AND vl_fuel >= 0 AND vl_fuel <= $mapfilter[gFuelLevel])" ;
+			$obd_filters .= " OR ( vl_incident = $VL_OBD_VALUE AND vl_fuel >= 0 AND vl_fuel < $mapfilter[gFuelLevel])" ;
 		}
 
 		// Coolant Temperature
@@ -408,17 +415,18 @@
 			// f -> c
 			// c=(f-32.0)/1.8
 			$tc = ($mapfilter['gCoolantTemperature'] - 32) / 1.8 ;
-			$obd_filters .= " OR ( vl_incident = $VL_OBD_VALUE AND vl_engine_coolant >= $tc)" ;
+			$obd_filters .= " OR ( vl_incident = $VL_OBD_VALUE AND vl_engine_coolant > $tc)" ;
 		}
 
 		// Engine Oil Level
 		if( $mapfilter['bEngineOilLevel'] ) {
-			$obd_filters .= " OR ( vl_incident = $VL_OBD_VALUE AND vl_engine_oil >= 0 AND vl_engine_oil <= $mapfilter[gEngineOilLevel])" ;
+			$obd_filters .= " OR ( vl_incident = $VL_OBD_VALUE AND vl_engine_oil >= 0 AND vl_engine_oil < $mapfilter[gEngineOilLevel])" ;
 		}
 
 		// Battery Voltage
 		if( $mapfilter['bBatteryVoltage'] ) {
-			$obd_filters .= " OR ( vl_incident = $VL_OBD_VALUE AND vl_battery >= 0 AND vl_battery <= $mapfilter[gBatteryVoltage])" ;
+			$gBatteryVoltage = round( $mapfilter['gBatteryVoltage'] * 1000 );
+			$obd_filters .= " OR ( vl_incident = $VL_OBD_VALUE AND vl_battery >= 0 AND vl_battery < $gBatteryVoltage)" ;
 		}
 
 		// add on 2021-10-29, Hard Brake & Quick Acceleration 
@@ -447,7 +455,9 @@
 					$resp['count'] = $row[0] ;
 				}
 				$result->free();
-			}			
+			}
+
+			$resp['sql'] = $sql;
 
 			$sql="SELECT min(vl_lon), max(vl_lon), max(vl_lat), min(vl_lat) FROM vl WHERE $filter AND vl_lon != 0 AND vl_lat != 0 ;" ;
 

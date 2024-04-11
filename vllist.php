@@ -16,7 +16,6 @@
 			$resp['errormsg']="No id specified" ;
 		}
 		else {
-			@$conn=new mysqli($smart_server, $smart_user, $smart_password, $smart_database );
 			$sql = "SELECT * FROM vl WHERE `vl_id` = $_REQUEST[vl_id] ;" ;
 			$result=$conn->query($sql);
 			if( !empty($result)) {

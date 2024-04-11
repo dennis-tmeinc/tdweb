@@ -68,7 +68,7 @@
 		// assume failed
 		$resp['records'] = 0 ;
 		$resp['total'] = 0 ;
-		$resp['page'] = 1 ;
+		$resp['page'] = $_REQUEST['page'] ;
 		$resp['rows'] = array() ;
 		// total records query
 		$sql="SELECT count(*) FROM drive_by_event WHERE ".$filter ;
@@ -76,7 +76,6 @@
 			if( $row = $result->fetch_array( MYSQLI_NUM ) ) {
 				$resp['records'] = $row[0] ;
 				$resp['total'] = ceil($row[0]/$_REQUEST['rows']) ;
-				$resp['page'] = $_REQUEST['page'] ;
 			}
 			$result->free();
 		}

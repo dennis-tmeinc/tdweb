@@ -33,6 +33,7 @@ if( !empty($_REQUEST['c']) ) {
 
 unset($_SESSION['user']) ;
 $_SESSION['xtime']=time() ;
+$_SESSION['country'] = "US";	// default country
 
 if( !empty($support_multicompany) && empty($_REQUEST['c']) && strcasecmp($_REQUEST['user'],"SuperAdmin")==0 ) {
 
@@ -47,6 +48,7 @@ if( !empty($support_multicompany) && empty($_REQUEST['c']) && strcasecmp($_REQUE
 	}
 	$_SESSION['nonce'] = $nonce ;
 	$user_password = file_get_contents( "$client_dir/sapass", "r" );
+	$user_password = trim($user_password);
 	if( strlen( $user_password ) > 25 && $user_password[0] == '$' ) {
 		$keys=explode('$', $user_password );
 		$_SESSION['keytype'] = $keys[1] ;
@@ -70,8 +72,13 @@ if( !empty($support_multicompany) && empty($_REQUEST['c']) && strcasecmp($_REQUE
 
 }
 else {
+	if( empty($smart_database) ) {
+		$resp['errormsg'] = "User name error!" ;
+		goto done;
+	}
+
 	// reconnect MySQL
-	@$conn = new mysqli("p:".$smart_host, $smart_user, $smart_password, $smart_database );
+	@$conn = new mysqli($smart_host, $smart_user, $smart_password, $smart_database );
 
 	if( empty($conn) ) {
 		$resp['errormsg'] = "Database error!" ;
@@ -83,17 +90,32 @@ else {
 	foreach( $_REQUEST as $key => $value )
 	{
 		$esc_req[$key]=$conn->escape_string($value);
-	}	
+	}
+	
+	$emailid = false ;
+	$at = strstr($_REQUEST['user'], "@");
+	if( !empty($at) ){
+		$dot = strstr($at, ".");
+		if( !empty($at) ) {
+			$emailid = true;
+		}
+	}
 
-	$sql="SELECT user_name, user_password, user_type, first_name, last_name FROM app_user WHERE user_name = '$esc_req[user]';" ;
+	if( $emailid ) {
+		$sql="SELECT user_name, user_password, user_type, first_name, last_name FROM app_user WHERE email = '$esc_req[user]';" ;
+	}
+	else {
+		$sql="SELECT user_name, user_password, user_type, first_name, last_name FROM app_user WHERE user_name = '$esc_req[user]';" ;
+	}
 
 	if( $result=$conn->query($sql) ) {
 		
 		if( $row = $result->fetch_array(MYSQLI_ASSOC) ) {
 			$_SESSION['xuser'] = $row['user_name']  ;
 			$_SESSION['xuser_type'] = $row['user_type'] ;
-			$_SESSION['welcome_name'] = $row['first_name'].' '.$row['last_name'] ;
-			if($_SESSION['welcome_name']==' ') $_SESSION['welcome_name']=$_SESSION['xuser'] ;
+			$_SESSION['welcome_name'] = trim( $row['first_name'].' '.$row['last_name'] );
+			if( empty( $_SESSION['welcome_name'] ) ) 
+				$_SESSION['welcome_name']=$_SESSION['xuser'] ;
 
 			// Add company name
 			if( !empty($company_root) && vfile_exists($company_root."/companyinfo.xml") ) {
@@ -111,11 +133,12 @@ else {
 			}
 
 			// country code support, for display units (imperial)
-			if( empty($country) || $country == "United States") {
-				$_SESSION['country'] = "US";
+			if( !empty($country) && ($country == "CA" || strcasecmp($country,"Canada") == 0 )) {
+				$_SESSION['country'] = "CA";
 			}
 			else {
-				$_SESSION['country'] = $country;
+				// default country "US"
+				$_SESSION['country'] = "US";
 			}
 
 			// setup password challenge			
@@ -149,8 +172,12 @@ else {
 		$result->free();
 	}
 }
-	
+
 done:	
+	if( !$resp['res'] ) {
+		// clear session
+		$_SESSION = [];
+	} ;
 	session_write() ;
 
 	echo json_encode($resp) ;
@@ -165,40 +192,51 @@ done:
 	
 	// clean up
 	$session_path = session_save_path () ;
-	$xtime = time() ;
-	$cleanfile = $session_path.'/sess_clk7l9eln8hvg27th3bdsmtvql' ;
-	@$ptime = file_get_contents( $cleanfile );
-	if( empty($ptime) ) { 
-		$ptime = $xtime - 7*24*3600 ;
-	}
-
-	if( $xtime - $ptime >= 24*3600 ) {
-		
-		// clean old session files
-		foreach (glob($session_path.'/sess_*') as $filename) {
-			if( $xtime - fileatime($filename) > 7*24*3600 ) {
-				@unlink($filename);
-			}
+	$cleanfile = $session_path.'/sessclrk7l9eln8hvg27th3bdsmtvq' ;
+	$cf = fopen($cleanfile, "c+");
+	if( flock($cf, LOCK_EX|LOCK_NB) ){
+		$xtime = time() ;
+		@$ptime = (int)fgets( $cf );
+		if( empty($ptime) ) { 
+			$ptime = $xtime - 7*24*3600 ;
 		}
 
-		// rotate logs
-		foreach (glob($_SERVER["DOCUMENT_ROOT"] . "/../Apache/logs/*log*" ) as $filename) {
-			if( $xtime - fileatime($filename) > 7*24*3600 ) {
-				@unlink($filename);
-			} 
-			else if( filesize( $filename ) > 64*1024 ) {
-				$f = fopen($filename,"r+");
-				fseek($f, -48*1024, SEEK_END );
-				fgets($f);  // skip a line
-				$buf = fread($f, 128*1024);
-				fseek($f,0);
-				ftruncate($f,0);
-				fwrite($f,$buf);
-				fclose($f);
+		if( $xtime - $ptime >= 18*3600 ) {
+			clearstatcache();
+			
+			// clean old session files
+			foreach (glob($session_path.'/sess_*') as $filename) {
+				if( $xtime - fileatime($filename) > 10*24*3600 ) {
+					@unlink($filename);
+				}
 			}
+
+			// clean old video cache 
+			foreach (glob($cache_dir.'/*') as $filename) {
+				if( $xtime - fileatime($filename) > 15*24*3600 ) {
+					@unlink($filename);
+				}
+			}
+
+			// rotate apache logs
+			foreach (glob($_SERVER["DOCUMENT_ROOT"] . "/../Apache/logs/*log*" ) as $filename) {
+				if( filesize( $filename ) > 64*1024 ) {
+					$f = fopen($filename,"r+");
+					fseek($f, -40000, SEEK_END );
+					fgets($f);  // skip a line
+					$buf = fread($f, 64*1024);
+					fseek($f,0);
+					ftruncate($f,0);
+					fwrite($f,$buf);
+					fclose($f);
+				}
+			}
+
+			// update ptime
+			fseek($cf,0);
+			ftruncate($cf,0);
+			fwrite($cf,strval($xtime));
 		}
-
-		file_put_contents($cleanfile, strval($xtime));
 	}
-
+	fclose($cf);
 ?>

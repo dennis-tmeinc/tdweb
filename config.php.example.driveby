@@ -4,10 +4,9 @@
 	$smart_user="server" ;
 	$smart_password="password" ;
 	$smart_database="smart" ;
-	$database_persistent=true ;
 
 	// List of timezone: http://php.net/manual/en/timezones.php
-	$timezone = "US/Eastern" ;
+	$timezone = "America/New_York" ;
 	
 	// expected number of icons on map
 	$map_icons=100;
@@ -17,6 +16,9 @@
 	
 	// Dashboard Option file
 	$dashboard_conf="C:\\SmartSvrApps\\dashboardoption.config" ;
+
+	// Touchdown server configure file (include email server configure)
+	$td_conf="C:\\SmartSvrApps\\tdconfig.conf";
 	
 	// backup file location, 
 	$backup_path="\\TouchDownCenter\\www\\tdc\\smartbackup" ;
@@ -37,11 +39,10 @@
 	$map_credentials="AqH8jpFgh8cOPZNsTLo0wcOQNGji0uwHgiGyBXOxJvzDySVjKN36y6t_TU1o33e-" ;
 
 	// Default map location, comment it to auto detect
-	$map_area="Toronto" ;
+	$map_area="New York, NY" ;
 	
 	// session timeout (max half hour)
 	$session_timeout=900 ;
-	$session_path= "session";
 	$session_idname = "touchdownid";
 
 	// enable or disable live track
@@ -64,8 +65,9 @@
 	$conv266_text = false ;
 	
 	// Maximum videos cache size in Mega Bytes
-	$webplay_cache_size = 10000 ;
-	
+	$webplay_cache_size = 20000 ;
+	$cache_dir = "D:\\VideoCache";
+
 	// multi company support
 	$support_multicompany = 0 ;
 	// script/excutable to create/remove com

@@ -10,11 +10,11 @@ if( empty($_SESSION['superadmin']) || $_SESSION['superadmin'] != "--SuperAdmin--
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">
 	<meta name="author" content="Dennis Chen @ TME, 2021-04-14">		
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="//code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css"><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="https://libs.cdnjs.net/jqueryui/<?php echo $jquiver; ?>/themes/<?php echo $jqtheme; ?>/jquery-ui.min.css"><script src="https://libs.cdnjs.net/jquery/<?php echo $jqver; ?>/jquery.min.js"></script><script src="https://libs.cdnjs.net/jqueryui/<?php echo $jquiver; ?>/jquery-ui.min.js"></script>
 	<script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script>
 	<script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
-	<link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
-	<script src="md5min.js"></script>
+	<link rel="stylesheet" href="https://libs.cdnjs.net/free-jqgrid/4.14.1/css/ui.jqgrid.min.css"><script src="https://libs.cdnjs.net/free-jqgrid/4.14.1/i18n/min/grid.locale-en.js"></script><script src="https://libs.cdnjs.net/free-jqgrid/4.14.1/jquery.jqgrid.min.js"></script>
+	<script src="jq/md5min.js"></script>
 	<style type="text/css">
 	
 	.useritem {
@@ -50,27 +50,53 @@ $( "#dialog_company" ).dialog({
 	autoOpen: false,
 	width:"auto",
 	modal: true,
-	buttons:{
-		"Save": function() {
-			$.getJSON("companysave.php", $("form#companyform").serialize(), function(resp){
-				if( resp.res ) {
-					$( "#dialog_company" ).dialog( "close" );
-					$("#companygrid").trigger("reloadGrid");
-				}
-				else {
-					if( resp.errormsg ) {
-						alert( resp.errormsg );
+	buttons:[
+		{
+			text: "Reset Admin Password",
+			id: "BtRstAdm",
+			click: function() {
+				var param = {"db":$('form#companyform input[name="Database"]').val()};
+				$.getJSON("companyresetadmin.php", param, function(resp){
+					if( resp.res ) {
+						alert("Company admin password cleared!");
 					}
 					else {
-						alert("Saving configuration failed!");
+						if( resp.errormsg ) {
+							alert( resp.errormsg );
+						}
+						else {
+							alert("Saving configuration failed!");
+						}
 					}
-				}
-			});		
+				});	
+			}
+    	},
+		{
+			text: "Save",
+			click: function() {
+				$.getJSON("companysave.php", $("form#companyform").serialize(), function(resp){
+					if( resp.res ) {
+						$( "#dialog_company" ).dialog( "close" );
+						$("#companygrid").trigger("reloadGrid");
+					}
+					else {
+						if( resp.errormsg ) {
+							alert( resp.errormsg );
+						}
+						else {
+							alert("Saving configuration failed!");
+						}
+					}
+				});		
+			}
 		},
-		Cancel: function() {
-			$( "#dialog_company" ).dialog( "close" );
-		}
-	}
+		{
+			text: "Cancel",
+			click: function() {
+				$( this ).dialog( "close" );
+			}
+    	}
+	]
 });
 
 function set_companyform( fdata )
@@ -112,7 +138,9 @@ $("button#btnew").click(function(e){
 		
 	$("form#companyform").data("edit",false);
 	$( "#dialog_company" ).dialog("option", "title", "Create A New Company Information");
+	$("#BtRstAdm").hide();
 	$( "#dialog_company" ).dialog("open");
+
 });
 
 $("button#btedit").click(function(e){
@@ -139,6 +167,7 @@ $("button#btedit").click(function(e){
 			$('form#companyform input[name="Database"]').prop("readonly",true);
 	
 			$( "#dialog_company" ).dialog("option", "title", "Edit Company Information");
+			$("#BtRstAdm").show();
 			$( "#dialog_company" ).dialog("open");
 		}
 	});
@@ -353,8 +382,8 @@ $( ".tdcdialog#dialog_testemail" ).dialog({
 		"Send": function() {
 			var form = $("form#emailserversetting").serializeArray();
 			form.push( {name:"recipient",value:$("input#testreceiver").val()} );
-			$.getJSON("emailtest.php", form, function(data){
-				if( data.res == 1 ) {
+			$.getJSON("emailtest2.php", form, function(data){
+				if( data.msg ) {
 					$( ".tdcdialog#dialog_message #message" ).text(data.msg);
 				}
 				$( ".tdcdialog#dialog_message" ).dialog("open");
@@ -373,15 +402,27 @@ $("button#emailsettings").click(function(e){
 // Adding tz auto detection feature 2021-11-02, I don't know why I do this.
 $("button#btDetectTZ").click(function(e){
 	e.preventDefault();
-	// alternative: https://ipapi.co/json, but has rate limitation
-	$.getJSON("http://ip-api.com/json/", function(tz){
-		if( tz.status == "success" && tz.timezone ) {
+    // alternative 1: "http://ip-api.com/json/", no https support
+	//$.getJSON("http://ip-api.com/json/", function(tz){
+	//	if( tz.status == "success" && tz.timezone ) {
+	//		$("select[name='TimeZone']").val(tz.timezone);
+	//		if( tz.countryCode && tz.region && tz.city){
+	//			$("input[name='MapArea']").val(tz.city + ", "+ tz.region + ", " + tz.countryCode);
+	//			$("input[name='City']").val(tz.city);
+	//			$("input[name='State']").val(tz.region);
+	//			$("input[name='Country']").val(tz.countryCode);
+	//		}
+	//	}
+	//});
+	// alternative 2: https://ipapi.co/json, but has rate limitation
+	$.getJSON("https://ipapi.co/json", function(tz){
+		if( tz.timezone ) {
 			$("select[name='TimeZone']").val(tz.timezone);
-			if( tz.countryCode && tz.region && tz.city){
-				$("input[name='MapArea']").val(tz.city + ", "+ tz.region + ", " + tz.countryCode);
+			if( tz.country && tz.region && tz.city){
+				$("input[name='MapArea']").val(tz.city + ", "+ tz.region + ", " + tz.country);
 				$("input[name='City']").val(tz.city);
 				$("input[name='State']").val(tz.region);
-				$("input[name='Country']").val(tz.countryCode);
+				$("input[name='Country']").val(tz.country);
 			}
 		}
 	});
@@ -429,7 +470,7 @@ $("button#btDetectTZ").click(function(e){
 for( $d = ord('C'); $d<=ord('Z'); $d++ ) {
 	$drive = chr($d);
 	@$space = disk_free_space( $drive.':' );
-	if( $space && $space > 1000000000 ) {
+	if( $space && $space > 100000000000 ) {
 		echo "<option value=\"$drive\"> $drive: </option>" ;
 	}
 }
@@ -458,13 +499,22 @@ for( $d = ord('C'); $d<=ord('Z'); $d++ ) {
 			<td>&nbsp;</td>
 		</tr>
 		<tr>
+			<td style="text-align:right">Video Relay Server:</td>
+			<td><input name="VideoRelay" type="text" /></td>
+			<td></td>
+			<td>&nbsp;</td>
+		</tr>
+		<tr>
 			<td style="text-align:right">Time Zone:</td>
 			<td>
 			<select name="TimeZone">
+			<option value="UTC">UTC</option>
 <?php
-$timezonelist=DateTimeZone::listIdentifiers(DateTimeZone::AMERICA);
+$timezonelist=DateTimeZone::listIdentifiers();
 foreach( $timezonelist as $tz ) {
-	printf('<option value="%s">%s</option>', $tz, $tz );
+	@$countrycode = (new DateTimeZone($tz))->getLocation()['country_code'] ;
+	if( $countrycode == 'CA' || $countrycode == 'US')
+		printf('<option value="%s">%s</option>', $tz, $tz );
 };
 ?>			
 			</select>
@@ -594,7 +644,9 @@ foreach( $timezonelist as $tz ) {
 
 <div>
 	<button id="btchangepasswd" >Change Password</button>
+	<?php if( empty($use_tdcmail) ) {  ?>
 	<button id="emailsettings">Email Server Settings</button>	
+	<?php } ?>
 </div>
 
 <!-- Dialog Email Server -->
@@ -605,23 +657,23 @@ foreach( $timezonelist as $tz ) {
 	<tbody>
 		<tr>
 			<td style="text-align: right;">Mail Server (SMTP):</td>
-			<td><input name="smtpServer" type="text" /></td>
+			<td><input name="smtpServer" type="text" size="30" /></td>
 		</tr>
 		<tr>
 			<td style="text-align: right;">Port:</td>
-			<td><input name="smtpServerPort" value="25" type="text" /></td>
+			<td><input name="smtpServerPort" value="587" type="text" size="30" /></td>
 		</tr>
 		<tr>
 			<td style="text-align: right;">Security Type:</td>
-			<td><input name="security" value="2" type="radio" />SSL <input name="security"  value="1" type="radio" />TLS <input name="security" type="radio" checked="checked" value="0" />None</td>
+			<td><input name="security" value="2" type="radio" />SSL <input name="security"  value="1" type="radio" />TLS <input name="security" type="radio" checked="checked" value="0" />STARTTLS/None</td>
 		</tr>
 		<tr>
 			<td style="text-align: right;">Sender E-mail Addr:</td>
-			<td><input name="senderAddr" type="text" /></td>
+			<td><input name="senderAddr" type="text" size="30" /></td>
 		</tr>
 		<tr>
 			<td style="text-align: right;">Sender Name:</td>
-			<td><input name="senderName" type="text" /></td>
+			<td><input name="senderName" type="text" size="30" /></td>
 		</tr>
 		<tr>
 			<td>Authentication:</td>
@@ -629,11 +681,11 @@ foreach( $timezonelist as $tz ) {
 		</tr>
 		<tr>
 			<td style="text-align: right;">User Name:</td>
-			<td><input name="authenticationUserName" type="text" /></td>
+			<td><input name="authenticationUserName" type="text" size="30" /></td>
 		</tr>
 		<tr>
 			<td style="text-align: right;">Password:</td>
-			<td><input name="authenticationPassword" type="password" /></td>
+			<td><input name="authenticationPassword" type="password" size="30" /></td>
 		</tr>
 	</tbody>
 </table>
@@ -651,7 +703,7 @@ foreach( $timezonelist as $tz ) {
 
 <!-- message box -->
 <div class="tdcdialog" id="dialog_message" title="Message">
-<p id="message">Are you OK?</p>
+<p id="message"></p>
 
 <p>&nbsp;</p>
 </div>

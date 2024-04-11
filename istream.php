@@ -54,7 +54,21 @@ function findvideo( &$chctx, $channel, $busname )
 		while( $row=$result->fetch_array() ) {
 			if( vfile_exists ( $row['path'] ) ) {
 			
-				$chctx['v'] = $row['path'] ;			// video file
+				$ifile = $row['path'] ;			// video file
+
+				// check and convert relative path to abs path
+				if( !empty($company_root) ) {
+					if( $ifile[1] == ':' ||
+						$ifile[0] == '/' || 
+						$ifile[0] == '\\' )
+					{
+					}
+					else {
+						$ifile = $company_root . "\\" . $ifile ;
+					}
+				}
+
+				$chctx['v'] = $ifile ;			// video file
 				$chctx['vt'] = $row['time_start'] ;		// video file time
 				$chctx['ve'] = $row['time_end'] ;		// video file end time
 				$chctx['vl'] = $row['length'] ;			// video file time length
@@ -87,6 +101,9 @@ function findvideo( &$chctx, $channel, $busname )
 					while( $lines = vfile_readlines( $kfile, 1000 ) ) {
 						for( $i=0; $i<count($lines); $i++ ) {
 							if( sscanf( $lines[$i]['text'], "%d,%d", $dms, $off )==2 ) {
+								if ( $dms < 0 ) {	// what happened? 
+									$dms=0; 
+								}
 								$chctx['no'] = $off ;
 								$chctx['nt'] = $dms ;						
 								$ft = new DateTime( $chctx['vt'] );		
@@ -377,9 +394,6 @@ switch ( $_REQUEST['cmd'] ) {
 				}
 			}
 			else {
-				
-				header("X-log1: start a new sess");
-				
 				// start a new reading
 				$chctx = array();
 				if( empty( $_SESSION['playlist']['headersize'] ) ) {
@@ -399,13 +413,10 @@ switch ( $_REQUEST['cmd'] ) {
 				$x = 2 ;
 				
 				while( findvideo( $chctx, $channel, $busname )  ) {
-					
-					
 					$vlength = videodata( $chctx, $vdata, $vheaddata );
 
 					header("X-log".$x.": $busname-$channel-$vlength");
 					$x++;
-
 
 					if( $vlength > 0 ) {
 						break ;
@@ -483,7 +494,41 @@ switch ( $_REQUEST['cmd'] ) {
 			$resp['time'] = $playtime->format('Y-m-d H:i:s');
 		}
         break;
-	
+
+	case 'getvl':
+		// parameter:  start, end in ISO format
+		$busname = $_SESSION['playlist']['info']['name'] ;
+		$sql = "SELECT vl_datetime,vl_incident,vl_lat,vl_lon,vl_speed,vl_heading FROM vl WHERE vl_vehicle_name = '$busname' AND vl_datetime >= '$_REQUEST[start]' AND vl_datetime <= '$_REQUEST[end]' ORDER BY vl_datetime" ;
+		if( $result = $conn->query($sql) ) {
+			$resp['vl'] = $result->fetch_all(MYSQLI_ASSOC);
+			$resp['error'] = 0 ;
+		}
+		else {
+			$resp['error'] = 106 ;
+			$resp['error_message'] = "Database error!" ;
+		}
+		break;
+
+	case 'vllive':
+		// get latest 
+		// parameter: vehicle = vehicle name
+		if( !empty( $_REQUEST['vehicle'] ) ) {
+			$st=new DateTime();
+			$st->sub(new DateInterval("PT2H"));
+			$stime = $st->format('Y-m-d H:i:s');
+			$sql = "SELECT vl_datetime,vl_incident,vl_lat,vl_lon,vl_speed,vl_heading FROM vl WHERE vl_vehicle_name = '$_REQUEST[vehicle]' AND vl_datetime > '$stime' ORDER BY vl_datetime DESC LIMIT 1" ;
+			if( $result = $conn->query($sql) ) {
+				$resp['res'] = 1 ;
+				$resp['vl'] = $result->fetch_all(MYSQLI_ASSOC);
+			}
+			else {
+				$resp['error'] = 106 ;
+				$resp['error_message'] = "Database error!" ;
+			}
+			break;
+		}
+		break;
+
 	default:
 		$resp['error']=102 ;
 		$resp['error_message'] = "Unknown command : ".$_REQUEST['cmd'] ;

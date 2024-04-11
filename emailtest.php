@@ -19,7 +19,7 @@
 			$emailtest -> $key = $value ;
 		}
 
-		$emailtestfile = tempnam($cache_dir, 'st');
+		$emailtestfile = tempnam(sys_get_temp_dir(), 'st');
 		$emailtest->asXML ( $emailtestfile );
 		
 		// execute email testing program

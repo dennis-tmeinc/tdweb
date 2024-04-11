@@ -8,10 +8,10 @@ require 'session.php';
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta name="description" content="Touch Down Center by TME">
 	<meta name="author" content="Dennis Chen @ TME, 2013-05-15">			
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="//code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css"><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="https://libs.cdnjs.net/jqueryui/<?php echo $jquiver; ?>/themes/<?php echo $jqtheme; ?>/jquery-ui.min.css"><script src="https://libs.cdnjs.net/jquery/<?php echo $jqver; ?>/jquery.min.js"></script><script src="https://libs.cdnjs.net/jqueryui/<?php echo $jquiver; ?>/jquery-ui.min.js"></script>
 	<script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
-	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
-	<link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
+	<link rel="stylesheet" href="https://libs.cdnjs.net/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.css"><script src="https://libs.cdnjs.net/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.js"></script>
+	<link rel="stylesheet" href="https://libs.cdnjs.net/free-jqgrid/4.14.1/css/ui.jqgrid.min.css"><script src="https://libs.cdnjs.net/free-jqgrid/4.14.1/i18n/min/grid.locale-en.js"></script><script src="https://libs.cdnjs.net/free-jqgrid/4.14.1/jquery.jqgrid.min.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 		#request {
         font-size:20px;
@@ -44,8 +44,8 @@ $("#requestlist").jqGrid({
     mtype: 'GET',
     colNames:['Vehicle','Date-Time', 'Duration','Status','Requested by', 'Description'],
     colModel :[ 
-      {name:'vmq_vehicle_name', index:'vmq_vehicle_name', sortable: true, width:100}, 
-      {name:'vmq_start_time', index:'vmq_start_time', width:150, sortable: true}, 
+      {name:'vmq_vehicle_name', index:'vmq_vehicle_name', sortable: true, width:100 },
+	  {name:'vmq_start_time', index:'vmq_start_time', width:150, sortable: true}, 
       {name:'duration', index:'duration', width:80, sortable: true , align:'right'}, 
       {name:'vmq_comp', index:'vmq_comp', width:100, sortable: true }, 
       {name:'vmq_ins_user_name', index:'vmq_ins_user_name', width:120, sortable: true }, 
@@ -60,6 +60,7 @@ $("#requestlist").jqGrid({
     rowList:[20, 50, 100, 200],
     sortname: 'vmq_start_time',
     sortorder: 'desc',
+	multiselect: true,
     viewrecords: true,
     gridview: true,
     caption: 'Video Request List'
@@ -89,17 +90,31 @@ $( ".tdcdialog#dialog_delete" ).dialog({
 
 $('#deleterequest').click(function(e){
 	e.preventDefault();
-	var id=$("#requestlist").jqGrid('getGridParam','selrow') ;
-	if( id == null ) {
+	var ids=$("#requestlist").jqGrid('getGridParam','selarrrow') ;
+	if( ids == null || ids.length == 0 ) {
 		alert("Please select one video clip!");
 		return ;
 	}
-	$( ".tdcdialog#dialog_delete #deletemsg" ).text("Please confirm to delete this video request?") ;
-	$( ".tdcdialog#dialog_delete #deletename" ).text( $("#requestlist").jqGrid('getCell', id, 1) + '  ' + $("#requestlist").jqGrid('getCell', id, 2) );
+	var qa = "Please confirm to delete this video request?" ;
+	if( ids.length>1 ) {
+		qa = "Please confirm to delete these video requests?" ;
+	}
+	$( ".tdcdialog#dialog_delete #deletemsg" ).text(qa) ;
+	var na = "<p>";
+	for( var i=0; i<ids.length; i++) {
+		if( i>4 ) {
+			na += '...';
+			break;
+		}
+		na += $("#requestlist").jqGrid('getCell', ids[i], 2) + ' ' + $("#requestlist").jqGrid('getCell', ids[i], 3) ;
+        na += '<br/>';
+	}
+	na += "</p>";
+	$( ".tdcdialog#dialog_delete #deletename" ).html( na );
 	$( "#dialog_vehicle" ).dialog( "option", "title", "Delete Video Clip?" );
 	$( ".tdcdialog#dialog_delete" ).data("yesfunction", function(){
 		var fdata=new Object ;
-		fdata.vmq_id=id ;
+		fdata.vmq_id=ids ;
 		$.getJSON("vmqdel.php", fdata, function(resp){
 			if( resp.res==1 ) {
 				$("#requestlist").trigger("reloadGrid");
@@ -146,7 +161,6 @@ $( "select[name='vmq_vehicle_name']" ).on( "change", function() {
 		
 	});
 });
-
 
 $("#rcontainer").show('slow');
 });
@@ -214,16 +228,24 @@ $("#rcontainer").show('slow');
 </fieldset>
 
 <fieldset><legend>Time Range</legend>
-
 <table>
 <tr>
-<td>From:</td><td><input class="datetimepicker" size="24" name="vmq_start_time" type="text" value="<?php $da=new DateTime(); $da->sub(new DateInterval('P1D')); echo $da->format('Y-m-d H:i:s'); ?>"/></td>
+<td>From:</td><td><input class="datetimepicker" size="18" name="vmq_start_time" type="text" value="<?php $da=new DateTime(); $da->sub(new DateInterval('P1D')); echo $da->format('Y-m-d H:i:s'); ?>"/></td>
 </tr>
 <tr>
-<td>Duration:</td><td><input name="vmq_duration" size="10" type="text" value="5" />minutes</td>
+<td>Duration:</td><td><input name="vmq_duration" size="5" type="number" value="5" min="1" max="9999" /> minutes</td>
 </tr>
 </table>
-
+<p>
+  <label for="repeats">Repeat:</label>
+  <input id="repeats" name="repeats" type="number" size="3" value="1" min="1" max="100" >
+  <select name="repeatcycle" id="repeatcycle">
+		<option selected="selected">Daily</option>
+		<option>Weekly</option>
+		<option>Monthly</option>
+		<option>Yearly</option>
+	</select>
+</p>
 </fieldset>
 
 <p>Description: <br/><textarea name="vmq_description" cols="30" rows="8" maxlength="450" ></textarea></p>
@@ -243,6 +265,7 @@ $("#rcontainer").show('slow');
 <?php } else { ?>
   <input   name="btset" checked="checked" href="videosrequest.php" id="btvideoreq" type="radio" /><label for="btvideoreq"> Request Video Clips </label>
 <?php } ?>
+  <input   name="btset" href="videosrequestevent.php" id="btvideoreqevent" type="radio" /><label for="btvideoreqevent"> Request Video Clips on Events </label>
 </p>
   
 <h4>Request Video Clips</h4>

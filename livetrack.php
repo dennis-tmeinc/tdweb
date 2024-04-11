@@ -12,9 +12,9 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
 <meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 <meta name="description" content="Touch Down Center by TME">
 <meta name="author" content="Dennis Chen @ TME, 2013-05-15">		
-<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="//code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css"><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script>
+<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="https://libs.cdnjs.net/jqueryui/<?php echo $jquiver; ?>/themes/<?php echo $jqtheme; ?>/jquery-ui.min.css"><script src="https://libs.cdnjs.net/jquery/<?php echo $jqver; ?>/jquery.min.js"></script><script src="https://libs.cdnjs.net/jqueryui/<?php echo $jquiver; ?>/jquery-ui.min.js"></script>
 <script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
-<link rel="stylesheet" type="text/css" media="screen" href="jq/ui.jqgrid.css" /><script src="jq/grid.locale-en.js" type="text/javascript"></script><script src="jq/jquery.jqGrid.min.js" type="text/javascript"></script>
+<link rel="stylesheet" href="https://libs.cdnjs.net/free-jqgrid/4.14.1/css/ui.jqgrid.min.css"><script src="https://libs.cdnjs.net/free-jqgrid/4.14.1/i18n/min/grid.locale-en.js"></script><script src="https://libs.cdnjs.net/free-jqgrid/4.14.1/jquery.jqgrid.min.js"></script>
 <style type="text/css"><?php echo "#rcontainer { display:none }" ?>
 	select#webplay_camera {
 	min-width: 100px ;
@@ -24,7 +24,7 @@ session_save('lastpage', $_SERVER['REQUEST_URI'] );
     vertical-align: middle;
 	}
 </style>
-<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script><script src="jq/live.js"></script>
+<link rel="stylesheet" href="https://libs.cdnjs.net/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.css"><script src="https://libs.cdnjs.net/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.js"></script><script src="jq/live.js"></script>
 <script src="td_alert.js"></script><script>
 // start up 
 var map  ;
@@ -444,7 +444,7 @@ function showpin( avlp, id, iconimg, clean )
 						var v = obdi[1] ;
 
 						// filter out some crazy obd values
-						if( v>1000000000 || v<-1000000000 ){
+						if( v>=1000000000 || v<=-1000000000 ){
 							continue;
 						}
 
@@ -478,7 +478,7 @@ function showpin( avlp, id, iconimg, clean )
 							// converted value is out of range
 							if( v==null || 
 								// or a number is crazy large 
-								( (!isNaN(v)) && ( v>1000000000 || v<-1000000000 )  )
+								( (!isNaN(v)) && ( v>=1000000000 || v<=-1000000000 )  )
 							){
 								continue;
 							}

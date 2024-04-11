@@ -15,21 +15,9 @@
 		
 		if( $_SESSION['user_type'] == 'admin' ) {
 
-			if( count( $_REQUEST[index] ) > 0 ) {
-				
-				$od = false ;
-				$sql = "DELETE FROM `videoclip` WHERE (" ;
-				foreach( $_REQUEST[index] as $id ) {
-					if( $od ) {
-						$sql .= " OR " ;
-					}
-					$sql .= "( `index` = $id )" ;
-					$od = true ;
-				}
-				$sql .=  ");" ;
-				
-				$resp['sql'] = $sql ;
-				
+			if( count( $_REQUEST['index'] ) > 0 ) {
+				$ids = implode(',',  $_REQUEST['index'] );
+				$sql = "DELETE FROM `videoclip` WHERE `index` in ($ids)" ;
 				if( $conn->query($sql) ) {
 					$resp['res']=1 ;	// success
 				}

@@ -11,9 +11,9 @@ session_save('settingpage', $_SERVER['REQUEST_URI'] );
 	<meta content="text/html; charset=utf-8" http-equiv="Content-Type" />
 	<meta content="Touch Down Center by TME" name="description" />
 	<meta content="Dennis Chen @ TME, 2021-04-27" name="author" />
-	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="//code.jquery.com/ui/<?php echo $jquiver; ?>/themes/base/jquery-ui.css"><script src="https://code.jquery.com/jquery-<?php echo $jqver; ?>.js"></script><script src="https://code.jquery.com/ui/<?php echo $jquiver; ?>/jquery-ui.js"></script>
+	<link href="tdclayout.css" rel="stylesheet" type="text/css" /><link rel="stylesheet" href="https://libs.cdnjs.net/jqueryui/<?php echo $jquiver; ?>/themes/<?php echo $jqtheme; ?>/jquery-ui.min.css"><script src="https://libs.cdnjs.net/jquery/<?php echo $jqver; ?>/jquery.min.js"></script><script src="https://libs.cdnjs.net/jqueryui/<?php echo $jquiver; ?>/jquery-ui.min.js"></script>
 	<script> if(window['jQuery']==undefined)document.write('<script src="jq/jquery.js"><\/script><link href="jq/jquery-ui.css" rel="stylesheet" type="text/css" \/><script src="jq/jquery-ui.js"><\/script>');</script><script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol'></script><script src="picker.js"></script>
-	<link href="jq/ui-timepicker-addon.css" rel="stylesheet" type="text/css" /><script src="jq/ui-timepicker-addon.js"></script>
+	<link rel="stylesheet" href="https://libs.cdnjs.net/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.css"><script src="https://libs.cdnjs.net/jquery-ui-timepicker-addon/1.6.3/jquery-ui-timepicker-addon.min.js"></script>
 	<style type="text/css"><?php echo "#rcontainer { display:none;}" ?>
 	</style>
 	<script src="td_alert.js"></script><script>
@@ -125,6 +125,34 @@ $( "#dialog_backupdatabase" ).dialog(
 	buttons:{
 		"Start": function() {
 			$( this ).dialog( "close" );
+
+			var backupEvt = new EventSource("backupsse.php?backupname=" + $( "#dialog_backupdatabase input").val());
+			backupEvt.onmessage = (e) => {
+				const ev = JSON.parse(e.data);
+				if( ev.event == "begin" ){
+					$( "#dialog_progress" ).dialog( "option", "title", "Backup" );
+					$( "#dialog_progress" ).dialog("open");
+				}
+				else if(ev.event == "end" ){
+					backupEvt.close();
+					backupEvt = null;
+				}
+				else if(ev.event == "progress" ){
+					var setProgress = $( "#dialog_progress" ).dialog( "option", "setProgress" );
+					setProgress(ev.progress);
+				}
+			}
+			backupEvt.onerror = (e) => {
+				backupEvt.close();
+				backupEvt = null;				
+				var setProgress = $( "#dialog_progress" ).dialog( "option", "setProgress" );
+				setProgress(-1);
+				if( $( "#dialog_progress" ).dialog("isOpen")){
+					$( "#dialog_progress" ).dialog("close");
+				}
+			}
+
+			/*
 			var param=new Object ;
 			param.backupname = $( "#dialog_backupdatabase input").val();
 			$.getJSON("backupstart.php", param, function(resp){
@@ -138,7 +166,8 @@ $( "#dialog_backupdatabase" ).dialog(
 				else {
 					alert("Backup failed to start!");
 				}
-			});			
+			});
+			*/			
 		},
 		Cancel: function() {
 			$( this ).dialog( "close" );
@@ -154,6 +183,35 @@ $( "#dialog_restoredatabase" ).dialog(
 	modal: true,
 	buttons:{
 		"Restore": function() {
+			var restoreEvt = new EventSource("backuprestoresse.php?backupname=" + $("#dialog_restoredatabase select#backuplists").val());
+			restoreEvt.onmessage = (e) => {
+				const ev = JSON.parse(e.data);
+				if( ev.event == "begin" ){
+					$( "#dialog_progress" ).dialog( "option", "title", "Restore" );
+					$( "#dialog_progress" ).dialog("open");
+				}
+				else if(ev.event == "end" ){
+					restoreEvt.close();
+					restoreEvt = null;
+				}
+				else if(ev.event == "progress" ){
+					var setProgress = $( "#dialog_progress" ).dialog( "option", "setProgress" );
+					setProgress(ev.progress);
+				}
+				else if( ev.event == "error" ){
+					console.log("Mysql error:" + ev.message);
+				}
+			}
+			restoreEvt.onerror = (e) => {
+				restoreEvt.close();
+				restoreEvt = null;
+				var setProgress = $( "#dialog_progress" ).dialog( "option", "setProgress" );
+				setProgress(-1);
+				if( $( "#dialog_progress" ).dialog("isOpen")){
+					$( "#dialog_progress" ).dialog("close");
+				}
+			}
+			/*
 			var param = new Object ;
 			param.backupname=$("#dialog_restoredatabase select#backuplists").val();
 			var d=new Date();
@@ -173,9 +231,9 @@ $( "#dialog_restoredatabase" ).dialog(
 				else {
 					alert("Restore failed!");
 				}
-			});	
+			});
+			*/
 			$( this ).dialog( "close" );
-			
 		},
 		"Delete": function() {
 			var param = new Object ;
@@ -230,6 +288,8 @@ var progfile ;
 var progvalue ;
 var progCloseTimer=null ;
 var progInUse = false ;
+var progTimeout = null;
+var progDots = ".";
 
 $( "#progressbar" ).progressbar();
 
@@ -247,19 +307,20 @@ $( "#dialog_progress" ).dialog(
 				clearTimeout(progCloseTimer)
 				progCloseTimer=null ;
 			}
-			setTimeout(function(){
-				location.reload(); 
-			},20);
 			return true ;
 		}
 	},
 	open: function() {
 		var progTimer ;
 		var smoothTimer ;
-		$( "#progress-label" ).text("Loading...");
 		progInUse = true ;
 		progvalue = 0 ;
+
+		var title = $( "#dialog_progress" ).dialog( "option", "title" );
+		$("#progressmessage").text( title + " in progress, please wait");
 		$( "#progressbar" ).progressbar( "value", false );
+		$( "#progress-label" ).text("Loading...");
+		progDots = ".";
 		
 		function inprogress() {
 			if( $( "#dialog_progress" ).dialog( "isOpen" ) )
@@ -313,7 +374,38 @@ $( "#dialog_progress" ).dialog(
 			});
 		}
 		// wait 3 seconds to let server start script
-		progTimer = setTimeout(inprogress,3000);
+		// progTimer = setTimeout(inprogress,3000);
+	},
+	setProgress: function(prog) {
+		if( progTimeout	) {
+			clearTimeout(progTimeout);
+			progTimeout=null ;
+		}		
+		if( prog < 0 ) {
+			$("#progressmessage").text("Server error!!!");
+			progInUse = false ;
+		}
+		else if( prog>= 100 ) {
+			$( "#progressbar" ).progressbar( "value", prog );
+			$( "#progress-label" ).text( "Complete!" );
+			progInUse = false ;
+		}
+		else {
+			progInUse = true;
+			$( "#progressbar" ).progressbar("value", prog ) ;
+			$( "#progress-label" ).text( prog+"%" );
+			progDots += ".";
+			if( progDots.length > 6 ) {
+				progDots = ".";
+			}
+			var title = $( "#dialog_progress" ).dialog( "option", "title" );
+			$("#progressmessage").text( title + " in progress, please wait" + progDots);
+			progTimeout = setTimeout(function(){ 
+				$( "#progress-label" ).text( "Server time out!" );
+				progInUse = False;
+				progTimeout=null;
+			},15000);	
+		}
 	}
 });
 

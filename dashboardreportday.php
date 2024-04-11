@@ -67,6 +67,11 @@
 			if( $row = $result->fetch_array(MYSQLI_NUM) ) {
 				if( $row[0] ) {
 					$Distance_Travelled_day = $row[0] ;
+					// convert to mph for US country code
+					if( $_SESSION['country'] == "US"){
+						$Distance_Travelled_day /= 1.60934;
+						$Distance_Travelled_avg /= 1.60934;
+					}
 					$__result_ok=TRUE ;
 				}
 				if( $row[1] ) {

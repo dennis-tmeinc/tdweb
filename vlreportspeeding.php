@@ -24,7 +24,11 @@
 	
 		if( $_SESSION['mapfilter']['bSpeeding'] ) {
 	
-			$sql = "SELECT vl_vehicle_name, vl_datetime FROM `vl` WHERE  vl_vehicle_name IN ($vehiclelist) AND ( vl_datetime BETWEEN '$startTime' AND '$endTime' ) AND `vl_speed` > $speedLimit  ORDER BY vl_vehicle_name, vl_datetime;";
+			$sql = "SELECT vl_vehicle_name, vl_datetime FROM `vl` WHERE ( vl_datetime BETWEEN '$startTime' AND '$endTime' ) AND `vl_speed` > $speedLimit";
+			if( !empty($vehiclelist) ) {
+				$sql .= " AND vehicle_name in ($vehiclelist)";
+			}			
+			$sql .= " ORDER BY vl_vehicle_name, vl_datetime";
 			
 			$result=$conn->query($sql,MYSQLI_USE_RESULT);	// set MYSQLI_USE_RESULT for huge data
 			if( $result ){
